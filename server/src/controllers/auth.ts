@@ -2,40 +2,93 @@ import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
 import RiderDocuments from '../models/riderDocument';
+import Vehicle from '../models/vehicle';
 
 const register = async (req: Request, res: Response, next: NextFunction) => {
-  const {
-    email,
-    fullname,
-    password,
-    role,
-    phone,
-    licenseNumber,
-    licensePhoto,
-    citizenshipNumber,
-    citizenshipPhoto,
-    vehicleType,
-    vehicleName,
-    vehicleModel,
-    vehiclePhoto,
-    vehicleNumberPlate,
-    vehicleNumberPlatePhoto,
-  } = req.body;
+  try {
+    const {
+      email,
+      fullname,
+      password,
+      role,
+      phone,
+      licenseNumber,
+      licensePhoto,
+      citizenshipNumber,
+      citizenshipPhoto,
+      vehicleType,
+      vehicleName,
+      vehicleModel,
+      vehiclePhoto,
+      vehicleNumberPlate,
+      vehicleNumberPlatePhoto,
+    } = req.body;
 
+    // 🚫 Check for rider-specific fields
+    if (role === 'rider') {
+      const missingFields = [
+        !licenseNumber && 'licenseNumber',
+        !licensePhoto && 'licensePhoto',
+        !citizenshipNumber && 'citizenshipNumber',
+        !citizenshipPhoto && 'citizenshipPhoto',
+        !vehicleType && 'vehicleType',
+        !vehicleName && 'vehicleName',
+        !vehicleModel && 'vehicleModel',
+        !vehiclePhoto && 'vehiclePhoto',
+        !vehicleNumberPlate && 'vehicleNumberPlate',
+        !vehicleNumberPlatePhoto && 'vehicleNumberPlatePhoto',
+      ].filter(Boolean);
 
-  const user=await User.create({
-    email,
-    fullname,
-    password,
-    role,
-    phone,
-    isEmailVerified:false
-  })
+      if (missingFields.length > 0) {
+        return res.status(400).json({
+          message: `Missing required rider fields: ${missingFields.join(', ')}`,
+        });
+      }
+    }
 
-  if(role==="rider"){
-    const rider=await RiderDocuments.create({
-      
-    })
+    // 👤 Create user
+    const user = await User.create({
+      email,
+      fullname,
+      password,
+      role,
+      phone,
+      isEmailVerified: false,
+    });
+
+    // 🛵 If rider, attach vehicle and documents
+    if (role === 'rider') {
+      await Vehicle.create({
+        vehicleType,
+        vehicleName,
+        vehicleModel,
+        vehiclePhoto,
+        vehicleNumberPlate,
+        vehicleNumberPlatePhoto,
+        riderId: user._id,
+      });
+
+      await RiderDocuments.create({
+        licenseNumber,
+        licensePhoto,
+        citizenshipNumber,
+        citizenshipPhoto,
+        isRiderVerified: false,
+        riderId: user._id,
+      });
+    }
+
+    res.status(201).json({
+      message: 'Registered successfully',
+      user,
+    });
+  } catch (e: unknown) {
+    console.error('Register error:', e);
+    if (e instanceof Error) {
+      return res.status(500).json({ message: e.message });
+    } else {
+      return res.status(500).json({ message: 'An unknown error occurred' });
+    }
   }
 };
 
@@ -67,3 +120,9 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
 //     res.status(400).json({ error: 'Login failed' });
 //   }
 // };
+
+const authController = {
+  register,
+};
+
+export default authController;
