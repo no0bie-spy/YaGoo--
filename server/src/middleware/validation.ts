@@ -1,51 +1,52 @@
 import { Request, Response, NextFunction } from 'express';
-import { z } from 'zod';
+import { ObjectSchema } from 'joi';
 
-const registerSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-  role: z.enum(['customer', 'rider', 'admin']),
-  name: z.string().min(2),
-  phone: z.string().min(10),
-  licenseNumber: z.string().optional(),
-  bikeNumberPlate: z.string().optional(),
-  bikeModel: z.string().optional(),
-}).refine((data) => {
-  if (data.role === 'rider') {
-    return data.licenseNumber && data.bikeNumberPlate && data.bikeModel;
-  }
-  return true;
-}, {
-  message: "Rider registration requires license number, bike number plate, and bike model"
-});
+interface ValidationSchemas {
+    body?: ObjectSchema;
+    params?: ObjectSchema;
+    query?: ObjectSchema;
+    headers?: ObjectSchema;
+}
 
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-});
+const validate = (validationSchemas: ValidationSchemas = {}) => {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        const { body, params, query, headers } = validationSchemas;
 
-export const validateRegister = (req: Request, res: Response, next: NextFunction) => {
-  try {
-    registerSchema.parse(req.body);
-    next();
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      res.status(400).json({ error: error.errors });
-    } else {
-      res.status(400).json({ error: 'Invalid input' });
-    }
-  }
+        try {
+            if (body) {
+                const validationResult = body.validate(req.body, { abortEarly: false });
+                if (validationResult.error) throw validationResult.error;
+            }
+
+            if (params) {
+                const validationResult = params.validate(req.params, { abortEarly: false });
+                if (validationResult.error) throw validationResult.error;
+            }
+
+            if (query) {
+                const validationResult = query.validate(req.query, { abortEarly: false });
+                if (validationResult.error) throw validationResult.error;
+            }
+
+            if (headers) {
+                const validationResult = headers.validate(req.headers, { abortEarly: false });
+                if (validationResult.error) throw validationResult.error;
+            }
+
+            next();
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                console.error('Validation error:', error);
+                res.status(400).json({
+                    error: error.message,
+                    details: (error as any)?.details || null
+                });
+            } else {
+                console.error('Unexpected validation error:', error);
+               res.status(500).json({ error: 'An unexpected error occurred during validation' });
+            }
+        }
+    };
 };
 
-export const validateLogin = (req: Request, res: Response, next: NextFunction) => {
-  try {
-    loginSchema.parse(req.body);
-    next();
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      res.status(400).json({ error: error.errors });
-    } else {
-      res.status(400).json({ error: 'Invalid input' });
-    }
-  }
-};
+export default validate;

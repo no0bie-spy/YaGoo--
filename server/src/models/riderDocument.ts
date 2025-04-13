@@ -1,4 +1,4 @@
-import { Document, model, Schema } from "mongoose";
+import { Document, model, Schema, Types } from "mongoose";
 
 
 interface rInterface extends Document{
@@ -6,7 +6,8 @@ interface rInterface extends Document{
     licensePhoto:string,
     citizenshipNumber:string,
     citizenshipPhoto:string,
-    isRiderVerified:boolean
+    isRiderVerified:boolean,
+    riderId: Types.ObjectId;
 }
 
 const riderDocumentSchema=new Schema<rInterface>({
@@ -33,6 +34,12 @@ const riderDocumentSchema=new Schema<rInterface>({
     isRiderVerified:{
         type:Boolean,
        default:false 
+    },
+    riderId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      unique: true,
     },
 },{
     timestamps:true

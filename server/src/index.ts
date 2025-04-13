@@ -3,6 +3,7 @@ import express from 'express'
 import connectToDB from './connect';
 
 import cors from 'cors'
+import mainRoutes from './routes/mainRoutes';
 const server=express();
 config();
 const port="8002"
@@ -11,7 +12,7 @@ server.use(express.json());
 connectToDB().then((connectMessage)=>{
     console.log(connectMessage);
     
-   
+    server.use(mainRoutes) 
     server.listen(port,()=>{
         console.log("Server Started on Port: "+port)
     })
