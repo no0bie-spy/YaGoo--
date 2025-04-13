@@ -1,17 +1,14 @@
-import {Document,model,Schema} from 'mongoose';
-
-
-
+import { Document, model, Schema } from 'mongoose';
 
 export type UserRole = 'customer' | 'rider' | 'admin';
 
 interface IUser extends Document {
   email: string;
-  fullname:string,
+  fullname: string;
   password: string;
   role: UserRole;
   phone: string;
-  isEmailVerified:boolean;
+  isEmailVerified: boolean;
 }
 
 const userSchema = new Schema<IUser>(
@@ -40,16 +37,15 @@ const userSchema = new Schema<IUser>(
       type: String,
       required: true,
     },
-    isEmailVerified:{
-      type:Boolean
-    }
+    isEmailVerified: {
+      type: Boolean,
+    },
   },
   {
     timestamps: true,
   }
 );
 
+const User = model<IUser>('User', userSchema);
 
-const User =model<IUser>('User', userSchema);
-
-export default User
+export default User;
