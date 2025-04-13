@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User';
 import RiderDocuments from '../models/riderDocument';
 import Vehicle from '../models/vehicle';
+import env from '../Ienv'
 
 const register = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -124,6 +125,24 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
 
 const login=async(req:Request,res:Response,next:NextFunction)=>{
   try{
+    const { email , password} = req.body;
+    
+    const existingUser = await User.findOne({ email, password});
+
+    if(!existingUser){
+      res.status(400).json({message: ' User not found'})
+    }
+    
+    const token = jwt.sign({
+      userId:existingUser?._id,
+      role:existingUser?.role
+    })
+
+    res.status(200).json({
+      message:"login ",
+      token
+    })
+      
 
   }
   catch (e: unknown) {
