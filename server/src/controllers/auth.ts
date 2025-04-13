@@ -1,31 +1,10 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import  User  from '../models/User';
 
-// export const register = async (req: Request, res: Response) => {
-//   try {
-//     const user = new User(req.body);
-//     await user.save();
-
-//     const token = jwt.sign(
-//       { userId: user._id, role: user.role },
-//       process.env.JWT_SECRET || 'your-secret-key',
-//       { expiresIn: '7d' }
-//     );
-
-//     res.status(201).json({
-//       token,
-//       user: {
-//         id: user._id,
-//         email: user.email,
-//         role: user.role,
-//         name: user.name,
-//       },
-//     });
-//   } catch (error) {
-//     res.status(400).json({ error: 'Registration failed' });
-//   }
-// };
+const register=async(req:Request,res:Response,next:NextFunction)=>{
+  const {email,fullname,password,role,phone,licenseNumber,licensePhoto,citizenshipNumber,citizenshipPhoto,}=req.body
+}
 
 // export const login = async (req: Request, res: Response) => {
 //   try {
