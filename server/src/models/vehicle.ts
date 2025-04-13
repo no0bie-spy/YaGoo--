@@ -51,7 +51,7 @@ const vehicleSchema = new Schema<VehicleInterface>(
     },
     isVehicleVerified: {
       type: Boolean,
-      default: false, // 👈 optional but often useful
+      default: false, 
     },
     riderId: {
       type: Schema.Types.ObjectId,

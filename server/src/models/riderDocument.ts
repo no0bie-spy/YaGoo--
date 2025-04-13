@@ -32,8 +32,7 @@ const riderDocumentSchema=new Schema<rInterface>({
     },
     isRiderVerified:{
         type:Boolean,
-        required:true,
-        unique:true
+       default:false 
     },
 },{
     timestamps:true
