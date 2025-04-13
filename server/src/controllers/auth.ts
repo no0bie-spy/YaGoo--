@@ -147,13 +147,14 @@ const login=async(req:Request,res:Response,next:NextFunction)=>{
   }
   catch (e: unknown) {
     console.error('Register error:', e);
-    if (e instanceof Error) {
+    if (e instanceof Error) { 
       return res.status(500).json({ message: e.message });
     } else {
       return res.status(500).json({ message: 'An unknown error occurred' });
     }
   }
 }
+
 const authController = {
   register,
   login
