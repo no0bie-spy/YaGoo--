@@ -123,37 +123,39 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
 // };
 
 
-const login=async(req:Request,res:Response,next:NextFunction)=>{
-  try{
-    const { email , password} = req.body;
-    
-    const existingUser = await User.findOne({ email, password});
+const login = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { email, password } = req.body;
 
-    if(!existingUser){
-      res.status(400).json({message: ' User not found'})
+    const existingUser = await User.findOne({ email, password });
+
+    if (!existingUser) {
+      return res.status(400).json({ message: 'Invalid Email and Password' });
     }
-    
-    const token = jwt.sign({
-      userId:existingUser?._id,
-      role:existingUser?.role
-    })
 
-    res.status(200).json({
-      message:"login ",
-      token
-    })
-      
+    const token = jwt.sign(
+      {
+        userId: existingUser._id,
+        role: existingUser.role,
+      },
+      env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
 
-  }
-  catch (e: unknown) {
-    console.error('Register error:', e);
-    if (e instanceof Error) { 
+    return res.status(200).json({
+      message: "Login successful",
+      token,
+    });
+
+  } catch (e: unknown) {
+    console.error('Login error:', e);
+    if (e instanceof Error) {
       return res.status(500).json({ message: e.message });
     } else {
       return res.status(500).json({ message: 'An unknown error occurred' });
     }
   }
-}
+};
 
 const authController = {
   register,
