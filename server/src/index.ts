@@ -4,9 +4,10 @@ import connectToDB from './connect';
 
 import cors from 'cors'
 import mainRoutes from './routes/mainRoutes';
+import env from './Ienv';
 const server=express();
 config();
-const port="8002"
+const port=env.PORT
 server.use(cors());
 server.use(express.json());
 connectToDB().then((connectMessage)=>{

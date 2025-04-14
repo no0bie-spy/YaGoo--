@@ -1,167 +1,154 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Platform } from 'react-native';
 import { router } from 'expo-router';
-import { Lock, Mail, User, Phone, Truck } from 'lucide-react-native';
+import { Lock, Mail, User, Phone, BadgeCheck, Bike } from 'lucide-react-native';
 import * as SecureStore from 'expo-secure-store';
+import axios from 'axios';
+import RNPickerSelect from 'react-native-picker-select';
 
-type UserRole = 'customer' | 'rider' | 'admin';
+type UserRole = 'customer' | 'rider';
 
 export default function Register() {
   const [role, setRole] = useState<UserRole>('customer');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
+  const [fullname, setFullname] = useState('');
   const [phone, setPhone] = useState('');
+  const [errors, setErrors] = useState<string[]>([]);
+
+  // Rider-specific fields
   const [licenseNumber, setLicenseNumber] = useState('');
-  const [bikeNumberPlate, setBikeNumberPlate] = useState('');
-  const [bikeModel, setBikeModel] = useState('');
-  const [error, setError] = useState('');
+  const [licensePhoto, setLicensePhoto] = useState('');
+  const [citizenshipNumber, setCitizenshipNumber] = useState('');
+  const [citizenshipPhoto, setCitizenshipPhoto] = useState('');
+  const [vehicleType, setVehicleType] = useState('');
+  const [vehicleName, setVehicleName] = useState('');
+  const [vehicleModel, setVehicleModel] = useState('');
+  const [vehiclePhoto, setVehiclePhoto] = useState('');
+  const [vehicleNumberPlate, setVehicleNumberPlate] = useState('');
+  const [vehicleNumberPlatePhoto, setVehicleNumberPlatePhoto] = useState('');
+  const [vehicleBlueBookPhoto, setVehicleBlueBookPhoto] = useState('')
 
   const handleRegister = async () => {
     try {
-      const userData = {
+      const userData: any = {
         email,
         password,
-        name,
+        fullname,
         phone,
         role,
-        ...(role === 'rider' && {
-          licenseNumber,
-          bikeNumberPlate,
-          bikeModel,
-        }),
       };
 
-      const response = await fetch('http://localhost:3000/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
+      if (role === 'rider') {
+        userData.licenseNumber = licenseNumber;
+        userData.licensePhoto = licensePhoto;
+        userData.citizenshipNumber = citizenshipNumber;
+        userData.citizenshipPhoto = citizenshipPhoto;
+        userData.vehicleType = vehicleType;
+        userData.vehicleName = vehicleName;
+        userData.vehicleModel = vehicleModel;
+        userData.vehiclePhoto = vehiclePhoto;
+        userData.vehicleNumberPlate = vehicleNumberPlate;
+        userData.vehicleNumberPlatePhoto = vehicleNumberPlatePhoto;
+        userData.vehicleBlueBookPhoto = vehicleBlueBookPhoto; // Add this field
+      }
+      console.log('Sending registration data:', userData);
+
+      const response = await axios.post('http://192.168.1.65:8002/register', userData);
+      const data = await response.data;
+
+
+      
+      router.replace({
+        pathname: '/login',
+        params: { message: 'Registration successful!' }
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Registration failed');
-      }
-
-      if (Platform.OS !== 'web') {
-        // Use SecureStore for native platforms
-        await SecureStore.setItemAsync('token', data.token);
-        await SecureStore.setItemAsync('userRole', data.user.role);
+    } catch (error: any) {
+      if (error.response) {
+        console.error(error.response);
+        setErrors([error.response.data.message || "Something went wrong."]);
       } else {
-        // Use localStorage for web platform
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('userRole', data.user.role);
+        setErrors(["Network or server error."]);
       }
-
-      router.replace('/(tabs)');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
     }
+    
   };
 
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Create Account</Text>
-      
-      {error ? <Text style={styles.error}>{error}</Text> : null}
 
+      {/* Show errors if any */}
+      {errors.length > 0 && errors.map((err, i) => (
+        <Text key={i} style={styles.error}>{err}</Text>
+      ))}
+
+      {/* Role Switch */}
       <View style={styles.roleContainer}>
-        <TouchableOpacity
-          style={[styles.roleButton, role === 'customer' && styles.roleButtonActive]}
-          onPress={() => setRole('customer')}
-        >
-          <Text style={[styles.roleText, role === 'customer' && styles.roleTextActive]}>
-            Customer
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.roleButton, role === 'rider' && styles.roleButtonActive]}
-          onPress={() => setRole('rider')}
-        >
-          <Text style={[styles.roleText, role === 'rider' && styles.roleTextActive]}>
-            Rider
-          </Text>
-        </TouchableOpacity>
+        {['customer', 'rider'].map((r) => (
+          <TouchableOpacity
+            key={r}
+            style={[styles.roleButton, role === r && styles.roleButtonActive]}
+            onPress={() => setRole(r as UserRole)}
+          >
+            <Text style={[styles.roleText, role === r && styles.roleTextActive]}>{r}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
-      <View style={styles.inputContainer}>
-        <Mail size={20} color="#666" />
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-        />
-      </View>
+      {/* Shared Inputs */}
+      <Input icon={<Mail size={20} />} placeholder="Email" value={email} setValue={setEmail} keyboardType="email-address" />
+      <Input icon={<Lock size={20} />} placeholder="Password" value={password} setValue={setPassword} secureTextEntry />
+      <Input icon={<User size={20} />} placeholder="Full Name" value={fullname} setValue={setFullname} />
+      <Input icon={<Phone size={20} />} placeholder="Phone" value={phone} setValue={setPhone} keyboardType="phone-pad" />
 
-      <View style={styles.inputContainer}>
-        <Lock size={20} color="#666" />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-      </View>
-
-      <View style={styles.inputContainer}>
-        <User size={20} color="#666" />
-        <TextInput
-          style={styles.input}
-          placeholder="Full Name"
-          value={name}
-          onChangeText={setName}
-        />
-      </View>
-
-      <View style={styles.inputContainer}>
-        <Phone size={20} color="#666" />
-        <TextInput
-          style={styles.input}
-          placeholder="Phone Number"
-          value={phone}
-          onChangeText={setPhone}
-          keyboardType="phone-pad"
-        />
-      </View>
-
+      {/* Rider-specific Inputs */}
       {role === 'rider' && (
         <>
-          <View style={styles.inputContainer}>
-            <Truck size={20} color="#666" />
-            <TextInput
-              style={styles.input}
-              placeholder="License Number"
-              value={licenseNumber}
-              onChangeText={setLicenseNumber}
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Truck size={20} color="#666" />
-            <TextInput
-              style={styles.input}
-              placeholder="Bike Number Plate"
-              value={bikeNumberPlate}
-              onChangeText={setBikeNumberPlate}
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Truck size={20} color="#666" />
-            <TextInput
-              style={styles.input}
-              placeholder="Bike Model"
-              value={bikeModel}
-              onChangeText={setBikeModel}
-            />
-          </View>
+          <Input icon={<BadgeCheck size={20} />} placeholder="License Number" value={licenseNumber} setValue={setLicenseNumber} />
+          <Input icon={<BadgeCheck size={20} />} placeholder="License Photo (URL or file ref)" value={licensePhoto} setValue={setLicensePhoto} />
+          <Input icon={<BadgeCheck size={20} />} placeholder="Citizenship Number" value={citizenshipNumber} setValue={setCitizenshipNumber} />
+          <Input icon={<BadgeCheck size={20} />} placeholder="Citizenship Photo (URL)" value={citizenshipPhoto} setValue={setCitizenshipPhoto} />
+          <RNPickerSelect
+            onValueChange={(value) => setVehicleType(value)}
+            placeholder={{ label: 'Select Vehicle Type', value: '' }}
+            items={[
+              { label: 'Bike', value: 'bike' },
+              { label: 'Car', value: 'car' },
+              { label: 'Scooter', value: 'scooter' },
+              { label: 'Other', value: 'other' },
+            ]}
+            style={{
+              inputIOS: {
+                paddingVertical: 12,
+                paddingHorizontal: 10,
+                borderWidth: 1,
+                borderColor: '#ddd',
+                borderRadius: 8,
+                color: 'black',
+                paddingRight: 30,
+                marginBottom: 15,
+              },
+              inputAndroid: {
+                paddingVertical: 12,
+                paddingHorizontal: 10,
+                borderWidth: 1,
+                borderColor: '#ddd',
+                borderRadius: 8,
+                color: 'black',
+                paddingRight: 30,
+                marginBottom: 15,
+              },
+            }}
+            Icon={() => <Bike size={20} color="#666" style={{ marginRight: 10 }} />}
+          />
+          <Input icon={<Bike size={20} />} placeholder="Vehicle Name" value={vehicleName} setValue={setVehicleName} />
+          <Input icon={<Bike size={20} />} placeholder="Vehicle Model" value={vehicleModel} setValue={setVehicleModel} />
+          <Input icon={<Bike size={20} />} placeholder="Vehicle Photo (URL)" value={vehiclePhoto} setValue={setVehiclePhoto} />
+          <Input icon={<Bike size={20} />} placeholder="Number Plate" value={vehicleNumberPlate} setValue={setVehicleNumberPlate} />
+          <Input icon={<Bike size={20} />} placeholder="Number Plate Photo (URL)" value={vehicleNumberPlatePhoto} setValue={setVehicleNumberPlatePhoto} />
+          <Input icon={<Bike size={20} />} placeholder="BlueBook Photo(URL)" value={vehicleBlueBookPhoto} setValue={setVehicleBlueBookPhoto} />
         </>
       )}
 
@@ -173,6 +160,23 @@ export default function Register() {
         <Text style={styles.link}>Already have an account? Login</Text>
       </TouchableOpacity>
     </ScrollView>
+  );
+}
+
+function Input({ icon, placeholder, value, setValue, secureTextEntry = false, keyboardType = 'default' }: any) {
+  return (
+    <View style={styles.inputContainer}>
+      {icon}
+      <TextInput
+        placeholderTextColor="#888"
+        style={styles.input}
+        placeholder={placeholder}
+        value={value}
+        onChangeText={setValue}
+        secureTextEntry={secureTextEntry}
+        keyboardType={keyboardType}
+      />
+    </View>
   );
 }
 

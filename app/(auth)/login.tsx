@@ -3,49 +3,55 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Platform } from 'r
 import { router } from 'expo-router';
 import { Lock, Mail } from 'lucide-react-native';
 import * as SecureStore from 'expo-secure-store';
-
+import { useLocalSearchParams } from 'expo-router';
+import axios from 'axios';
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState<string[]>([]);
+  const { message } = useLocalSearchParams();
 
   const handleLogin = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const userData: any = {
+        email,
+        password
+      };
+      const response = await axios.post('http://192.168.1.65:8002/login', userData);
+      const data = await response.data;
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Login failed');
-      }
-
-      if (Platform.OS !== 'web') {
-        // Use SecureStore for native platforms
-        await SecureStore.setItemAsync('token', data.token);
-        await SecureStore.setItemAsync('userRole', data.user.role);
-      } else {
-        // Use localStorage for web platform
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('userRole', data.user.role);
-      }
 
       router.replace('/(tabs)');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+    } catch (error: any) {
+      console.log("Full error:", error);
+
+      if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
+        const errorMessages = error.response.data.details.map((err: any) => err.message);
+        setErrors(errorMessages);
+      } else if (error.response?.data?.message) {
+        setErrors([error.response.data.message]); // fallback if message is provided
+      } else {
+        setErrors(["Something went wrong."]);
+      }
     }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Welcome Back</Text>
-      
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+
+      {message ? (
+        <Text style={styles.success}>{message}</Text>
+      ) : null}
+
+      {errors.length > 0 &&
+        errors.map((err, index) => (
+          <Text key={index} style={styles.error}>
+            {err}
+          </Text>
+        ))}
+
+
 
       <View style={styles.inputContainer}>
         <Mail size={20} color="#666" />
@@ -88,6 +94,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#fff',
   },
+  success: {
+    color: 'green',
+    marginBottom: 15,
+    textAlign: 'center',
+    fontWeight: 'bold',
+  },
+
   title: {
     fontSize: 24,
     fontWeight: 'bold',
