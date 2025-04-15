@@ -54,15 +54,21 @@ export default function Register() {
       }
       console.log('Sending registration data:', userData);
 
-      const response = await axios.post('http://192.168.1.65:8002/register', userData);
+      const response = await axios.post('http://127.0.0.1:8002/register', userData);
       const data = await response.data;
 
 
       
-      router.replace({
-        pathname: '/login',
-        params: { message: 'Registration successful!' }
+      // router.replace({
+      //   pathname: '/verify-email',
+      //   params: { message: 'Registration successful!' }
+      // });
+
+      router.push({
+        pathname: '/verify-email',
+        params: { email }
       });
+      
 
     } catch (error: any) {
       if (error.response) {
