@@ -9,6 +9,7 @@
     "dev": "npm run build && npm run start"
   },
   "dependencies": {
+    "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
@@ -16,6 +17,7 @@
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.0.3",
+    "nodemailer": "^6.10.1",
     "nodemon": "^3.1.9",
     "zod": "^3.22.4"
   },
@@ -27,6 +29,7 @@
     "@types/jsonwebtoken": "^9.0.5",
     "@types/node": "^20.17.30",
     "ts-node": "^10.9.2",
+    "@types/nodemailer": "^6.4.17",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.8.3"
   }

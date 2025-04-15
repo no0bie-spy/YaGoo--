@@ -4,6 +4,9 @@ import User from '../models/User';
 import RiderDocuments from '../models/riderDocument';
 import Vehicle from '../models/vehicle';
 import env from '../Ienv';
+import { sendRecoveryEmail } from '../services/mailer';
+import bcrypt from "bcryptjs"; 
+import { Otp } from '../models/otp';
 
 const register = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -96,9 +99,28 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
       });
     }
 
+
+      // Call the function to send the recovery email
+       const { token, info} = await sendRecoveryEmail(email);
+  
+      //hash the otp to save into the database
+      const hashedToken = await bcrypt.hash(token,10);
+
+      const expiryOTP = new Date(Date.now()+ 10*60*1000); // valid for 10 minutes
+
+      const  otpSaved = new Otp({
+        email: email,
+        otp: hashedToken,
+        otpExpiresAt: expiryOTP,
+       })
+
+       
+  //save otp for the respective user
+  await otpSaved.save();
+
     res.status(201).json({
       message: 'Registered successfully',
-      user,
+      user,info
     });
   } catch (e: unknown) {
     console.error('Register error:', e);
