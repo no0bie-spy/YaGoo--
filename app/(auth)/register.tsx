@@ -55,7 +55,7 @@ export default function Register() {
       }
       console.log('Sending registration data:', userData);
 
-      const response = await axios.post('http://192.168.1.149:8002/register', userData);
+      const response = await axios.post('http://192.168.1.65:8002/register', userData);
       const data = await response.data;
       console.log(data)
 

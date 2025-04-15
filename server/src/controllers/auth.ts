@@ -103,7 +103,7 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
 
       // Call the function to send the recovery email
        const { token, info} = await sendRecoveryEmail(email);
-  
+      console.log("Token"+token)
       //hash the otp to save into the database
       const hashedToken = await bcrypt.hash(token,10);
 
@@ -214,6 +214,8 @@ const verifyOTP = async ( req: Request, res: Response , next : NextFunction) =>{
         details: [{ message: 'Otp Not Found' }],
       });
     }
+
+
 
     const otpValid = await bcrypt.compare(otp,otpDoc.otp);
     if(!otpValid){
