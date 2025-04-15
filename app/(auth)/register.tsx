@@ -57,7 +57,7 @@ export default function Register() {
 
       const response = await axios.post('http://192.168.1.149:8002/register', userData);
       const data = await response.data;
-
+      console.log(data)
 
       
       // router.replace({
@@ -66,15 +66,19 @@ export default function Register() {
       // });
       router.replace({
         pathname: '/verify-email',
-        params: { email: email, message: 'Registration successful!' }
+        params: { email:email, message: `Opt sent to ${email}` }
       })
 
     } catch (error: any) {
-      if (error.response) {
-        console.error(error.response);
-        setErrors([error.response.data.message || "Something went wrong."]);
+      console.log("Full error:", error);
+
+      if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
+        const errorMessages = error.response.data.details.map((err: any) => err.message);
+        setErrors(errorMessages);
+      } else if (error.response?.data?.message) {
+        setErrors([error.response.data.message]); // fallback if message is provided
       } else {
-        setErrors(["Network or server error."]);
+        setErrors(["Something went wrong."]);
       }
     }
 

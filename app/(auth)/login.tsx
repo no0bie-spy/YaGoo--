@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { Lock, Mail } from 'lucide-react-native';
-import * as SecureStore from 'expo-secure-store';
 import { useLocalSearchParams } from 'expo-router';
 import axios from 'axios';
 import Input from '@/components/Input';

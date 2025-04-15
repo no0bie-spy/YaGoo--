@@ -3,8 +3,7 @@
 
 import nodemailer from "nodemailer";
 import env from "../Ienv"; // Make sure file name matches
-import { config } from "dotenv";
-config()
+
 
 
 
@@ -19,6 +18,7 @@ const transporter = nodemailer.createTransport({
     pass: env.SMTP_PASSWORD,
   },
 });
+console.log(env.SMTP_HOST)
 
 // Function to send the recovery email
 export async function sendRecoveryEmail(userEmail: string): Promise<{ token: string; info: any }> {
