@@ -60,11 +60,14 @@ export default function Register() {
 
 
       
-      router.replace({
-        pathname: '/login',
-        params: { message: 'Registration successful!' }
-      });
-      
+      // router.replace({
+      //   pathname: '/login',
+      //   params: { message: 'Registration successful!' }
+      // });
+      router.push({
+        pathname: '/verify-email',
+        params: { email: email, message: 'Registration successful!' }
+      })
 
     } catch (error: any) {
       if (error.response) {
