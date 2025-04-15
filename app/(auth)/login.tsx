@@ -19,9 +19,10 @@ export default function Login() {
         email,
         password
       };
-      const response = await axios.post('http://192.168.1.65:8002/login', userData);
-      const data = await response.data;
+      const response = await axios.post('http://192.168.1.149:8002/login', userData);
 
+      const data = await response.data;
+        console.log(data)
 
       router.replace('/(tabs)');
     } catch (error: any) {
@@ -55,8 +56,8 @@ export default function Login() {
       <Input
         icon={<Mail size={20} />}
         placeholder="Email"
-        value={password}
-        setValue={setPassword}
+        value={email}
+        setValue={setEmail}
         keyboardType="email-address"
       />
       <Input
@@ -75,7 +76,12 @@ export default function Login() {
         style={{ backgroundColor: 'transparent' }}
         textStyle={{ color: '#2196F3' }}
       />
-
+      <AppButton
+        title="Forget Password?"
+        onPress={() => router.push('/verify-email')}
+        style={{ backgroundColor: 'transparent' }}
+        textStyle={{ color: '#2196F3' }}
+      />
      
     </View>
   );

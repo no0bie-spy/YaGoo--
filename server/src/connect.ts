@@ -1,24 +1,25 @@
-import mongoose from "mongoose";
-import env from "./Ienv";
-import { config } from "dotenv";
-config()
-
+import mongoose from 'mongoose';
+import env from './Ienv';
 
 const connectToDB = async (): Promise<string> => {
   const mongoDBUrl = env.MONGODB_URL;
- 
+  console.log(mongoDBUrl);
   if (!mongoDBUrl) {
-    return Promise.reject("MONGODB_URL is not defined in environment variables");
+    return Promise.reject(
+      'MONGODB_URL is not defined in environment variables'
+    );
   }
 
   try {
     await mongoose.connect(mongoDBUrl);
-    return "MongoDB connected";
+    return 'MongoDB connected';
   } catch (error) {
     if (error instanceof Error) {
       return Promise.reject(error.message);
     }
-    return Promise.reject("An unknown error occurred while connecting to MongoDB");
+    return Promise.reject(
+      'An unknown error occurred while connecting to MongoDB'
+    );
   }
 };
 
