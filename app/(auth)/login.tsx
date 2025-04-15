@@ -52,12 +52,6 @@ export default function Login() {
             {err}
           </Text>
         ))}
-
-
-
-
-
-
       <Input
         icon={<Mail size={20} />}
         placeholder="Email"

@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import axios from 'axios';
+import Input from '@/components/Input';
+import { Mail } from 'lucide-react-native';
+import AppButton from '@/components/Button';
 
 export default function VerifyEmail() {
   const { email } = useLocalSearchParams();
@@ -33,17 +36,18 @@ export default function VerifyEmail() {
 
       {error !== '' && <Text style={styles.error}>{error}</Text>}
 
-      <TextInput
-        style={styles.input}
-        placeholder="Enter OTP"
-        keyboardType="number-pad"
+
+      <Input
+        icon={<Mail size={20} />}
+        placeholder="Email"
         value={otp}
-        onChangeText={setOtp}
+        setValue={setOtp}
+        keyboardType="number-pad"
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleVerify}>
-        <Text style={styles.buttonText}>Verify Email</Text>
-      </TouchableOpacity>
+      <AppButton title="Verify Email" onPress={handleVerify} />
+
+
     </View>
   );
 }
