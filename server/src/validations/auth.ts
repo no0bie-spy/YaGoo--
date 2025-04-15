@@ -141,6 +141,19 @@ const userValidation = {
       }),
     }),
   },
+  otp: {
+    body: Joi.object({
+      email: Joi.string().email().required().messages({
+        'any.required': 'Email is required',
+        'string.email': 'Invalid email format',
+      }),
+      otp: Joi.string().min(6).required().messages({
+        'any.required': 'OTP is required',
+        'string.min': 'Password must be at least 4 characters',
+      }),
+    }),
+  },
+
 };
 
 export default userValidation;
