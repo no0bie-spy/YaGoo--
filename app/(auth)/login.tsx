@@ -22,7 +22,7 @@ export default function Login() {
       const response = await axios.post('http://192.168.1.149:8002/login', userData);
 
       const data = await response.data;
-        console.log(data)
+      console.log(data)
 
       router.replace('/(tabs)');
     } catch (error: any) {
@@ -82,7 +82,7 @@ export default function Login() {
         style={{ backgroundColor: 'transparent' }}
         textStyle={{ color: '#2196F3' }}
       />
-     
+
     </View>
   );
 }
