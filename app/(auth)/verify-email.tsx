@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'reac
 import { useLocalSearchParams, router } from 'expo-router';
 import axios from 'axios';
 import Input from '@/components/Input';
-import { Mail } from 'lucide-react-native';
+import { Mail, Phone } from 'lucide-react-native';
 import AppButton from '@/components/Button';
 
 export default function VerifyEmail() {
@@ -13,7 +13,7 @@ export default function VerifyEmail() {
 
   const handleVerify = async () => {
     try {
-      const response = await axios.post('http://127.0.0.1:8002/verify-email', {
+      const response = await axios.post('http://192.168.1.255:8002/verify-email', {
         email,
         otp,
       });
@@ -38,15 +38,20 @@ export default function VerifyEmail() {
 
 
       <Input
-        icon={<Mail size={20} />}
-        placeholder="Email"
+        icon={<Phone size={20} />}
+        placeholder="Otp"
         value={otp}
         setValue={setOtp}
         keyboardType="number-pad"
       />
 
       <AppButton title="Verify Email" onPress={handleVerify} />
-
+      <AppButton
+        title="Already have an account? Login"
+        onPress={() => router.push('/login')}
+        style={{ backgroundColor: 'transparent' }}
+        textStyle={{ color: '#2196F3' }}
+      />
 
     </View>
   );

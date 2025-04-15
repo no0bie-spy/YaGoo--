@@ -171,7 +171,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
     if (!existingUser) {
       return res
         .status(400)
-        .json({ details: [{ message: 'Email already used' }] });
+        .json({ details: [{ message: 'User not exist' }] });
     }
 
     const token = jwt.sign(

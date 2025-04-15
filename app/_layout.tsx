@@ -15,7 +15,7 @@ export default function RootLayout() {
 
   const checkAuth = async () => {
     let token = null;
-    
+     
     if (Platform.OS !== 'web') {
       // Use SecureStore for native platforms
       token = await SecureStore.getItemAsync('token');

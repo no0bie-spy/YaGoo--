@@ -11,7 +11,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Welcome!</Text>
+      <Text style={styles.title}>Welcome! to YaGoo</Text>
       <Text style={styles.role}>You are logged in as: {role}</Text>
     </View>
   );
