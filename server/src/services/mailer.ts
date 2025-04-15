@@ -1,24 +1,25 @@
 // forgot-pw.ts
 import nodemailer from "nodemailer";
 import { config } from "dotenv";
-import env from '../Ienv'
+
 config();
 
-
+// Define the interface for sendMail's response (optional, you can use `any` too)
+import { SentMessageInfo } from "nodemailer";
 
 // SMTP transport setup
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
-  port: Number(env.SMTP_PORT),
+  port: Number(process.env.SMTP_PORT),
   secure: true, // true for port 465, false for other ports
   auth: {
-    user: env.SMTP_USERNAME,
-    pass: env.SMTP_PASSWORD,
+    user: process.env.SMTP_USERNAME,
+    pass: process.env.SMTP_PASSWORD,
   },
 });
 
 // Function to send the recovery email
-c
+export async function sendRecoveryEmail(userEmail: string): Promise<{ token: string; info: any }> {
 
   const token = (100000 + Math.floor(Math.random() * 900000)).toString();
 
