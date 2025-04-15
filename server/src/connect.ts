@@ -5,7 +5,7 @@ config()
 
 
 const connectToDB = async (): Promise<string> => {
-  const mongoDBUrl = process.env.MONGODB_URL;
+  const mongoDBUrl = env.MONGODB_URL;
  
   if (!mongoDBUrl) {
     return Promise.reject("MONGODB_URL is not defined in environment variables");

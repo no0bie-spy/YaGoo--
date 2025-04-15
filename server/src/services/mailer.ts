@@ -1,20 +1,22 @@
 // forgot-pw.ts
+
+
 import nodemailer from "nodemailer";
+import env from "../Ienv"; // Make sure file name matches
 import { config } from "dotenv";
+config()
 
-config();
 
-// Define the interface for sendMail's response (optional, you can use `any` too)
-import { SentMessageInfo } from "nodemailer";
+
 
 // SMTP transport setup
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT),
+  host: env.SMTP_HOST,
+  port: Number(env.SMTP_PORT),
   secure: true, // true for port 465, false for other ports
   auth: {
-    user: process.env.SMTP_USERNAME,
-    pass: process.env.SMTP_PASSWORD,
+    user: env.SMTP_USERNAME,
+    pass: env.SMTP_PASSWORD,
   },
 });
 
