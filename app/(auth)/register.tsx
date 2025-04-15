@@ -60,11 +60,14 @@ export default function Register() {
 
 
       
-      router.replace({
-        pathname: '/login',
-        params: { message: 'Registration successful!' }
-      });
-      
+      // router.replace({
+      //   pathname: '/login',
+      //   params: { message: 'Registration successful!' }
+      // });
+      router.push({
+        pathname: '/verify-email',
+        params: { email: email, message: 'Registration successful!' }
+      })
 
     } catch (error: any) {
       if (error.response) {
@@ -239,5 +242,25 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 15,
     marginBottom: 30,
+  },
+  inputIOS: {
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    color: 'black',
+    paddingRight: 30,
+    marginBottom: 15,
+  },
+  inputAndroid: {
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    color: 'black',
+    paddingRight: 30,
+    marginBottom: 15,
   },
 });
