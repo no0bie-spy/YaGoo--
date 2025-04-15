@@ -5,6 +5,8 @@ import { Lock, Mail } from 'lucide-react-native';
 import * as SecureStore from 'expo-secure-store';
 import { useLocalSearchParams } from 'expo-router';
 import axios from 'axios';
+import Input from '@/components/Input';
+import AppButton from '@/components/Button';
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -53,36 +55,34 @@ export default function Login() {
 
 
 
-      <View style={styles.inputContainer}>
-        <Mail size={20} color="#666" />
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-        />
-      </View>
 
-      <View style={styles.inputContainer}>
-        <Lock size={20} color="#666" />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-      </View>
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
-      </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => router.push('/register')}>
-        <Text style={styles.link}>Don't have an account? Register</Text>
-      </TouchableOpacity>
+      <Input
+        icon={<Mail size={20} />}
+        placeholder="Email"
+        value={password}
+        setValue={setPassword}
+        keyboardType="email-address"
+      />
+      <Input
+        icon={<Lock size={20} />}
+        placeholder="Password"
+        value={password}
+        setValue={setPassword}
+        secureTextEntry
+      />
+
+      <AppButton title="Login" onPress={handleLogin} />
+
+      <AppButton
+        title="Don't have an account? Register"
+        onPress={() => router.push('/register')}
+        style={{ backgroundColor: 'transparent' }}
+        textStyle={{ color: '#2196F3' }}
+      />
+
+     
     </View>
   );
 }

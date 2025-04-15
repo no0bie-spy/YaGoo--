@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { Lock, Mail, User, Phone, BadgeCheck, Bike } from 'lucide-react-native';
-import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 import RNPickerSelect from 'react-native-picker-select';
+import Input from '@/components/Input';
+import AppButton from '@/components/Button';
 
 type UserRole = 'customer' | 'rider';
 
@@ -59,14 +60,9 @@ export default function Register() {
 
 
       
-      // router.replace({
-      //   pathname: '/verify-email',
-      //   params: { message: 'Registration successful!' }
-      // });
-
-      router.push({
-        pathname: '/verify-email',
-        params: { email }
+      router.replace({
+        pathname: '/login',
+        params: { message: 'Registration successful!' }
       });
       
 
@@ -78,7 +74,7 @@ export default function Register() {
         setErrors(["Network or server error."]);
       }
     }
-    
+
   };
 
   return (
@@ -158,33 +154,21 @@ export default function Register() {
         </>
       )}
 
-      <TouchableOpacity style={styles.button} onPress={handleRegister}>
-        <Text style={styles.buttonText}>Register</Text>
-      </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => router.push('/login')}>
-        <Text style={styles.link}>Already have an account? Login</Text>
-      </TouchableOpacity>
+
+      <AppButton title="Register" onPress={handleRegister} />
+      <AppButton
+        title="Already have an account? Login"
+        onPress={() => router.push('/login')}
+        style={{ backgroundColor: 'transparent' }}
+        textStyle={{ color: '#2196F3' }}
+      />
+
     </ScrollView>
   );
 }
 
-function Input({ icon, placeholder, value, setValue, secureTextEntry = false, keyboardType = 'default' }: any) {
-  return (
-    <View style={styles.inputContainer}>
-      {icon}
-      <TextInput
-        placeholderTextColor="#888"
-        style={styles.input}
-        placeholder={placeholder}
-        value={value}
-        onChangeText={setValue}
-        secureTextEntry={secureTextEntry}
-        keyboardType={keyboardType}
-      />
-    </View>
-  );
-}
+
 
 const styles = StyleSheet.create({
   container: {
