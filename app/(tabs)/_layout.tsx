@@ -12,18 +12,18 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color, size }) => <MapPin size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
         }}
       />
-       <Tabs.Screen
+
+      <Tabs.Screen
         name="rides"
         options={{
           title: 'My Rides',
-          tabBarIcon: ({ size, color }) => (
-            <Clock size={size} color={color} />
-          ),
+          tabBarIcon: ({ size, color }) => <Clock size={size} color={color} />,
         }}
       />
+
       <Tabs.Screen
         name="profile"
         options={{
@@ -31,8 +31,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
         }}
       />
-      
-      
+
     </Tabs>
   );
 }
