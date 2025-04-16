@@ -27,106 +27,7 @@ const userValidation = {
           'any.required': 'Phone number is required',
         }),
 
-      role: Joi.string()
-        .valid('customer', 'rider', 'admin')
-        .required()
-        .messages({
-          'any.required': 'Role is required',
-          'any.only': 'Role must be customer, rider or admin',
-        }),
-
-      // Rider-specific fields (conditionally required)
-      licenseNumber: Joi.when('role', {
-        is: 'rider',
-        then: Joi.string().required().messages({
-          'any.required': 'License number is required for riders',
-        }),
-        otherwise: Joi.optional(),
-      }),
-
-      licensePhoto: Joi.when('role', {
-        is: 'rider',
-        then: Joi.string().required().messages({
-          'any.required': 'License photo is required for riders',
-        }),
-        otherwise: Joi.optional(),
-      }),
-
-      citizenshipNumber: Joi.when('role', {
-        is: 'rider',
-        then: Joi.string().required().messages({
-          'any.required': 'Citizenship number is required for riders',
-        }),
-        otherwise: Joi.optional(),
-      }),
-
-      citizenshipPhoto: Joi.when('role', {
-        is: 'rider',
-        then: Joi.string().required().messages({
-          'any.required': 'Citizenship photo is required for riders',
-        }),
-        otherwise: Joi.optional(),
-      }),
-
-      vehicleType: Joi.when('role', {
-        is: 'rider',
-        then: Joi.string()
-          .valid('bike', 'car', 'scooter', 'others')
-          .required()
-          .messages({
-            'any.required': 'Vehicle type is required for riders',
-            'any.only':
-              'Vehicle type must be one of bike, car, scooter, others',
-          }),
-        otherwise: Joi.optional(),
-      }),
-
-      vehicleName: Joi.when('role', {
-        is: 'rider',
-        then: Joi.string().required().messages({
-          'any.required': 'Vehicle name is required for riders',
-        }),
-        otherwise: Joi.optional(),
-      }),
-
-      vehicleModel: Joi.when('role', {
-        is: 'rider',
-        then: Joi.string().required().messages({
-          'any.required': 'Vehicle model is required for riders',
-        }),
-        otherwise: Joi.optional(),
-      }),
-
-      vehiclePhoto: Joi.when('role', {
-        is: 'rider',
-        then: Joi.string().required().messages({
-          'any.required': 'Vehicle photo is required for riders',
-        }),
-        otherwise: Joi.optional(),
-      }),
-
-      vehicleNumberPlate: Joi.when('role', {
-        is: 'rider',
-        then: Joi.string().required().messages({
-          'any.required': 'Vehicle number plate is required for riders',
-        }),
-        otherwise: Joi.optional(),
-      }),
-
-      vehicleNumberPlatePhoto: Joi.when('role', {
-        is: 'rider',
-        then: Joi.string().required().messages({
-          'any.required': 'Vehicle number plate photo is required for riders',
-        }),
-        otherwise: Joi.optional(),
-      }),
-      vehicleBlueBookPhoto: Joi.when('role', {
-        is: 'rider',
-        then: Joi.string().required().messages({
-          'any.required': 'Vehicle blue book photo is required for riders',
-        }),
-        otherwise: Joi.optional(),
-      }),
+     
     }),
   },
   login: {
@@ -141,6 +42,7 @@ const userValidation = {
       }),
     }),
   },
+
   otp: {
     body: Joi.object({
       email: Joi.string().email().required().messages({
@@ -153,6 +55,69 @@ const userValidation = {
       }),
     }),
   },
+
+  registerRider: {
+    body: Joi.object({
+      licenseNumber: Joi.string().required().messages({
+        'any.required': 'License number is required',
+      }),
+
+      licensePhoto: Joi.string().required().messages({
+        'any.required': 'License photo is required',
+      }),
+
+      citizenshipNumber: Joi.string().required().messages({
+        'any.required': 'Citizenship number is required',
+      }),
+
+      citizenshipPhoto: Joi.string().required().messages({
+        'any.required': 'Citizenship photo is required',
+      }),
+
+      vehicleType: Joi.string()
+        .valid('bike', 'car', 'scooter', 'others')
+        .required()
+        .messages({
+          'any.required': 'Vehicle type is required',
+          'any.only': 'Vehicle type must be one of bike, car, scooter, others',
+        }),
+
+      vehicleName: Joi.string().required().messages({
+        'any.required': 'Vehicle name is required',
+      }),
+
+      vehicleModel: Joi.string().required().messages({
+        'any.required': 'Vehicle model is required',
+      }),
+
+      vehiclePhoto: Joi.string().required().messages({
+        'any.required': 'Vehicle photo is required',
+      }),
+
+      vehicleNumberPlate: Joi.string().required().messages({
+        'any.required': 'Vehicle number plate is required',
+      }),
+
+      vehicleNumberPlatePhoto: Joi.string().required().messages({
+        'any.required': 'Vehicle number plate photo is required',
+      }),
+
+      vehicleBlueBookPhoto: Joi.string().required().messages({
+        'any.required': 'Vehicle blue book photo is required',
+      }),
+    }),
+  },
+
+  forgotPassword: {
+    body: Joi.object({
+      email: Joi.string().email().required().messages({
+        'any.required': 'Email is required',
+        'string.email': 'Invalid email format',
+      }),
+     
+    }),
+  },
+  
 
 };
 
