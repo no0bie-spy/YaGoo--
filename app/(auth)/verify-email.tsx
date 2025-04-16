@@ -9,24 +9,34 @@ import AppButton from '@/components/Button';
 export default function VerifyEmail() {
   const { email } = useLocalSearchParams();
   const [otp, setOtp] = useState('');
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState<string[]>([]);
 
   const handleVerify = async () => {
     try {
-      const response = await axios.post('http://192.168.1.255:8002/verify-email', {
+      const response = await axios.post('http://192.168.1.149:8002/verifyOTP', {
         email,
         otp,
       });
 
-      if (response.data.success) {
-        Alert.alert('Success', 'Email verified successfully!');
-        router.replace('/login');
+      const data = await response.data;
+      console.log(data);
+      router.replace({
+        pathname: '/login',
+        params: { message: 'Registration successful!' }
+      });
+    } catch (error: any) {
+      console.log("Full error:", error);
+
+      if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
+        const errorMessages = error.response.data.details.map((err: any) => err.message);
+        setErrors(errorMessages);
+      } else if (error.response?.data?.message) {
+        setErrors([error.response.data.message]); // fallback if message is provided
       } else {
-        setError('Invalid OTP or verification failed.');
+        setErrors(["Something went wrong."]);
       }
-    } catch (err: any) {
-      setError(err?.response?.data?.message || 'Verification failed. Try again.');
     }
+
   };
 
   return (
@@ -34,7 +44,9 @@ export default function VerifyEmail() {
       <Text style={styles.title}>Verify Your Email</Text>
       <Text style={styles.subtitle}>We’ve sent an OTP to: {email}</Text>
 
-      {error !== '' && <Text style={styles.error}>{error}</Text>}
+      {errors.length > 0 && errors.map((err, i) => (
+        <Text key={i} style={styles.error}>{err}</Text>
+      ))}
 
 
       <Input

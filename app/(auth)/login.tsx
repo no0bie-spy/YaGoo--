@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { Lock, Mail } from 'lucide-react-native';
-import * as SecureStore from 'expo-secure-store';
 import { useLocalSearchParams } from 'expo-router';
 import axios from 'axios';
 import Input from '@/components/Input';
@@ -22,7 +21,7 @@ export default function Login() {
       const response = await axios.post('http://192.168.1.149:8002/login', userData);
 
       const data = await response.data;
-        console.log(data)
+      console.log(data)
 
       router.replace('/(tabs)');
     } catch (error: any) {
@@ -82,7 +81,7 @@ export default function Login() {
         style={{ backgroundColor: 'transparent' }}
         textStyle={{ color: '#2196F3' }}
       />
-     
+
     </View>
   );
 }

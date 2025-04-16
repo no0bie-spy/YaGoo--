@@ -181,6 +181,8 @@ const verifyOTP = async ( req: Request, res: Response , next : NextFunction) =>{
       });
     }
 
+
+
     const otpValid = await bcrypt.compare(otp,otpDoc.otp);
     if(!otpValid){
       return res.status(400).json({
