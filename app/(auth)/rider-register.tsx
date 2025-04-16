@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { Text, StyleSheet, ScrollView, ViewStyle, StyleProp } from 'react-native';
 import { router } from 'expo-router';
 import { BadgeCheck, Bike } from 'lucide-react-native';
 import axios from 'axios';
@@ -36,7 +36,6 @@ export default function RiderRegistration() {
       const data = await response.data;
       console.log(data);
 
-      // After successful registration, navigate to verify email page
       router.replace({
         pathname: '/verify-email',
         params: { email: email, message: `Opt sent to ${email}` }
@@ -49,7 +48,7 @@ export default function RiderRegistration() {
         const errorMessages = error.response.data.details.map((err: any) => err.message);
         setErrors(errorMessages);
       } else if (error.response?.data?.message) {
-        setErrors([error.response.data.message]); // fallback if message is provided
+        setErrors([error.response.data.message]);
       } else {
         setErrors(["Something went wrong."]);
       }
@@ -58,17 +57,19 @@ export default function RiderRegistration() {
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer} style={styles.container}>
-
       <Text style={styles.title}>Register as a Rider</Text>
 
-      {/* Show errors if any */}
       {errors.length > 0 && errors.map((err, i) => (
         <Text key={i} style={styles.error}>{err}</Text>
       ))}
 
-      {/* Rider-specific Inputs */}
       <Input icon={<BadgeCheck size={20} />} placeholder="License Number" value={licenseNumber} setValue={setLicenseNumber} />
-      <CustomImagePicker label="License Photo" selectedImageUri={licensePhoto} onImageSelect={setLicensePhoto} />
+      <CustomImagePicker
+        label="License Photo"
+        selectedImageUri={licensePhoto}
+        onImageSelect={setLicensePhoto}
+        containerStyle={styles.fullWidth}
+      />
 
       <RNPickerSelect
         onValueChange={(value) => setVehicleType(value)}
@@ -80,40 +81,27 @@ export default function RiderRegistration() {
           { label: 'Other', value: 'other' },
         ]}
         style={{
-          inputIOS: {
-            paddingVertical: 12,
-            paddingHorizontal: 10,
-            borderWidth: 1,
-            borderColor: '#ddd',
-            borderRadius: 8,
-            color: 'black',
-            paddingRight: 30,
-            marginBottom: 15,
-          },
-          inputAndroid: {
-            paddingVertical: 12,
-            paddingHorizontal: 10,
-            borderWidth: 1,
-            borderColor: '#ddd',
-            borderRadius: 8,
-            color: 'black',
-            paddingRight: 30,
-            marginBottom: 15,
-          },
+          inputIOS: styles.picker,
+          inputAndroid: styles.picker,
         }}
         Icon={() => <Bike size={20} color="#666" style={{ marginRight: 10 }} />}
       />
       <Input icon={<Bike size={20} />} placeholder="Vehicle Name" value={vehicleName} setValue={setVehicleName} />
       <Input icon={<Bike size={20} />} placeholder="Vehicle Model" value={vehicleModel} setValue={setVehicleModel} />
-      <CustomImagePicker label="Vehicle Photo" selectedImageUri={vehiclePhoto} onImageSelect={setVehiclePhoto} />
+      <CustomImagePicker
+        label="Vehicle Photo"
+        selectedImageUri={vehiclePhoto}
+        onImageSelect={setVehiclePhoto}
+        containerStyle={styles.fullWidth}
+      />
       <Input icon={<Bike size={20} />} placeholder="Vehicle Number Plate" value={vehicleNumberPlate} setValue={setVehicleNumberPlate} />
+      <Input icon={<BadgeCheck size={20} />} placeholder="Email" value={email} setValue={setEmail} />
 
-      {/* Register Button */}
-      <AppButton title="Register as Rider" onPress={handleRegister} style={styles.fullWidth} />
+      <AppButton title="Register as Rider" onPress={handleRegister} style={styles.fullWidth} /> 
       <AppButton
         title="Already have an account? Login"
         onPress={() => router.push('/login')}
-        style={{ backgroundColor: 'transparent' }}
+        style={StyleSheet.flatten([styles.fullWidth, { backgroundColor: 'transparent' }])}
         textStyle={{ color: '#2196F3' }}
       />
     </ScrollView>
@@ -123,27 +111,35 @@ export default function RiderRegistration() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingHorizontal: 20,
     backgroundColor: '#fff',
   },
   scrollContainer: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+    paddingVertical: 20,
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 30,
+    fontWeight: '700',
+    marginBottom: 20,
     textAlign: 'center',
-    marginTop: 20,
   },
   error: {
     color: 'red',
-    marginBottom: 15,
+    marginBottom: 5,
     textAlign: 'center',
+  },
+  picker: {
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    color: 'black',
+    paddingRight: 30,
+    marginBottom: 15,
   },
   fullWidth: {
     width: '100%',
+    marginBottom: 15,
   },
 });

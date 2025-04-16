@@ -20,7 +20,8 @@ export default function SwitchRole() {
             const data = await response.data;
 
             router.replace({
-                pathname: '/verify-email'
+                pathname: '/verify-email',
+                params: { email: email}
             });
 
         } catch (error: any) {

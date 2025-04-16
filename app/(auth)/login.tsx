@@ -6,6 +6,7 @@ import { useLocalSearchParams } from 'expo-router';
 import axios from 'axios';
 import Input from '@/components/Input';
 import AppButton from '@/components/Button';
+import { storeSession } from '@/usableFunction/Session';
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,7 +23,7 @@ export default function Login() {
 
       const data = await response.data;
       console.log(data)
-
+      await storeSession('accessToken', data.token);
       router.replace('/(tabs)');
     } catch (error: any) {
       console.log("Full error:", error);
@@ -77,7 +78,7 @@ export default function Login() {
       />
       <AppButton
         title="Forget Password?"
-        onPress={() => router.push('/verify-email')}
+        onPress={() => router.replace('/forgot-password')} // Corrected route name
         style={{ backgroundColor: 'transparent' }}
         textStyle={{ color: '#2196F3' }}
       />

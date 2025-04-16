@@ -6,9 +6,10 @@ interface ImagePickerProps {
   label: string;
   onImageSelect: (uri: string) => void;
   selectedImageUri: string;
+  containerStyle?: object; // Optional containerStyle prop
 }
 
-const CustomImagePicker: React.FC<ImagePickerProps> = ({ label, onImageSelect, selectedImageUri }) => {
+const CustomImagePicker: React.FC<ImagePickerProps> = ({ label, onImageSelect, selectedImageUri, containerStyle }) => {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
 
   // Request permission to access media library
@@ -36,12 +37,12 @@ const CustomImagePicker: React.FC<ImagePickerProps> = ({ label, onImageSelect, s
     });
 
     if (!result.canceled && result.assets && result.assets[0].uri) {
-      onImageSelect(result.assets[0].uri);  // Corrected the usage of assets and uri
+      onImageSelect(result.assets[0].uri);
     }
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, containerStyle]}>
       <Text style={styles.label}>{label}</Text>
       {selectedImageUri ? (
         <Image source={{ uri: selectedImageUri }} style={styles.image} />
