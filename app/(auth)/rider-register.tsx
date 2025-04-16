@@ -10,7 +10,7 @@ import CustomImagePicker from '@/components/ImageInput'; // Assuming CustomImage
 
 type UserRole = 'customer' | 'rider';
 
-export default function Register() {
+export default function riderRegister() {
   const [role, setRole] = useState<UserRole>('customer');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

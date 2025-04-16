@@ -1,10 +1,13 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Platform } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import axios from 'axios';
 import Input from '@/components/Input';
 import { Mail, Phone } from 'lucide-react-native';
 import AppButton from '@/components/Button';
+import AsyncStorage from '@react-native-async-storage/async-storage'; 
+import * as SecureStore from 'expo-secure-store';
+import { storeSession } from '@/usableFunction/Session';
 
 export default function VerifyEmail() {
   const { email } = useLocalSearchParams();
@@ -20,8 +23,10 @@ export default function VerifyEmail() {
 
       const data = await response.data;
       console.log(data);
+     await storeSession('accessToken', data.token);
+
       router.replace({
-        pathname: '/login',
+        pathname: '/(tabs)',
         params: { message: 'Registration successful!' }
       });
     } catch (error: any) {
