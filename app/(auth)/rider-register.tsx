@@ -6,7 +6,7 @@ import axios from 'axios';
 import RNPickerSelect from 'react-native-picker-select';
 import Input from '@/components/Input';
 import AppButton from '@/components/Button';
-import CustomImagePicker from '@/components/ImageInput'; // Assuming CustomImagePicker is in this path
+import CustomImagePicker from '@/components/ImageInput';
 
 type UserRole = 'customer' | 'rider';
 
@@ -56,7 +56,7 @@ export default function Register() {
       }
       console.log('Sending registration data:', userData);
 
-      const response = await axios.post('http://192.168.1.65:8002/register', userData);
+      const response = await axios.post('http://192.168.1.149:8002/register', userData);
       const data = await response.data;
       console.log(data);
 
