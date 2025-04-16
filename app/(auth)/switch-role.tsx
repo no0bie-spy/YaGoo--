@@ -1,17 +1,17 @@
 import AppButton from '@/components/Button';
 import axios from 'axios';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
 export default function SwitchRole() {
-
+    const {email}=useLocalSearchParams();
     const [errors, setErrors] = React.useState<string[]>([]);
 
     const handleCustomer = async () => {
         const userData = {
             role: 'customer',
-
+            email
         };
 
         try {
