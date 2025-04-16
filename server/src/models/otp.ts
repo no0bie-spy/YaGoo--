@@ -3,14 +3,14 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IOtp extends Document {
   email: string;
-  otp: string;
+  OTP: string;
   otpExpiresAt: Date;
   createdAt: Date;
 }
 
 const otpSchema = new Schema<IOtp>({
   email: { type: String, unique: true, required: true },
-  otp: { type: String, required: true },
+  OTP: { type: String, required: true },
   otpExpiresAt: {
     type: Date,
     required: true,
