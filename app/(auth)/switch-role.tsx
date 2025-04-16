@@ -16,7 +16,7 @@ export default function SwitchRole() {
 
         try {
 
-            const response = await axios.post('http://192.168.1.156:8002/sendOTP', userData);
+            const response = await axios.post('http://192.168.1.65:8002/sendOTP', userData);
             const data = await response.data;
 
             router.replace({

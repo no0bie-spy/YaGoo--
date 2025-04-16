@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Text, StyleSheet, ScrollView, ViewStyle, StyleProp } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { BadgeCheck, Bike } from 'lucide-react-native';
 import axios from 'axios';
 import Input from '@/components/Input';
@@ -21,6 +21,7 @@ export default function RiderRegistration() {
 
   const handleRegister = async () => {
     try {
+      const {email}=useLocalSearchParams();
       const riderData: any = {
         licenseNumber,
         licensePhoto,
@@ -32,7 +33,7 @@ export default function RiderRegistration() {
         email,
       };
 
-      const response = await axios.post('http://192.168.1.149:8002/register/rider', riderData);
+      const response = await axios.post('http://192.168.1.65:8002//registerRider', riderData);
       const data = await response.data;
       console.log(data);
 
@@ -95,7 +96,7 @@ export default function RiderRegistration() {
         containerStyle={styles.fullWidth}
       />
       <Input icon={<Bike size={20} />} placeholder="Vehicle Number Plate" value={vehicleNumberPlate} setValue={setVehicleNumberPlate} />
-      <Input icon={<BadgeCheck size={20} />} placeholder="Email" value={email} setValue={setEmail} />
+      
 
       <AppButton title="Register as Rider" onPress={handleRegister} style={styles.fullWidth} /> 
       <AppButton
@@ -112,34 +113,37 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 20,
-    backgroundColor: '#fff',
+    backgroundColor: '#f9f9f9',
   },
   scrollContainer: {
-    paddingVertical: 20,
+    paddingVertical: 30,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '700',
-    marginBottom: 20,
+    fontSize: 26,
+    fontWeight: 'bold',
+    marginBottom: 25,
     textAlign: 'center',
+    color: '#333',
   },
   error: {
-    color: 'red',
-    marginBottom: 5,
+    color: '#d9534f',
+    marginBottom: 8,
     textAlign: 'center',
+    fontSize: 14,
   },
   picker: {
-    paddingVertical: 12,
-    paddingHorizontal: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 15,
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    color: 'black',
-    paddingRight: 30,
-    marginBottom: 15,
+    borderColor: '#ccc',
+    borderRadius: 10,
+    color: '#333',
+    backgroundColor: '#fff',
+    marginBottom: 20,
+    fontSize: 16,
   },
   fullWidth: {
     width: '100%',
-    marginBottom: 15,
+    marginBottom: 20,
   },
 });

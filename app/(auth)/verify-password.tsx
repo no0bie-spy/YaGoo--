@@ -5,7 +5,7 @@ import axios from 'axios';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Phone, Text as LucideText } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function VerifyPassword() {
     const { email } = useLocalSearchParams();
@@ -33,7 +33,7 @@ export default function VerifyPassword() {
                 retypePassword,
             };
 
-            const response = await axios.post('http://192.168.1.149:8002/changePassword', userData);
+            const response = await axios.post('http://192.168.1.65:8002/changePassword', userData);
             const data = response.data;
             console.log(data);
 
@@ -54,7 +54,7 @@ export default function VerifyPassword() {
     };
 
     return (
-        <View style={styles.container}>
+        <ScrollView contentContainerStyle={styles.scrollContainer} style={styles.container}>
             <Text style={styles.title}>Verify Password</Text>
             <Text style={styles.subtitle}>We’ve sent an OTP to: {email}</Text>
 
@@ -84,7 +84,7 @@ export default function VerifyPassword() {
                 secureTextEntry
             />
             <AppButton title="Verify" onPress={handleVerify} />
-        </View>
+            </ScrollView>
     );
 }
 
@@ -95,6 +95,12 @@ const styles = StyleSheet.create({
         marginTop: 100,
         backgroundColor: '#f9f9f9',
     },
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
