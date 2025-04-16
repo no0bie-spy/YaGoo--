@@ -21,7 +21,7 @@ export default function verifyPassword() {
                 password,
                 retypepassword
             }
-            const response=await axios.post('http://192.168.1.149:8002/verify-password', userData)
+            const response=await axios.post('http://192.168.1.149:8002/changePassword', userData)
             const data = await response.data;
             console.log(data)
             await storeSession('accessToken', data.token);
