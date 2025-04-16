@@ -57,29 +57,14 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
       isEmailVerified: false,
     });
 
-      // Call the function to send the recovery email
-      //  const { token, info} = await sendRecoveryEmail(email);
-  
-      // //hash the otp to save into the database
-      // const hashedToken = await bcrypt.hash(token,10);
 
-      // const expiryOTP = new Date(Date.now()+ 10*60*1000); // valid for 10 minutes
-
-      // const  otpSaved = new Otp({
-      //   email: email,
-      //   otp: hashedToken,
-      //   otpExpiresAt: expiryOTP,
-      //  })
-
-       
-  //save otp for the respective user
-  // await otpSaved.save();
 
     // res.status(201).json({
     //   message: 'Registered successfully',
     //   user,info
     // });
 
+    next(email)
    return  res.status(201).json({
       details: [
         {
@@ -163,7 +148,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-const verifyOTP = async ( req: Request, res: Response , next : NextFunction) =>{
+const verifyEmail = async ( req: Request, res: Response , next : NextFunction) =>{
   try{
     const { email, otp} = req.body;
 
@@ -190,11 +175,25 @@ const verifyOTP = async ( req: Request, res: Response , next : NextFunction) =>{
    
     user.isEmailVerified = true;
     await user.save();
-    
     await Otp.deleteOne({ email });
+
+    const token = jwt.sign(
+      {
+        userId: user._id,
+        email: user.email,
+        role: user.role,
+      },
+      env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    
+   
     return res.status(200).json({
-      message: 'Otp matched Successfully',
-      user
+      message: 'OTP matched Successfully',
+      user,
+      token,
+      
     });
 
   }
@@ -328,7 +327,7 @@ const sendOTP = async ( req: Request, res: Response, next: NextFunction) =>{
 const authController = {
   register,
   login,
-  verifyOTP,
+  verifyEmail,
   registerRider,
   sendOTP
 };
