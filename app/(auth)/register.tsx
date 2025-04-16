@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import { router } from 'expo-router';
+import { router, usePathname } from 'expo-router';
 import { Lock, Mail, User, Phone, BadgeCheck, Bike } from 'lucide-react-native';
 import axios from 'axios';
 import Input from '@/components/Input';
@@ -25,17 +25,20 @@ export default function Register() {
         password,
         fullname,
         phone,
-        role: 'Customer',  // Note: Ensure role is 'Customer' here if that's intended
+        role: 'Customer',
       };
-  
-      const response = await axios.post('http://192.168.1.149:8002/register', userData);
+
+      const response = await axios.post('http://192.168.1.156:8002/register', userData);
       const data = await response.data;
       console.log(data);
-  
-      router.push('/switch-role');
+
+      router.replace({
+        pathname: "/switch-role",
+        params: { email: email}
+      });
     } catch (error: any) {
       console.log("Full error:", error);
-  
+
       if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
         const errorMessages = error.response.data.details.map((err: any) => err.message);
         setErrors(errorMessages);
@@ -46,7 +49,7 @@ export default function Register() {
       }
     }
   };
-  
+
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer} style={styles.container}>
@@ -64,7 +67,7 @@ export default function Register() {
       <Input icon={<User size={20} />} placeholder="Full Name" value={fullname} setValue={setFullname} />
       <Input icon={<Phone size={20} />} placeholder="Phone" value={phone} setValue={setPhone} keyboardType="phone-pad" />
 
-      
+
 
       <AppButton title="Register" onPress={handleRegister} style={styles.fullWidth} />
       <AppButton
@@ -124,5 +127,5 @@ const styles = StyleSheet.create({
   fullWidth: {
     width: '100%',
   },
-  
+
 });
