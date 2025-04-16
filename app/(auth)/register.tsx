@@ -7,6 +7,7 @@ import RNPickerSelect from 'react-native-picker-select';
 import Input from '@/components/Input';
 import AppButton from '@/components/Button';
 
+
 type UserRole = 'customer' | 'rider';
 
 export default function Register() {
