@@ -80,6 +80,7 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
     //   user,info
     // });
 
+    next(email)
    return  res.status(201).json({
       details: [
         {
@@ -163,7 +164,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-const verifyOTP = async ( req: Request, res: Response , next : NextFunction) =>{
+const verifyEmail = async ( req: Request, res: Response , next : NextFunction) =>{
   try{
     const { email, otp} = req.body;
 
@@ -190,11 +191,24 @@ const verifyOTP = async ( req: Request, res: Response , next : NextFunction) =>{
    
     user.isEmailVerified = true;
     await user.save();
+
+    const token = jwt.sign(
+      {
+        userId: user._id,
+        email: user.email,
+        role: user.role,
+      },
+      env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
     
     await Otp.deleteOne({ email });
     return res.status(200).json({
       message: 'Otp matched Successfully',
-      user
+      user,
+      token,
+      
     });
 
   }
@@ -328,7 +342,7 @@ const sendOTP = async ( req: Request, res: Response, next: NextFunction) =>{
 const authController = {
   register,
   login,
-  verifyOTP,
+  verifyEmail,
   registerRider,
   sendOTP
 };

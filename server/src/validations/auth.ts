@@ -27,6 +27,11 @@ const userValidation = {
           'any.required': 'Phone number is required',
         }),
 
+        role: Joi.string()
+        .valid('customer', 'rider')
+        .optional() 
+        
+
      
     }),
   },
