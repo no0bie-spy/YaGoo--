@@ -181,8 +181,6 @@ const verifyOTP = async ( req: Request, res: Response , next : NextFunction) =>{
       });
     }
 
-
-
     const otpValid = await bcrypt.compare(otp,otpDoc.otp);
     if(!otpValid){
       return res.status(400).json({
@@ -190,11 +188,9 @@ const verifyOTP = async ( req: Request, res: Response , next : NextFunction) =>{
       });
     }
    
-
     user.isEmailVerified = true;
     await user.save();
     
-
     await Otp.deleteOne({ email });
     return res.status(200).json({
       message: 'Otp matched Successfully',
@@ -274,7 +270,7 @@ const registerRider = async ( req: Request, res: Response, next: NextFunction) =
 };
 
 
-const forgotPassword = async ( req: Request, res: Response, next: NextFunction) =>{
+const sendOTP = async ( req: Request, res: Response, next: NextFunction) =>{
 
   try {
     const { email } = req.body;
@@ -307,9 +303,6 @@ const forgotPassword = async ( req: Request, res: Response, next: NextFunction) 
         { upsert: true } // insert new if not exists
       );
       
-
-    
-
     return  res.status(200).json({
         details: [
           {
@@ -337,7 +330,7 @@ const authController = {
   login,
   verifyOTP,
   registerRider,
-  forgotPassword
+  sendOTP
 };
 
 export default authController;
