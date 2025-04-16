@@ -13,14 +13,14 @@ export default function VerifyEmail() {
 
   const handleVerify = async () => {
     try {
-      const response = await axios.post('http://192.168.1.65:8002/verifyOTP', {
+      const response = await axios.post('http://192.168.1.149:8002/verifyOTP', {
         email,
         otp,
       });
 
-     const data = await response.data;
+      const data = await response.data;
       console.log(data);
-        router.replace({
+      router.replace({
         pathname: '/login',
         params: { message: 'Registration successful!' }
       });
@@ -36,6 +36,7 @@ export default function VerifyEmail() {
         setErrors(["Something went wrong."]);
       }
     }
+
   };
 
   return (
