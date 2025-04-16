@@ -8,21 +8,7 @@ import AppButton from '@/components/Button';
 import CustomImagePicker from '@/components/ImageInput';
 import RNPickerSelect from 'react-native-picker-select';
 
-<<<<<<< HEAD
-type UserRole = 'customer' | 'rider';
-
-export default function riderRegister() {
-  const [role, setRole] = useState<UserRole>('customer');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [fullname, setFullname] = useState('');
-  const [phone, setPhone] = useState('');
-  const [errors, setErrors] = useState<string[]>([]);
-
-  // Rider-specific fields
-=======
 export default function RiderRegistration() {
->>>>>>> feece0324737657895bd2f7f3c7e6b47c85b1ab4
   const [licenseNumber, setLicenseNumber] = useState('');
   const [licensePhoto, setLicensePhoto] = useState('');
   const [vehicleType, setVehicleType] = useState('');
