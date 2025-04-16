@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { Lock, Mail, User, Phone, BadgeCheck, Bike } from 'lucide-react-native';
 import axios from 'axios';
 import RNPickerSelect from 'react-native-picker-select';
 import Input from '@/components/Input';
 import AppButton from '@/components/Button';
-
+import CustomImagePicker from '@/components/ImageInput'; // Assuming CustomImagePicker is in this path
 
 type UserRole = 'customer' | 'rider';
 
@@ -29,7 +29,7 @@ export default function Register() {
   const [vehiclePhoto, setVehiclePhoto] = useState('');
   const [vehicleNumberPlate, setVehicleNumberPlate] = useState('');
   const [vehicleNumberPlatePhoto, setVehicleNumberPlatePhoto] = useState('');
-  const [vehicleBlueBookPhoto, setVehicleBlueBookPhoto] = useState('')
+  const [vehicleBlueBookPhoto, setVehicleBlueBookPhoto] = useState('');
 
   const handleRegister = async () => {
     try {
@@ -43,32 +43,27 @@ export default function Register() {
 
       if (role === 'rider') {
         userData.licenseNumber = licenseNumber;
-        userData.licensePhoto = licensePhoto;
+        userData.licensePhoto = licensePhoto || '';  // Ensuring it's not null
         userData.citizenshipNumber = citizenshipNumber;
-        userData.citizenshipPhoto = citizenshipPhoto;
+        userData.citizenshipPhoto = citizenshipPhoto || '';  // Ensuring it's not null
         userData.vehicleType = vehicleType;
         userData.vehicleName = vehicleName;
         userData.vehicleModel = vehicleModel;
-        userData.vehiclePhoto = vehiclePhoto;
+        userData.vehiclePhoto = vehiclePhoto || '';  // Ensuring it's not null
         userData.vehicleNumberPlate = vehicleNumberPlate;
-        userData.vehicleNumberPlatePhoto = vehicleNumberPlatePhoto;
-        userData.vehicleBlueBookPhoto = vehicleBlueBookPhoto; // Add this field
+        userData.vehicleNumberPlatePhoto = vehicleNumberPlatePhoto || '';  // Ensuring it's not null
+        userData.vehicleBlueBookPhoto = vehicleBlueBookPhoto || '';  // Ensuring it's not null
       }
       console.log('Sending registration data:', userData);
 
       const response = await axios.post('http://192.168.1.65:8002/register', userData);
       const data = await response.data;
-      console.log(data)
+      console.log(data);
 
-      
-      // router.replace({
-      //   pathname: '/login',
-      //   params: { message: 'Registration successful!' }
-      // });
       router.replace({
         pathname: '/verify-email',
-        params: { email:email, message: `Opt sent to ${email}` }
-      })
+        params: { email: email, message: `Opt sent to ${email}` }
+      });
 
     } catch (error: any) {
       console.log("Full error:", error);
@@ -82,7 +77,6 @@ export default function Register() {
         setErrors(["Something went wrong."]);
       }
     }
-
   };
 
   return (
@@ -117,9 +111,11 @@ export default function Register() {
       {role === 'rider' && (
         <>
           <Input icon={<BadgeCheck size={20} />} placeholder="License Number" value={licenseNumber} setValue={setLicenseNumber} />
-          <Input icon={<BadgeCheck size={20} />} placeholder="License Photo (URL or file ref)" value={licensePhoto} setValue={setLicensePhoto} />
+          <CustomImagePicker label="License Photo" selectedImageUri={licensePhoto} onImageSelect={setLicensePhoto} />
+
           <Input icon={<BadgeCheck size={20} />} placeholder="Citizenship Number" value={citizenshipNumber} setValue={setCitizenshipNumber} />
-          <Input icon={<BadgeCheck size={20} />} placeholder="Citizenship Photo (URL)" value={citizenshipPhoto} setValue={setCitizenshipPhoto} />
+          <CustomImagePicker label="Citizenship Photo" selectedImageUri={citizenshipPhoto} onImageSelect={setCitizenshipPhoto} />
+
           <RNPickerSelect
             onValueChange={(value) => setVehicleType(value)}
             placeholder={{ label: 'Select Vehicle Type', value: '' }}
@@ -155,14 +151,12 @@ export default function Register() {
           />
           <Input icon={<Bike size={20} />} placeholder="Vehicle Name" value={vehicleName} setValue={setVehicleName} />
           <Input icon={<Bike size={20} />} placeholder="Vehicle Model" value={vehicleModel} setValue={setVehicleModel} />
-          <Input icon={<Bike size={20} />} placeholder="Vehicle Photo (URL)" value={vehiclePhoto} setValue={setVehiclePhoto} />
+          <CustomImagePicker label="Vehicle Photo" selectedImageUri={vehiclePhoto} onImageSelect={setVehiclePhoto} />
           <Input icon={<Bike size={20} />} placeholder="Number Plate" value={vehicleNumberPlate} setValue={setVehicleNumberPlate} />
-          <Input icon={<Bike size={20} />} placeholder="Number Plate Photo (URL)" value={vehicleNumberPlatePhoto} setValue={setVehicleNumberPlatePhoto} />
-          <Input icon={<Bike size={20} />} placeholder="BlueBook Photo(URL)" value={vehicleBlueBookPhoto} setValue={setVehicleBlueBookPhoto} />
+          <CustomImagePicker label="Number Plate Photo" selectedImageUri={vehicleNumberPlatePhoto} onImageSelect={setVehicleNumberPlatePhoto} />
+          <CustomImagePicker label="BlueBook Photo" selectedImageUri={vehicleBlueBookPhoto} onImageSelect={setVehicleBlueBookPhoto} />
         </>
       )}
-
-
 
       <AppButton title="Register" onPress={handleRegister} />
       <AppButton
@@ -171,12 +165,9 @@ export default function Register() {
         style={{ backgroundColor: 'transparent' }}
         textStyle={{ color: '#2196F3' }}
       />
-
     </ScrollView>
   );
 }
-
-
 
 const styles = StyleSheet.create({
   container: {
@@ -212,60 +203,9 @@ const styles = StyleSheet.create({
   roleTextActive: {
     color: '#fff',
   },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    marginBottom: 15,
-    paddingHorizontal: 10,
-  },
-  input: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    padding: 15,
-    borderRadius: 8,
-    marginTop: 10,
-  },
-  buttonText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontWeight: 'bold',
-  },
   error: {
     color: 'red',
     marginBottom: 15,
     textAlign: 'center',
-  },
-  link: {
-    color: '#007AFF',
-    textAlign: 'center',
-    marginTop: 15,
-    marginBottom: 30,
-  },
-  inputIOS: {
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    color: 'black',
-    paddingRight: 30,
-    marginBottom: 15,
-  },
-  inputAndroid: {
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    color: 'black',
-    paddingRight: 30,
-    marginBottom: 15,
   },
 });
