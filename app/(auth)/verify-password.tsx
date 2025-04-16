@@ -8,6 +8,7 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 export default function VerifyPassword() {
+export default function VerifyPassword() {
     const { email } = useLocalSearchParams();
     const [errors, setErrors] = useState<string[]>([]);
     const [OTP, setOtp] = useState('');
@@ -47,10 +48,13 @@ export default function VerifyPassword() {
                 setErrors(errorMessages);
             } else if (error.response?.data?.message) {
                 setErrors([error.response.data.message]);
+                setErrors([error.response.data.message]);
             } else {
-                setErrors(["Something went wrong."]);
+                setErrors(['Something went wrong.']);
             }
         }
+    };
+
     };
 
     return (
@@ -132,3 +136,4 @@ const styles = StyleSheet.create({
         fontSize: 14,
     },
 });
+
