@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { Lock, Mail, User, Phone, BadgeCheck, Bike } from 'lucide-react-native';
-import axios from 'axios';
+import axios from 'axios'; 
 import RNPickerSelect from 'react-native-picker-select';
 import Input from '@/components/Input';
 import AppButton from '@/components/Button';
@@ -55,7 +55,7 @@ export default function Register() {
       }
       console.log('Sending registration data:', userData);
 
-      const response = await axios.post('http://192.168.1.149:8002/register', userData);
+      const response = await axios.post('http://192.168.1.157:8002/register', userData);
       const data = await response.data;
 
 
@@ -146,7 +146,7 @@ export default function Register() {
                 marginBottom: 15,
               },
             }}
-            Icon={() => <Bike size={20} color="#666" style={{ marginRight: 10 }} />}
+            Icon={() => <Phone size={20} color="#666" style={{ marginRight: 10 }} />}
           />
           <Input icon={<Bike size={20} />} placeholder="Vehicle Name" value={vehicleName} setValue={setVehicleName} />
           <Input icon={<Bike size={20} />} placeholder="Vehicle Model" value={vehicleModel} setValue={setVehicleModel} />
