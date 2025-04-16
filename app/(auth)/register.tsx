@@ -3,10 +3,9 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 
 import { router } from 'expo-router';
 import { Lock, Mail, User, Phone, BadgeCheck, Bike } from 'lucide-react-native';
 import axios from 'axios';
-import RNPickerSelect from 'react-native-picker-select';
 import Input from '@/components/Input';
 import AppButton from '@/components/Button';
-import CustomImagePicker from '@/components/ImageInput';
+
 
 type UserRole = 'customer' | 'rider';
 
@@ -33,9 +32,7 @@ export default function Register() {
       const data = await response.data;
       console.log(data);
   
-      // After successful registration, navigate to switch-role.tsx
-      router.push('/switch-role');  // Change the path to switch-role
-  
+      router.push('/switch-role');
     } catch (error: any) {
       console.log("Full error:", error);
   
