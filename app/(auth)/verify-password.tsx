@@ -3,11 +3,10 @@ import Input from '@/components/Input';
 import { storeSession } from '@/usableFunction/Session';
 import axios from 'axios';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Phone, Text as LucideText } from 'lucide-react-native'
+import { Phone, Text as LucideText } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-export default function VerifyPassword() {
 export default function VerifyPassword() {
     const { email } = useLocalSearchParams();
     const [errors, setErrors] = useState<string[]>([]);
@@ -17,15 +16,15 @@ export default function VerifyPassword() {
 
     const handleVerify = async () => {
         if (!email || !OTP || !newPassword || !retypePassword) {
-            setErrors(["All fields are required."]);
+            setErrors(['All fields are required.']);
             return;
         }
-    
+
         if (newPassword !== retypePassword) {
-            setErrors(["Passwords do not match."]);
+            setErrors(['Passwords do not match.']);
             return;
         }
-    
+
         try {
             const userData = {
                 email,
@@ -33,28 +32,25 @@ export default function VerifyPassword() {
                 newPassword,
                 retypePassword,
             };
-    
+
             const response = await axios.post('http://192.168.1.149:8002/changePassword', userData);
             const data = response.data;
             console.log(data);
-    
+
             await storeSession('accessToken', String(data.token));
             router.replace('/(tabs)');
         } catch (error: any) {
             console.log("Full error:", error);
-    
+
             if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
                 const errorMessages = error.response.data.details.map((err: any) => err.message);
                 setErrors(errorMessages);
             } else if (error.response?.data?.message) {
                 setErrors([error.response.data.message]);
-                setErrors([error.response.data.message]);
             } else {
                 setErrors(['Something went wrong.']);
             }
         }
-    };
-
     };
 
     return (
@@ -136,4 +132,3 @@ const styles = StyleSheet.create({
         fontSize: 14,
     },
 });
-
