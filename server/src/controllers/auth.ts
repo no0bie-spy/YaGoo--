@@ -296,7 +296,8 @@ const forgotPassword = async ( req: Request, res: Response, next: NextFunction) 
     
       // Call the function to send the recovery email
        const { token, info} = await sendRecoveryEmail(email);
-  
+ console.log(token, info); 
+
       //hash the otp to save into the database
       const hashedToken = await bcrypt.hash(token,10);
 
@@ -306,7 +307,7 @@ const forgotPassword = async ( req: Request, res: Response, next: NextFunction) 
         { email }, // find by email
         {
           $set: {
-            otp: hashedToken,
+            OTP: hashedToken,
             otpExpiresAt: expiryOTP,
           },
         },

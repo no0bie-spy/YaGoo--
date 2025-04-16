@@ -23,7 +23,7 @@ export default function VerifyEmail() {
 
       const data = await response.data;
       console.log(data);
-     await storeSession('accessToken', data.token);
+      await storeSession('accessToken', String(data.token));
 
       router.replace({
         pathname: '/(tabs)',

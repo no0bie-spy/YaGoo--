@@ -27,12 +27,7 @@ const userValidation = {
           'any.required': 'Phone number is required',
         }),
 
-        role: Joi.string()
-        .valid('customer', 'rider')
-        .optional() 
-        
-
-     
+      role: Joi.string().valid('customer', 'rider').optional(),
     }),
   },
   login: {
@@ -119,7 +114,6 @@ const userValidation = {
         'any.required': 'Email is required',
         'string.email': 'Invalid email format',
       }),
-     
     }),
   },
 
@@ -144,20 +138,8 @@ const userValidation = {
         'any.required': 'ReTypePassword is required',
         'string.min': 'ReTypePassword must be at least 6 characters',
       }),
-
-
-      
-
-
-
-
-     
     }),
   },
-
-
-  
-
 };
 
 export default userValidation;
