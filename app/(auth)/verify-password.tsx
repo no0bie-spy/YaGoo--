@@ -16,21 +16,21 @@ import {
 export default function VerifyPassword() {
     const { email } = useLocalSearchParams();
     const [errors, setErrors] = useState<string[]>([]);
-    const [otp, setOtp] = useState('');
-    const [password, setPassword] = useState('');
-    const [retypepassword, setretypePassword] = useState('');
+    const [OTP, setOtp] = useState('');
+    const [newPassword, setPassword] = useState('');
+    const [retypePassword, setretypePassword] = useState('');
 
     const handleVerify = async () => {
-        if (password !== retypepassword) {
+        if (newPassword !== retypePassword) {
             return setErrors(['Passwords do not match.']);
         }
 
         try {
             const userData = {
                 email,
-                otp,
-                password,
-                retypepassword,
+                OTP,
+                newPassword,
+                retypePassword,
             };
 
             const response = await axios.post('http://192.168.1.149:8002/changePassword', userData);
@@ -68,21 +68,21 @@ export default function VerifyPassword() {
                 <Input
                     icon={<Phone size={20} />}
                     placeholder="OTP"
-                    value={otp}
+                    value={OTP}
                     setValue={setOtp}
                     keyboardType="numeric"
                 />
                 <Input
                     icon={<Lock size={20} />}
                     placeholder="New Password"
-                    value={password}
+                    value={newPassword}
                     setValue={setPassword}
                     secureTextEntry
                 />
                 <Input
                     icon={<Lock size={20} />}
                     placeholder="Retype New Password"
-                    value={retypepassword}
+                    value={retypePassword}
                     setValue={setretypePassword}
                     secureTextEntry
                 />
