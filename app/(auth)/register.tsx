@@ -7,10 +7,8 @@ import Input from '@/components/Input';
 import AppButton from '@/components/Button';
 
 
-type UserRole = 'customer' | 'rider';
 
 export default function Register() {
-  const [role, setRole] = useState<UserRole>('customer');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullname, setFullname] = useState('');
@@ -25,7 +23,6 @@ export default function Register() {
         password,
         fullname,
         phone,
-        role: 'Customer',
       };
 
       const response = await axios.post('http://192.168.1.156:8002/register', userData);
