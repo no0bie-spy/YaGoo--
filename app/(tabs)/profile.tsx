@@ -1,11 +1,13 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
+import { clearSession } from '@/usableFunction/Session';
 
 export default function ProfileScreen() {
   const handleLogout = async () => {
-    await SecureStore.deleteItemAsync('token');
-    await SecureStore.deleteItemAsync('userRole');
+    
+    await clearSession('accessToken');
+
     router.replace('/login');
   };
 
