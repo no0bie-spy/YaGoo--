@@ -3,7 +3,7 @@ import env from './Ienv';
 
 const connectToDB = async (): Promise<string> => {
   const mongoDBUrl = env.MONGODB_URL;
-  console.log(mongoDBUrl);
+
   if (!mongoDBUrl) {
     return Promise.reject(
       'MONGODB_URL is not defined in environment variables'
