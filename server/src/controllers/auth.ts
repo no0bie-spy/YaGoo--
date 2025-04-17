@@ -326,32 +326,6 @@ const forgotPassword = async (
     //hash the otp to save into the database
     const hashedToken = await bcrypt.hash(token, 10);
 
-<<<<<<< HEAD
-      await Otp.updateOne(
-        { email }, // find by email
-        {
-          $set: {
-            OTP: hashedToken,
-            otpExpiresAt: expiryOTP,
-          },
-        },
-        { upsert: true } // insert new if not exists
-      );
-
-  
-
-    
-      
-    return  res.status(200).json({
-        details: [
-          {
-            message: 'Otp Sent Successfully',
-            existingUser
-          },
-        ],
-       
-      });
-=======
     const expiryOTP = new Date(Date.now() + 10 * 60 * 1000); // valid for 10 minutes
 
     await Otp.updateOne(
@@ -364,7 +338,6 @@ const forgotPassword = async (
       },
       { upsert: true } // insert new if not exists
     );
->>>>>>> 01efc832b0ad5686d2cc4663ee9c7b0b71563de0
 
     return res.status(200).json({
       details: [
