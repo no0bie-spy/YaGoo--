@@ -144,8 +144,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
     }
   }
 };
-
-const registerRider = async (
+export const registerRider = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -161,14 +160,16 @@ const registerRider = async (
       vehicleNumberPlate
     } = req.body;
 
-    const {
-      licensePhoto,
-      citizenshipPhoto,
-      vehiclePhoto,
-      vehicleNumberPlatePhoto,
-      vehicleBlueBookPhoto
-    } = req.files || req.body;
+    // Access the files from the request (Multer stores them under 'files' field)
+    const { 
+      licensePhoto, 
+      citizenshipPhoto, 
+      vehiclePhoto, 
+      vehicleNumberPlatePhoto, 
+      vehicleBlueBookPhoto 
+    } = req.files;
 
+    // Validate if all fields are present
     if (
       !licenseNumber || !licensePhoto || !citizenshipNumber || !citizenshipPhoto ||
       !vehicleType || !vehicleName || !vehicleModel || !vehiclePhoto ||
@@ -179,7 +180,7 @@ const registerRider = async (
       });
     }
 
-    // Step 1: Find the user
+    //Find the user by email
     const user = await User.findOne({ email });
 
     if (!user) {
@@ -194,6 +195,7 @@ const registerRider = async (
       });
     }
 
+    // Check if the rider's documents have already been submitted
     const existingRiderDocs = await RiderDocuments.findOne({ riderId: user._id });
     if (existingRiderDocs) {
       return res.status(409).json({
@@ -201,6 +203,7 @@ const registerRider = async (
       });
     }
 
+    // Check if the rider's vehicle has been registered
     const existingVehicle = await Vehicle.findOne({ riderId: user._id });
     if (existingVehicle) {
       return res.status(409).json({
@@ -208,25 +211,25 @@ const registerRider = async (
       });
     }
 
-    // Step 2: Save rider documents
+    // Save rider documents (license, citizenship, etc.)
     const riderDocs = new RiderDocuments({
       licenseNumber,
-      licensePhoto,
+      licensePhoto: licensePhoto[0].path,
       citizenshipNumber,
-      citizenshipPhoto,
+      citizenshipPhoto: citizenshipPhoto[0].path,
       riderId: user._id
     });
     await riderDocs.save();
 
-    // Step 3: Save vehicle info
+    // Save vehicle info (vehicle details, photos, etc.)
     const vehicle = new Vehicle({
       vehicleType,
       vehicleName,
       vehicleModel,
-      vehiclePhoto,
+      vehiclePhoto: vehiclePhoto[0].path,
       vehicleNumberPlate,
-      vehicleNumberPlatePhoto,
-      vehicleBlueBookPhoto,
+      vehicleNumberPlatePhoto: vehicleNumberPlatePhoto[0].path,
+      vehicleBlueBookPhoto: vehicleBlueBookPhoto[0].path,
       riderId: user._id
     });
     await vehicle.save();

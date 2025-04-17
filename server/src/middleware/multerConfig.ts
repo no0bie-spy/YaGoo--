@@ -10,9 +10,10 @@ const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
     cb(null, uploadDir);
   },
-  filename: (_req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+  filename: function (req, file, cb) {
+    const extension = file.mimetype.split("/")[1];
+    const newFileName = `${Date.now()}-${file.originalname}`;
+    cb(null, newFileName); 
   },
 });
 
