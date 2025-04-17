@@ -167,7 +167,7 @@ export const registerRider = async (
       vehiclePhoto, 
       vehicleNumberPlatePhoto, 
       vehicleBlueBookPhoto 
-    } = req.files;
+    } = req.files as { [fieldname: string]: Express.Multer.File[] };
 
     // Validate if all fields are present
     if (
