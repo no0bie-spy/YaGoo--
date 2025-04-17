@@ -5,7 +5,8 @@ import IRequest from "./IRequest";
 const getUserfromAuthToken=async(req:IRequest,res:Response,next:NextFunction)=>{
     try{
          const authToken=req.headers['authorization'];
-       
+        //const authToken = req.header('Authorization')?.replace('Bearer ', '');
+        
         
         const decode=jwt.verify(authToken as string,env.JWT_SECRET);
        if(decode){
