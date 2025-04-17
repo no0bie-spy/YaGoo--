@@ -16,6 +16,7 @@ export default function RiderRegistration() {
   const [vehicleModel, setVehicleModel] = useState('');
   const [vehicleNumberPlate, setVehicleNumberPlate] = useState('');
   const [email, setEmail] = useState(params.email as string || '');
+  const [citizenshipNumber, setCitizenshipNumber] = useState('');
 
   // Images
   const [licensePhoto, setLicensePhoto] = useState('');
@@ -36,6 +37,7 @@ export default function RiderRegistration() {
       formData.append('vehicleName', vehicleName);
       formData.append('vehicleModel', vehicleModel);
       formData.append('vehicleNumberPlate', vehicleNumberPlate);
+      formData.append('citizenshipNumber', citizenshipNumber); // Added citizenship number
 
       formData.append('licensePhoto', {
         uri: licensePhoto,
@@ -108,6 +110,14 @@ export default function RiderRegistration() {
 
       <Input icon={<BadgeCheck size={20} />} placeholder="License Number" value={licenseNumber} setValue={setLicenseNumber} />
       
+      {/* Citizenship Number Input */}
+      <Input
+        icon={<BadgeCheck size={20} />}
+        placeholder="Citizenship Number"
+        value={citizenshipNumber}
+        setValue={setCitizenshipNumber}
+      />
+
       <CustomImagePicker
         label="License Photo"
         selectedImageUri={licensePhoto}
@@ -137,6 +147,8 @@ export default function RiderRegistration() {
       />
       <Input icon={<Bike size={20} />} placeholder="Vehicle Name" value={vehicleName} setValue={setVehicleName} />
       <Input icon={<Bike size={20} />} placeholder="Vehicle Model" value={vehicleModel} setValue={setVehicleModel} />
+      
+      {/* Vehicle Number Plate Input */}
       <Input 
         icon={<Bike size={20} />} 
         placeholder="Vehicle Number Plate" 
@@ -163,7 +175,6 @@ export default function RiderRegistration() {
         containerStyle={styles.fullWidth}
       />
 
-      <AppButton title="Register as Rider" onPress={handleRegister} style={styles.fullWidth} />
       <AppButton title="Register as Rider" onPress={handleRegister} style={styles.fullWidth} />
       <AppButton
         title="Already have an account? Login"
