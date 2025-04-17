@@ -39,3 +39,7 @@ yarn-error.*
 
 #server
 server/.env
+
+/server/public/
+
+

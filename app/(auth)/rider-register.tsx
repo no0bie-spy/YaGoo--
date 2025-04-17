@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Text, StyleSheet, ScrollView, ViewStyle, StyleProp } from 'react-native';
+import { Text, StyleSheet, ScrollView } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { BadgeCheck, Bike } from 'lucide-react-native';
 import axios from 'axios';
@@ -9,41 +9,83 @@ import CustomImagePicker from '@/components/ImageInput';
 import RNPickerSelect from 'react-native-picker-select';
 
 export default function RiderRegistration() {
+  const params = useLocalSearchParams();
   const [licenseNumber, setLicenseNumber] = useState('');
-  const [licensePhoto, setLicensePhoto] = useState('');
   const [vehicleType, setVehicleType] = useState('');
   const [vehicleName, setVehicleName] = useState('');
   const [vehicleModel, setVehicleModel] = useState('');
-  const [vehiclePhoto, setVehiclePhoto] = useState('');
   const [vehicleNumberPlate, setVehicleNumberPlate] = useState('');
+  const [email, setEmail] = useState(params.email as string || '');
+
+  // Images
+  const [licensePhoto, setLicensePhoto] = useState('');
+  const [citizenshipPhoto, setCitizenshipPhoto] = useState('');
+  const [vehiclePhoto, setVehiclePhoto] = useState('');
+  const [vehicleNumberPlatePhoto, setVehicleNumberPlatePhoto] = useState('');
+  const [vehicleBlueBookPhoto, setVehicleBlueBookPhoto] = useState('');
+
   const [errors, setErrors] = useState<string[]>([]);
-  const [email, setEmail] = useState('');
 
   const handleRegister = async () => {
     try {
-      const {email}=useLocalSearchParams();
-      const riderData: any = {
-        licenseNumber,
-        licensePhoto,
-        vehicleType,
-        vehicleName,
-        vehicleModel,
-        vehiclePhoto,
-        vehicleNumberPlate,
-        email,
-      };
+      const formData = new FormData();
 
-      const response = await axios.post('http://192.168.1.149:8002//registerRider', riderData);
+      formData.append('email', email);
+      formData.append('licenseNumber', licenseNumber);
+      formData.append('vehicleType', vehicleType);
+      formData.append('vehicleName', vehicleName);
+      formData.append('vehicleModel', vehicleModel);
+      formData.append('vehicleNumberPlate', vehicleNumberPlate);
+
+      formData.append('licensePhoto', {
+        uri: licensePhoto,
+        type: 'image/jpeg',
+        name: 'license.jpg',
+      } as any);
+
+      formData.append('citizenshipPhoto', {
+        uri: citizenshipPhoto,
+        type: 'image/jpeg',
+        name: 'citizenship.jpg',
+      } as any);
+
+      formData.append('vehiclePhoto', {
+        uri: vehiclePhoto,
+        type: 'image/jpeg',
+        name: 'vehicle.jpg',
+      } as any);
+
+      formData.append('vehicleNumberPlatePhoto', {
+        uri: vehicleNumberPlatePhoto,
+        type: 'image/jpeg',
+        name: 'numberPlate.jpg',
+      } as any);
+
+      formData.append('vehicleBlueBookPhoto', {
+        uri: vehicleBlueBookPhoto,
+        type: 'image/jpeg',
+        name: 'bluebook.jpg',
+      } as any);
+
+      const response = await axios.post(
+        'http://192.168.1.156:8002/registerRider',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
       const data = await response.data;
       console.log(data);
 
       router.replace({
         pathname: '/verify-email',
-        params: { email: email, message: `Opt sent to ${email}` }
+        params: { email: email, message: `OTP sent to ${email}` },
       });
-
     } catch (error: any) {
-      console.log("Full error:", error);
+      console.log('Full error:', error);
 
       if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
         const errorMessages = error.response.data.details.map((err: any) => err.message);
@@ -51,7 +93,7 @@ export default function RiderRegistration() {
       } else if (error.response?.data?.message) {
         setErrors([error.response.data.message]);
       } else {
-        setErrors(["Something went wrong."]);
+        setErrors(['Something went wrong.']);
       }
     }
   };
@@ -65,13 +107,19 @@ export default function RiderRegistration() {
       ))}
 
       <Input icon={<BadgeCheck size={20} />} placeholder="License Number" value={licenseNumber} setValue={setLicenseNumber} />
+      
       <CustomImagePicker
         label="License Photo"
         selectedImageUri={licensePhoto}
         onImageSelect={setLicensePhoto}
         containerStyle={styles.fullWidth}
       />
-
+      <CustomImagePicker
+        label="Citizenship Photo"
+        selectedImageUri={citizenshipPhoto}
+        onImageSelect={setCitizenshipPhoto}
+        containerStyle={styles.fullWidth}
+      />
       <RNPickerSelect
         onValueChange={(value) => setVehicleType(value)}
         placeholder={{ label: 'Select Vehicle Type', value: '' }}
@@ -89,16 +137,33 @@ export default function RiderRegistration() {
       />
       <Input icon={<Bike size={20} />} placeholder="Vehicle Name" value={vehicleName} setValue={setVehicleName} />
       <Input icon={<Bike size={20} />} placeholder="Vehicle Model" value={vehicleModel} setValue={setVehicleModel} />
+      <Input 
+        icon={<Bike size={20} />} 
+        placeholder="Vehicle Number Plate" 
+        value={vehicleNumberPlate} 
+        setValue={setVehicleNumberPlate} 
+      />
+
       <CustomImagePicker
         label="Vehicle Photo"
         selectedImageUri={vehiclePhoto}
         onImageSelect={setVehiclePhoto}
         containerStyle={styles.fullWidth}
       />
-      <Input icon={<Bike size={20} />} placeholder="Vehicle Number Plate" value={vehicleNumberPlate} setValue={setVehicleNumberPlate} />
-      
+      <CustomImagePicker
+        label="Vehicle Number Plate Photo"
+        selectedImageUri={vehicleNumberPlatePhoto}
+        onImageSelect={setVehicleNumberPlatePhoto}
+        containerStyle={styles.fullWidth}
+      />
+      <CustomImagePicker
+        label="Vehicle Blue Book Photo"
+        selectedImageUri={vehicleBlueBookPhoto}
+        onImageSelect={setVehicleBlueBookPhoto}
+        containerStyle={styles.fullWidth}
+      />
 
-      <AppButton title="Register as Rider" onPress={handleRegister} style={styles.fullWidth} /> 
+      <AppButton title="Register as Rider" onPress={handleRegister} style={styles.fullWidth} />
       <AppButton
         title="Already have an account? Login"
         onPress={() => router.push('/login')}
