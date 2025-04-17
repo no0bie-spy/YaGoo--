@@ -30,8 +30,7 @@ export async function sendRecoveryEmail(userEmail: string): Promise<{ token: str
           <p>Please use the following token to verify your email address:</p>
           <p><b style="font-size: 20px;">${token}</b></p>
           <p>For your security, do not share this email or verification token with anyone.</p>
-          <p>Thank you,<br />The YaGOo Team</p>
-`,
+          <p>Thank you,<br />The YaGOo Team</p>`,
   });
 
   console.log("Message sent: %s", info.messageId);

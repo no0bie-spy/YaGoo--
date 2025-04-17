@@ -145,7 +145,6 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-//register rider document details
 const registerRider = async (
   req: Request,
   res: Response,
@@ -153,10 +152,74 @@ const registerRider = async (
 ) => {
   try {
     const {
+      email,
+      licenseNumber,
+      citizenshipNumber,
+      vehicleType,
+      vehicleName,
+      vehicleModel,
+      vehicleNumberPlate
+    } = req.body;
+
+    const {
+      licensePhoto,
+      citizenshipPhoto,
+      vehiclePhoto,
+      vehicleNumberPlatePhoto,
+      vehicleBlueBookPhoto
+    } = req.files || req.body;
+
+    if (
+      !licenseNumber || !licensePhoto || !citizenshipNumber || !citizenshipPhoto ||
+      !vehicleType || !vehicleName || !vehicleModel || !vehiclePhoto ||
+      !vehicleNumberPlate || !vehicleNumberPlatePhoto || !vehicleBlueBookPhoto
+    ) {
+      return res.status(400).json({
+        message: "All rider and vehicle document fields are required.",
+      });
+    }
+
+    // Step 1: Find the user
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found. Please register first.",
+      });
+    }
+
+    if (user.role !== 'rider') {
+      return res.status(403).json({
+        message: "Only users with rider role can register rider documents.",
+      });
+    }
+
+    const existingRiderDocs = await RiderDocuments.findOne({ riderId: user._id });
+    if (existingRiderDocs) {
+      return res.status(409).json({
+        message: "Rider documents already submitted.",
+      });
+    }
+
+    const existingVehicle = await Vehicle.findOne({ riderId: user._id });
+    if (existingVehicle) {
+      return res.status(409).json({
+        message: "Vehicle already registered for this rider.",
+      });
+    }
+
+    // Step 2: Save rider documents
+    const riderDocs = new RiderDocuments({
       licenseNumber,
       licensePhoto,
       citizenshipNumber,
       citizenshipPhoto,
+      riderId: user._id
+    });
+    await riderDocs.save();
+
+    // Step 3: Save vehicle info
+    const vehicle = new Vehicle({
       vehicleType,
       vehicleName,
       vehicleModel,
@@ -164,46 +227,22 @@ const registerRider = async (
       vehicleNumberPlate,
       vehicleNumberPlatePhoto,
       vehicleBlueBookPhoto,
-    } = req.body;
-
-    const missingFields = [
-      !licenseNumber && 'licenseNumber',
-      !licensePhoto && 'licensePhoto',
-      !citizenshipNumber && 'citizenshipNumber',
-      !citizenshipPhoto && 'citizenshipPhoto',
-      !vehicleType && 'vehicleType',
-      !vehicleName && 'vehicleName',
-      !vehicleModel && 'vehicleModel',
-      !vehiclePhoto && 'vehiclePhoto',
-      !vehicleNumberPlate && 'vehicleNumberPlate',
-      !vehicleNumberPlatePhoto && 'vehicleNumberPlatePhoto',
-      !vehicleBlueBookPhoto && 'vehicleBlueBookPhoto',
-    ].filter(Boolean);
-
-    if (missingFields.length > 0) {
-      return res.status(400).json({
-        details: [
-          {
-            message: `Missing required rider fields: ${missingFields.join(
-              ', '
-            )}`,
-          },
-        ],
-      });
-    }
-
-    // multer remaining
-
-    return res.status(200).json({
-      message: 'Login successful',
+      riderId: user._id
     });
-  } catch (e: unknown) {
-    console.error('Register error:', e);
-    if (e instanceof Error) {
-      return res.status(500).json({ message: e.message });
-    } else {
-      return res.status(500).json({ message: 'An unknown error occurred' });
-    }
+    await vehicle.save();
+
+    res.status(201).json({
+      message: "Rider documents and vehicle registered successfully.",
+      riderDocuments: riderDocs,
+      vehicle,
+    });
+
+  } catch (error) {
+    console.error("Error registering rider:", error);
+    return res.status(500).json({
+      message: "Something went wrong while registering rider documents.",
+      error: error instanceof Error ? error.message : error,
+    });
   }
 };
 
