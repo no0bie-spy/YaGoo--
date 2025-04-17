@@ -11,14 +11,14 @@ import { storeSession } from '@/usableFunction/Session';
 
 export default function VerifyEmail() {
   const { email } = useLocalSearchParams();
-  const [otp, setOtp] = useState('');
+  const [OTP, setOtp] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
 
   const handleVerify = async () => {
     try {
-      const response = await axios.post('http://192.168.1.65:8002/verifyOTP', {
+      const response = await axios.post('http://172.16.2.237:8002/verifyOTP', {
         email,
-        otp,
+        OTP,
       });
 
       const data = await response.data;
@@ -57,7 +57,7 @@ export default function VerifyEmail() {
       <Input
         icon={<Phone size={20} />}
         placeholder="Otp"
-        value={otp}
+        value={OTP}
         setValue={setOtp}
         keyboardType="number-pad"
       />
