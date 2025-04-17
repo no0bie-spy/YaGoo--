@@ -33,7 +33,7 @@ export default function RiderRegistration() {
         email,
       };
 
-      const response = await axios.post('http://192.168.1.65:8002//registerRider', riderData);
+      const response = await axios.post('http://192.168.1.149:8002//registerRider', riderData);
       const data = await response.data;
       console.log(data);
 
