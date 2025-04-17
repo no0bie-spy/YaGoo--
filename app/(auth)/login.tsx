@@ -23,7 +23,7 @@ export default function Login() {
 
       const data = await response.data;
       console.log(data)
-      await storeSession('accessToken', data.token);
+      await storeSession('accessToken', String(data.token));
       router.replace('/(tabs)');
     } catch (error: any) {
       console.log("Full error:", error);

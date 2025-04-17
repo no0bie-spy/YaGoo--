@@ -13,13 +13,13 @@ export default function ForgotPassword() {
     const handleForgetPassword = async () => {
         try {
             const userData = { email }
-            const response = await axios.post('http://192.168.1.156:8002/forgotPassword', userData)
+            const response = await axios.post('http://192.168.1.149:8002/forgotPassword', userData)
             const data = response.data;
             console.log(data)
             router.replace({
                 pathname: '/verify-password',
-                params: { email, message: `OTP sent to ${email}` }
-            })
+                params: { email, message: `OTP sent to ${email}` },
+            });
         } catch (error: any) {
             console.log("Full error:", error)
 

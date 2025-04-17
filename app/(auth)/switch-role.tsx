@@ -10,15 +10,16 @@ export default function SwitchRole() {
 
     const handleCustomer = async () => {
         const userData = {
-            role: 'customer',
+           
             email
         };
 
         try {
 
-            const response = await axios.post('http://192.168.1.105:8002/sendOtp', userData);
+            const response = await axios.post('http://192.168.1.149:8002/sendOTP', userData);
             const data = await response.data;
 
+            console.log(data);
             router.replace({
                 pathname: '/verify-email',
                 params: { email: email}
