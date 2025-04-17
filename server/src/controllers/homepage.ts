@@ -30,6 +30,7 @@ const userDetails = async (req: IRequest, res: Response, next: NextFunction) => 
     const role = existingUser.role;
     const phone = existingUser.phone;
     const isEmailVerified = existingUser.isEmailVerified;
+    const email = existingUser.email;
 
 
   return res.status(200).json({
@@ -38,7 +39,8 @@ const userDetails = async (req: IRequest, res: Response, next: NextFunction) => 
     fullname,
     role,
     phone,
-    isEmailVerified
+    isEmailVerified,
+    email
   }
 });
 
