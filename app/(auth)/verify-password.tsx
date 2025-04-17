@@ -33,7 +33,7 @@ export default function VerifyPassword() {
                 retypePassword,
             };
 
-            const response = await axios.post('http://192.168.1.65:8002/changePassword', userData);
+            const response = await axios.post('http://172.16.5.50:8002/changePassword', userData);
             const data = response.data;
             console.log(data);
 
