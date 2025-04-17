@@ -306,12 +306,16 @@ const forgotPassword = async ( req: Request, res: Response, next: NextFunction) 
         { email }, // find by email
         {
           $set: {
-            otp: hashedToken,
+            OTP: hashedToken,
             otpExpiresAt: expiryOTP,
           },
         },
         { upsert: true } // insert new if not exists
       );
+
+  
+
+    
       
     return  res.status(200).json({
         details: [

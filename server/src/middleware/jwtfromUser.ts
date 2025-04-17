@@ -4,8 +4,11 @@ import env from "../Ienv";
 import IRequest from "./IRequest";
 const getUserfromAuthToken=async(req:IRequest,res:Response,next:NextFunction)=>{
     try{
-        const authToken=req.headers['authorization'];
-        const decode=jwt.verify(authToken as string,env.JWT_Password);
+         const authToken=req.headers['authorization'];
+        //const authToken = req.header('Authorization')?.replace('Bearer ', '');
+        
+        
+        const decode=jwt.verify(authToken as string,env.JWT_SECRET);
        if(decode){
         if(typeof decode==="string"){
             res.status(403).json({
@@ -13,7 +16,8 @@ const getUserfromAuthToken=async(req:IRequest,res:Response,next:NextFunction)=>{
             })
             return
         }
-        req.userId = (decode as JwtPayload).userID;
+        req.userId = (decode as JwtPayload).userId;
+        console.log(req.userId)
         next()
        }else{
         res.status(403).json({
