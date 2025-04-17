@@ -10,30 +10,39 @@ import RNPickerSelect from 'react-native-picker-select';
 
 export default function RiderRegistration() {
   const [licenseNumber, setLicenseNumber] = useState('');
+  const { email } = useLocalSearchParams();
+  const [citizenshipPhoto, setCitizenshipPhoto] = useState('');
+  const [citizenshipNumber, setCitizenshipNumber] = useState('');
   const [licensePhoto, setLicensePhoto] = useState('');
   const [vehicleType, setVehicleType] = useState('');
   const [vehicleName, setVehicleName] = useState('');
   const [vehicleModel, setVehicleModel] = useState('');
   const [vehiclePhoto, setVehiclePhoto] = useState('');
   const [vehicleNumberPlate, setVehicleNumberPlate] = useState('');
+  const [vehicleNumberPlatePhoto, setVehicleNumberPlatePhoto] = useState('');
+  const [vehicleBlueBookPhoto, setVehicleBlueBookPhoto] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
-  const [email, setEmail] = useState('');
+
 
   const handleRegister = async () => {
     try {
-      const {email}=useLocalSearchParams();
+
       const riderData: any = {
         licenseNumber,
+        citizenshipNumber,
+        citizenshipPhoto,
         licensePhoto,
         vehicleType,
         vehicleName,
         vehicleModel,
         vehiclePhoto,
         vehicleNumberPlate,
+        vehicleNumberPlatePhoto,
+        vehicleBlueBookPhoto,
         email,
       };
 
-      const response = await axios.post('http://192.168.1.149:8002//registerRider', riderData);
+      const response = await axios.post('http://192.168.1.149:8002/registerRider', riderData);
       const data = await response.data;
       console.log(data);
 
@@ -64,14 +73,27 @@ export default function RiderRegistration() {
         <Text key={i} style={styles.error}>{err}</Text>
       ))}
 
-      <Input icon={<BadgeCheck size={20} />} placeholder="License Number" value={licenseNumber} setValue={setLicenseNumber} />
+      <Input icon={<BadgeCheck size={20} />}
+        placeholder="License Number"
+        value={licenseNumber}
+        setValue={setLicenseNumber} />
+
       <CustomImagePicker
         label="License Photo"
         selectedImageUri={licensePhoto}
         onImageSelect={setLicensePhoto}
         containerStyle={styles.fullWidth}
       />
-
+      <Input icon={<BadgeCheck size={20} />}
+        placeholder="Citizenship Number"
+        value={citizenshipNumber}
+        setValue={setCitizenshipNumber} />
+      <CustomImagePicker
+        label="Citizenship Photo"
+        selectedImageUri={citizenshipPhoto}
+        onImageSelect={setCitizenshipPhoto}
+        containerStyle={styles.fullWidth}
+      />
       <RNPickerSelect
         onValueChange={(value) => setVehicleType(value)}
         placeholder={{ label: 'Select Vehicle Type', value: '' }}
@@ -95,10 +117,25 @@ export default function RiderRegistration() {
         onImageSelect={setVehiclePhoto}
         containerStyle={styles.fullWidth}
       />
-      <Input icon={<Bike size={20} />} placeholder="Vehicle Number Plate" value={vehicleNumberPlate} setValue={setVehicleNumberPlate} />
-      
+      <Input icon={<Bike size={20} />}
+        placeholder="Vehicle Number Plate"
+        value={vehicleNumberPlate}
+        setValue={setVehicleNumberPlate} />
 
-      <AppButton title="Register as Rider" onPress={handleRegister} style={styles.fullWidth} /> 
+      <CustomImagePicker
+        label="Vehicle Number Plate Photo"
+        selectedImageUri={vehicleNumberPlatePhoto}
+        onImageSelect={setVehicleNumberPlatePhoto}
+        containerStyle={styles.fullWidth}
+      />
+      <CustomImagePicker
+        label="Vehicle BlueBook Photo"
+        selectedImageUri={vehicleBlueBookPhoto}
+        onImageSelect={setVehicleBlueBookPhoto}
+        containerStyle={styles.fullWidth}
+      />
+
+      <AppButton title="Register as Rider" onPress={handleRegister} style={styles.fullWidth} />
       <AppButton
         title="Already have an account? Login"
         onPress={() => router.push('/login')}

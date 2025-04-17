@@ -16,7 +16,7 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
 
     // Check if user with this email already exists
     const existingUser = await User.findOne({ email });
-    if (!existingUser) {
+    if (existingUser) {
       return res.status(400).json({
         details: [{ message: 'Email already used' }],
       });
@@ -144,7 +144,8 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
     }
   }
 };
-export const registerRider = async (
+
+ const registerRider = async (
   req: Request,
   res: Response,
   next: NextFunction
