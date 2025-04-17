@@ -164,6 +164,7 @@ export default function RiderRegistration() {
       />
 
       <AppButton title="Register as Rider" onPress={handleRegister} style={styles.fullWidth} />
+      <AppButton title="Register as Rider" onPress={handleRegister} style={styles.fullWidth} />
       <AppButton
         title="Already have an account? Login"
         onPress={() => router.push('/login')}
