@@ -16,7 +16,7 @@ export default function VerifyEmail() {
 
   const handleVerify = async () => {
     try {
-      const response = await axios.post('http://192.168.1.156:8002/verifyOTP', {
+      const response = await axios.post('http://192.168.1.65:8002/verifyOTP', {
         email,
         OTP,
       });

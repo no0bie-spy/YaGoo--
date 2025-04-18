@@ -43,7 +43,8 @@ export default function SwitchRole() {
     const handleRider = async () => {
         try {
             router.replace({
-                pathname: '/rider-register'
+                pathname: '/rider-register',
+                params: { email: email }, // Pass email here
             });
 
         } catch (error: any) {

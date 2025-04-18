@@ -13,16 +13,17 @@ import IRequest from '../middleware/IRequest';
 //normal registration
 const userDetails = async (req: IRequest, res: Response, next: NextFunction) => {
   try {
-   const user = req.userId;
-   
-   if (!user) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-    // Check if user with this email already exists
+    const user = req.userId;
+
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // Check if user exists
     const existingUser = await User.findById(user);
     if (!existingUser) {
       return res.status(404).json({
-        details: [{ message: 'User doesnot exist ' }],
+        details: [{ message: 'User does not exist' }],
       });
     }
 
@@ -32,20 +33,47 @@ const userDetails = async (req: IRequest, res: Response, next: NextFunction) => 
     const isEmailVerified = existingUser.isEmailVerified;
     const email = existingUser.email;
 
+    const responseData: any = {
+      fullname,
+      role,
+      phone,
+      isEmailVerified,
+      email,
+    };
 
-  return res.status(200).json({
-  message: 'User details shown',
-  user: {
-    fullname,
-    role,
-    phone,
-    isEmailVerified,
-    email
-  }
-});
+    // If the user is a rider, fetch rider-specific details
+    if (role === 'rider') {
+      const riderDocs = await RiderDocuments.findOne({ riderId: user });
+      const vehicle = await Vehicle.findOne({ riderId: user });
 
+      if (riderDocs) {
+        responseData.riderDocuments = {
+          licenseNumber: riderDocs.licenseNumber,
+          citizenshipNumber: riderDocs.citizenshipNumber,
+          licensePhoto: riderDocs.licensePhoto,
+          citizenshipPhoto: riderDocs.citizenshipPhoto,
+        };
+      }
+
+      if (vehicle) {
+        responseData.vehicle = {
+          vehicleType: vehicle.vehicleType,
+          vehicleName: vehicle.vehicleName,
+          vehicleModel: vehicle.vehicleModel,
+          vehicleNumberPlate: vehicle.vehicleNumberPlate,
+          vehiclePhoto: vehicle.vehiclePhoto,
+          vehicleNumberPlatePhoto: vehicle.vehicleNumberPlatePhoto,
+          vehicleBlueBookPhoto: vehicle.vehicleBlueBookPhoto,
+        };
+      }
+    }
+
+    return res.status(200).json({
+      message: 'User details shown',
+      user: responseData,
+    });
   } catch (e: unknown) {
-    console.error('Register error:', e);
+    console.error('Error fetching user details:', e);
     if (e instanceof Error) {
       return res.status(500).json({ message: e.message });
     } else {

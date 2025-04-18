@@ -21,7 +21,7 @@ authRouter.post('/login',validate(userValidation.login),authController.login);
 authRouter.post('/verifyOTP',validate(userValidation.otp),authController.verifyEmail);
 authRouter.post('/sendOTP',validate(userValidation.forgotPassword),authController.sendOTP);
 
-authRouter.post('/registerRider',riderUpload,authController.registerRider,authController.sendOTP);
+authRouter.post('/registerRider',riderUpload,authController.registerRider);
 authRouter.post('/forgotPassword',validate(userValidation.forgotPassword),authController.forgotPassword);
   authRouter.post('/changePassword',validate(userValidation.changePassword),authController.changePassword);
 

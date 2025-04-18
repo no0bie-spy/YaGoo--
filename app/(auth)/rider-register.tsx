@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Text, StyleSheet, ScrollView } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { BadgeCheck, Bike } from 'lucide-react-native';
@@ -10,12 +10,17 @@ import RNPickerSelect from 'react-native-picker-select';
 
 export default function RiderRegistration() {
   const params = useLocalSearchParams();
+  const [email, setEmail] = useState(params.email as string || '');
+
+  React.useEffect(() => {
+    console.log("Email received in rider-register:", email);
+  }, [email]);
   const [licenseNumber, setLicenseNumber] = useState('');
   const [vehicleType, setVehicleType] = useState('');
   const [vehicleName, setVehicleName] = useState('');
   const [vehicleModel, setVehicleModel] = useState('');
   const [vehicleNumberPlate, setVehicleNumberPlate] = useState('');
-  const [email, setEmail] = useState(params.email as string || '');
+
   const [citizenshipNumber, setCitizenshipNumber] = useState('');
 
   // Images
@@ -28,6 +33,10 @@ export default function RiderRegistration() {
   const [errors, setErrors] = useState<string[]>([]);
 
   const handleRegister = async () => {
+    if (!email) {
+      setErrors(["Email is required. Please go back and try again."]);
+      return;
+    }
     try {
       const formData = new FormData();
 
@@ -37,7 +46,7 @@ export default function RiderRegistration() {
       formData.append('vehicleName', vehicleName);
       formData.append('vehicleModel', vehicleModel);
       formData.append('vehicleNumberPlate', vehicleNumberPlate);
-      formData.append('citizenshipNumber', citizenshipNumber); 
+      formData.append('citizenshipNumber', citizenshipNumber);
 
       formData.append('licensePhoto', {
         uri: licensePhoto,
@@ -70,7 +79,7 @@ export default function RiderRegistration() {
       } as any);
 
       const response = await axios.post(
-        'http://192.168.1.156:8002/registerRider',
+        'http://192.168.1.65:8002/registerRider',
         formData,
         {
           headers: {
@@ -109,7 +118,7 @@ export default function RiderRegistration() {
       ))}
 
       <Input icon={<BadgeCheck size={20} />} placeholder="License Number" value={licenseNumber} setValue={setLicenseNumber} />
-      
+
       {/* Citizenship Number Input */}
       <Input
         icon={<BadgeCheck size={20} />}
@@ -147,13 +156,13 @@ export default function RiderRegistration() {
       />
       <Input icon={<Bike size={20} />} placeholder="Vehicle Name" value={vehicleName} setValue={setVehicleName} />
       <Input icon={<Bike size={20} />} placeholder="Vehicle Model" value={vehicleModel} setValue={setVehicleModel} />
-      
+
       {/* Vehicle Number Plate Input */}
-      <Input 
-        icon={<Bike size={20} />} 
-        placeholder="Vehicle Number Plate" 
-        value={vehicleNumberPlate} 
-        setValue={setVehicleNumberPlate} 
+      <Input
+        icon={<Bike size={20} />}
+        placeholder="Vehicle Number Plate"
+        value={vehicleNumberPlate}
+        setValue={setVehicleNumberPlate}
       />
 
       <CustomImagePicker

@@ -30,7 +30,7 @@ const CustomImagePicker: React.FC<ImagePickerProps> = ({ label, onImageSelect, s
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ImagePicker.MediaTypeOptions.Images, // Use the correct API
       allowsEditing: true,
       aspect: [4, 3],
       quality: 1,

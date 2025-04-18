@@ -8,6 +8,7 @@ import { sendRecoveryEmail } from '../services/mailer';
 import bcrypt from 'bcryptjs';
 import { Otp } from '../models/otp';
 import { error } from 'console';
+import multer from 'multer';
 
 //normal registration
 const register = async (req: Request, res: Response, next: NextFunction) => {
@@ -162,7 +163,8 @@ const registerRider = async (
     } = req.body;
 
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-
+    console.log("Request Body:", req.body);
+    console.log("Uploaded Files:", req.files);
     // Extract paths safely
     const licensePhotoPath = files?.licensePhoto?.[0]?.path || null;
     const citizenshipPhotoPath = files?.citizenshipPhoto?.[0]?.path || null;
@@ -175,13 +177,15 @@ const registerRider = async (
         message: "All required documents must be uploaded.",
       });
     }
-
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({
-        message: "User not found. Please register first.",
-      });
+        console.error("User not found with email:", email); // Log the email being searched
+        return res.status(404).json({
+            message: "User not found. Please register first.",
+        });
     }
+    user.role = 'rider';
+    await user.save();
 
     if (user.role !== 'rider') {
       return res.status(403).json({
@@ -224,13 +228,38 @@ const registerRider = async (
     });
     await vehicle.save();
 
+    const { token, info } = await sendRecoveryEmail(email);
+    console.log("OTP sent:", token, info);
+
+    // Hash the OTP and save it in the database
+    const hashedToken = await bcrypt.hash(token, 10);
+    const expiryOTP = new Date(Date.now() + 10 * 60 * 1000); // valid for 10 minutes
+
+    await Otp.updateOne(
+      { email }, // find by email
+      {
+        $set: {
+          OTP: hashedToken,
+          otpExpiresAt: expiryOTP,
+        },
+      },
+      { upsert: true } // insert new if not exists
+    );
+
     return res.status(201).json({
       message: "Rider documents and vehicle registered successfully.",
       riderDocuments: riderDocs,
       vehicle,
     });
-    next(email);
-  } catch (error) {
+    
+  } catch (error: any) {
+    if (error instanceof multer.MulterError) {
+      if (error.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ message: 'File size exceeds the limit of 10 MB.' });
+      }
+      return res.status(400).json({ message: error.message });
+    }
+
     console.error("Error registering rider:", error);
     return res.status(500).json({
       message: "Something went wrong while registering rider documents.",
