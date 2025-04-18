@@ -145,7 +145,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
- const registerRider = async (
+const registerRider = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -229,7 +229,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
       riderDocuments: riderDocs,
       vehicle,
     });
-
+    next(email);
   } catch (error) {
     console.error("Error registering rider:", error);
     return res.status(500).json({

@@ -37,7 +37,7 @@ export default function RiderRegistration() {
       formData.append('vehicleName', vehicleName);
       formData.append('vehicleModel', vehicleModel);
       formData.append('vehicleNumberPlate', vehicleNumberPlate);
-      formData.append('citizenshipNumber', citizenshipNumber); // Added citizenship number
+      formData.append('citizenshipNumber', citizenshipNumber); 
 
       formData.append('licensePhoto', {
         uri: licensePhoto,
