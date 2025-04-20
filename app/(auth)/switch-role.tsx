@@ -16,7 +16,7 @@ export default function SwitchRole() {
 
         try {
 
-            const response = await axios.post('http://192.168.1.149:8002/sendOTP', userData);
+            const response = await axios.post('http://192.168.1.156:8002/sendOTP', userData);
             const data = await response.data;
 
             console.log(data);
@@ -43,7 +43,8 @@ export default function SwitchRole() {
     const handleRider = async () => {
         try {
             router.replace({
-                pathname: '/rider-register'
+                pathname: '/rider-register',
+                params: { email: email }, // Pass email here
             });
 
         } catch (error: any) {

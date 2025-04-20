@@ -57,6 +57,9 @@ const userValidation = {
   },
 
   registerRider: {
+    email: Joi.string().email().messages({
+      'string.email': 'Invalid email format',
+    }),
     body: Joi.object({
       licenseNumber: Joi.string().required().messages({
         'any.required': 'License number is required',

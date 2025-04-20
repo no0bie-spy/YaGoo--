@@ -8,6 +8,7 @@ import { sendRecoveryEmail } from '../services/mailer';
 import bcrypt from 'bcryptjs';
 import { Otp } from '../models/otp';
 import { error } from 'console';
+import multer from 'multer';
 
 //normal registration
 const register = async (req: Request, res: Response, next: NextFunction) => {
@@ -144,7 +145,8 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
     }
   }
 };
-export const registerRider = async (
+
+const registerRider = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -160,34 +162,30 @@ export const registerRider = async (
       vehicleNumberPlate
     } = req.body;
 
-    // Access the files from the request (Multer stores them under 'files' field)
-    const { 
-      licensePhoto, 
-      citizenshipPhoto, 
-      vehiclePhoto, 
-      vehicleNumberPlatePhoto, 
-      vehicleBlueBookPhoto 
-    } = req.files as { [fieldname: string]: Express.Multer.File[] };
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+    console.log("Request Body:", req.body);
+    console.log("Uploaded Files:", req.files);
+    // Extract paths safely
+    const licensePhotoPath = files?.licensePhoto?.[0]?.path || null;
+    const citizenshipPhotoPath = files?.citizenshipPhoto?.[0]?.path || null;
+    const vehiclePhotoPath = files?.vehiclePhoto?.[0]?.path || null;
+    const vehicleNumberPlatePhotoPath = files?.vehicleNumberPlatePhoto?.[0]?.path || null;
+    const vehicleBlueBookPhotoPath = files?.vehicleBlueBookPhoto?.[0]?.path || null;
 
-    // Validate if all fields are present
-    if (
-      !licenseNumber || !licensePhoto || !citizenshipNumber || !citizenshipPhoto ||
-      !vehicleType || !vehicleName || !vehicleModel || !vehiclePhoto ||
-      !vehicleNumberPlate || !vehicleNumberPlatePhoto || !vehicleBlueBookPhoto
-    ) {
+    if (!licensePhotoPath || !citizenshipPhotoPath || !vehiclePhotoPath || !vehicleNumberPlatePhotoPath || !vehicleBlueBookPhotoPath) {
       return res.status(400).json({
-        message: "All rider and vehicle document fields are required.",
+        message: "All required documents must be uploaded.",
       });
     }
-
-    //Find the user by email
     const user = await User.findOne({ email });
-
     if (!user) {
-      return res.status(404).json({
-        message: "User not found. Please register first.",
-      });
+        console.error("User not found with email:", email); // Log the email being searched
+        return res.status(404).json({
+            message: "User not found. Please register first.",
+        });
     }
+    user.role = 'rider';
+    await user.save();
 
     if (user.role !== 'rider') {
       return res.status(403).json({
@@ -195,7 +193,6 @@ export const registerRider = async (
       });
     }
 
-    // Check if the rider's documents have already been submitted
     const existingRiderDocs = await RiderDocuments.findOne({ riderId: user._id });
     if (existingRiderDocs) {
       return res.status(409).json({
@@ -203,7 +200,6 @@ export const registerRider = async (
       });
     }
 
-    // Check if the rider's vehicle has been registered
     const existingVehicle = await Vehicle.findOne({ riderId: user._id });
     if (existingVehicle) {
       return res.status(409).json({
@@ -211,36 +207,59 @@ export const registerRider = async (
       });
     }
 
-    // Save rider documents (license, citizenship, etc.)
     const riderDocs = new RiderDocuments({
       licenseNumber,
-      licensePhoto: licensePhoto[0].path,
+      licensePhoto: licensePhotoPath,
       citizenshipNumber,
-      citizenshipPhoto: citizenshipPhoto[0].path,
-      riderId: user._id
+      citizenshipPhoto: citizenshipPhotoPath,
+      riderId: user._id,
     });
     await riderDocs.save();
 
-    // Save vehicle info (vehicle details, photos, etc.)
     const vehicle = new Vehicle({
       vehicleType,
       vehicleName,
       vehicleModel,
-      vehiclePhoto: vehiclePhoto[0].path,
       vehicleNumberPlate,
-      vehicleNumberPlatePhoto: vehicleNumberPlatePhoto[0].path,
-      vehicleBlueBookPhoto: vehicleBlueBookPhoto[0].path,
-      riderId: user._id
+      vehiclePhoto: vehiclePhotoPath,
+      vehicleNumberPlatePhoto: vehicleNumberPlatePhotoPath,
+      vehicleBlueBookPhoto: vehicleBlueBookPhotoPath,
+      riderId: user._id,
     });
     await vehicle.save();
 
-    res.status(201).json({
+    const { token, info } = await sendRecoveryEmail(email);
+    console.log("OTP sent:", token, info);
+
+    // Hash the OTP and save it in the database
+    const hashedToken = await bcrypt.hash(token, 10);
+    const expiryOTP = new Date(Date.now() + 10 * 60 * 1000); // valid for 10 minutes
+
+    await Otp.updateOne(
+      { email }, // find by email
+      {
+        $set: {
+          OTP: hashedToken,
+          otpExpiresAt: expiryOTP,
+        },
+      },
+      { upsert: true } // insert new if not exists
+    );
+
+    return res.status(201).json({
       message: "Rider documents and vehicle registered successfully.",
       riderDocuments: riderDocs,
       vehicle,
     });
+    
+  } catch (error: any) {
+    if (error instanceof multer.MulterError) {
+      if (error.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ message: 'File size exceeds the limit of 10 MB.' });
+      }
+      return res.status(400).json({ message: error.message });
+    }
 
-  } catch (error) {
     console.error("Error registering rider:", error);
     return res.status(500).json({
       message: "Something went wrong while registering rider documents.",

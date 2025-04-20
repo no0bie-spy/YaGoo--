@@ -4,8 +4,35 @@ meta {
   seq: 2
 }
 
-get {
-  url: http://localhost:8002/riderRegister
-  body: none
+post {
+  url: http://localhost:8002/registerRider
+  body: multipartForm
   auth: inherit
+}
+
+body:json {
+  {
+    "licenseNumber":"122312313",
+    "citizenshipNumber":"123198231",
+    "vehicleType":"bike",
+        "vehicleName":"Pafsa",
+        "vehicleModel":"jkasd",
+        "vehicleNumberPlate":"123"
+    
+  }
+}
+
+body:multipart-form {
+  licensePhoto: @file(C:\Users\user\Pictures\bshal.jpg)
+  citizenshipPhoto: @file(C:\Users\user\Pictures\bshal.jpg)
+  vehiclePhoto: @file(C:\Users\user\Pictures\bshal.jpg)
+  vehicleNumberPlatePhoto: @file(C:\Users\user\Pictures\bshal.jpg)
+  vehicleBlueBookPhoto: @file(C:\Users\user\Pictures\bshal.jpg)
+  licenseNumber: 123123121
+  citizenshipNumber: 123124124
+  vehicleType: bike
+  vehicleName: askj
+  vehicleModel: aksdhkan
+  vehicleNumberPlate: 1231243
+  email: bighitnepal@gmail.com
 }

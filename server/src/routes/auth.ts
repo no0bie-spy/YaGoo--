@@ -21,17 +21,7 @@ authRouter.post('/login',validate(userValidation.login),authController.login);
 authRouter.post('/verifyOTP',validate(userValidation.otp),authController.verifyEmail);
 authRouter.post('/sendOTP',validate(userValidation.forgotPassword),authController.sendOTP);
 
-authRouter.post('/registerRider', riderUpload, (req, res, next) => {
-  // Attach file names to body so they can be validated
-  const files = req.files as Record<string, Express.Multer.File[]>;
-  if (files) {
-    for (const field in files) {
-      req.body[field] = files[field][0]?.filename || '';
-    }
-  }
-  // Call the actual validation middleware
-  validate(userValidation.registerRider)(req, res, next);
-}, authController.registerRider);
+authRouter.post('/registerRider',riderUpload,authController.registerRider);
 authRouter.post('/forgotPassword',validate(userValidation.forgotPassword),authController.forgotPassword);
   authRouter.post('/changePassword',validate(userValidation.changePassword),authController.changePassword);
 

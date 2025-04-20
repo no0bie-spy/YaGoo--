@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { clearSession, getSession } from '@/usableFunction/Session';
 import { useEffect, useState } from 'react';
@@ -9,6 +9,8 @@ export default function ProfileScreen() {
   const [email, setEmail] = useState('');
   const [fullname, setFullname] = useState('');
   const [phone, setPhone] = useState('');
+  const [riderDocuments, setRiderDocuments] = useState<any>(null);
+  const [vehicle, setVehicle] = useState<any>(null);
 
   const handleLogout = async () => {
     await clearSession('accessToken');
@@ -18,7 +20,7 @@ export default function ProfileScreen() {
   const fetchUserDetails = async () => {
     try {
       const token = await getSession('accessToken');
-      const response = await axios.get('http://192.168.1.149:8002/userdetails', {
+      const response = await axios.get('http://192.168.1.65:8002/userdetails', {
         headers: {
           Authorization: `${token}`,
         },
@@ -29,6 +31,11 @@ export default function ProfileScreen() {
       setFullname(data.user.fullname);
       setPhone(data.user.phone);
       setEmail(data.user.email);
+
+      if (data.user.role === 'rider') {
+        setRiderDocuments(data.user.riderDocuments || null);
+        setVehicle(data.user.vehicle || null);
+      }
     } catch (error: any) {
       console.error('Error fetching user details:', error);
     }
@@ -39,7 +46,7 @@ export default function ProfileScreen() {
   }, []);
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.heading}>Profile</Text>
 
       <View style={styles.infoContainer}>
@@ -47,19 +54,36 @@ export default function ProfileScreen() {
         <Text style={styles.infoText}>Phone: {phone || 'Loading...'}</Text>
         <Text style={styles.infoText}>Email: {email || 'Loading...'}</Text>
         <Text style={styles.infoText}>Role: {role || 'Loading...'}</Text>
+
+        {role === 'rider' && riderDocuments && (
+          <>
+            <Text style={styles.subHeading}>Rider Documents</Text>
+            <Text style={styles.infoText}>License Number: {riderDocuments.licenseNumber}</Text>
+            <Text style={styles.infoText}>Citizenship Number: {riderDocuments.citizenshipNumber}</Text>
+          </>
+        )}
+
+        {role === 'rider' && vehicle && (
+          <>
+            <Text style={styles.subHeading}>Vehicle Details</Text>
+            <Text style={styles.infoText}>Vehicle Type: {vehicle.vehicleType}</Text>
+            <Text style={styles.infoText}>Vehicle Name: {vehicle.vehicleName}</Text>
+            <Text style={styles.infoText}>Vehicle Model: {vehicle.vehicleModel}</Text>
+            <Text style={styles.infoText}>Vehicle Number Plate: {vehicle.vehicleNumberPlate}</Text>
+          </>
+        )}
       </View>
 
       <TouchableOpacity style={styles.button} onPress={handleLogout}>
         <Text style={styles.buttonText}>Logout</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }
 
-
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: '#F9F9F9',
     alignItems: 'center',
     justifyContent: 'center',
@@ -69,6 +93,13 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 30,
+    color: '#333',
+  },
+  subHeading: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 20,
+    marginBottom: 10,
     color: '#333',
   },
   infoContainer: {
@@ -81,8 +112,11 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,  
-    }
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   infoText: {
     fontSize: 15,
