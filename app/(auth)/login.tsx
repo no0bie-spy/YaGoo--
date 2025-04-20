@@ -12,7 +12,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
   const { message } = useLocalSearchParams();
-  
+
   const handleLogin = async () => {
     try {
       const userData: any = {
@@ -24,17 +24,11 @@ export default function Login() {
         alert("Please enter both email and password.");
         return;
       }
-<<<<<<< HEAD
-      const response = await axios.post('http://192.168.1.149:8002/login', userData);
-
-      const data = await response.data;   
-=======
       const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
       console.log("IP Address:", IP_Address); // Debugging log
       const response = await axios.post(`http://${IP_Address}:8002/login`, userData);
       console.log("Response:", response); // Debugging log
       const data = await response.data;
->>>>>>> c9d1b5f73bf56c1550c66031dbc827bfd50b9412
       console.log(data)
       await storeSession('accessToken', String(data.token));
       router.replace({ pathname: '/(tabs)/home' }); // Adjust the path as needed
