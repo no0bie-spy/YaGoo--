@@ -35,16 +35,16 @@ const userValidation = {
       email: Joi.string().email().required().messages({
         'any.required': 'Email is required',
         'string.email': 'Invalid email format',
-        'string.empty': 'Email is required',
+     
       }),
       password: Joi.string().min(6).required().messages({
         'any.required': 'Password is required',
         'string.min': 'Password must be at least 6 characters',
-        'string.empty': 'Password is required', 
- 
+
       }),
     }),
   },
+  
 
   otp: {
     body: Joi.object({
