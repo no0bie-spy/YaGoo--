@@ -78,8 +78,11 @@ export default function RiderRegistration() {
         name: 'bluebook.jpg',
       } as any);
 
+      const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
+      console.log("IP Address:", IP_Address); // Debugging log
+      
       const response = await axios.post(
-        'http://192.168.1.156:8002/registerRider',
+        `http://${IP_Address}:8002/registerRider`,
         formData,
         {
           headers: {

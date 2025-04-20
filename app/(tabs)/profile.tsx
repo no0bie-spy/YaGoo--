@@ -22,7 +22,9 @@ export default function ProfileScreen() {
     try {
       const token = await getSession('accessToken');
       
-      const response = await axios.get('http://192.168.1.149:8002/userdetails', {
+      const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
+      console.log("IP Address:", IP_Address); // Debugging log
+      const response = await axios.post(`http://${IP_Address}:8002/userdetails`, {
 
         headers: {
           Authorization: `${token}`,
