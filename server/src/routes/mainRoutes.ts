@@ -1,6 +1,7 @@
 import { Router } from "express";
 import authRouter from "./auth";
 import userSettingRouter from "./homepage";
+import rideRouter from "./rides";
 
 
 
@@ -11,6 +12,6 @@ mainRoutes.use('',authRouter)
 
 mainRoutes.use('',userSettingRouter)
 
-
+mainRoutes.use("",rideRouter)
 
 export default mainRoutes;

@@ -1,7 +1,7 @@
 import { Schema, model, Types, Document } from 'mongoose';
 
 interface IRide extends Document {
-  customer: Types.ObjectId;
+  customerId: Types.ObjectId;
   rider?: Types.ObjectId;
   start_location: string;
   destination: string;
@@ -13,7 +13,7 @@ interface IRide extends Document {
 
 const rideSchema = new Schema<IRide>(
   {
-    customer: {
+    customerId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
@@ -32,11 +32,10 @@ const rideSchema = new Schema<IRide>(
     },
     otp_start: {
       type: String,
-      required: true,
     },
     status: {
       type: String,
-      enum: ['requested', 'matched', 'in-progress', 'completed', 'cancelled'],
+      enum: ['not-started','requested', 'matched', 'in-progress', 'completed', 'cancelled'],
       default: 'requested',
     },
   },

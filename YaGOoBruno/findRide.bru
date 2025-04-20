@@ -1,0 +1,20 @@
+meta {
+  name: findRide
+  type: http
+  seq: 4
+}
+
+post {
+  url: http://localhost:8002/register
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "email":"bsaladkari@gmail.com",
+    "fullname":"bishal Adhiakri",
+    "password":"91823981",
+    "phone":"1111111111"
+  }
+}
