@@ -105,9 +105,9 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
     res.cookie("uid", token, {
       httpOnly: true,      // JS can't access this cookie
       secure: true,        // Only send over HTTPS
-     
     });
-    
+
+   
     return res.status(200).json({
       message: 'Login successful',
       token,
@@ -430,7 +430,7 @@ const logout = async (req: Request, res: Response, next: NextFunction) => {
     
     res.clearCookie("uid");
     
-    
+
   } catch (e: unknown) {
     console.error('Verify Error', e);
     if (e instanceof Error) {

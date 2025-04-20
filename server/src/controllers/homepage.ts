@@ -101,9 +101,9 @@ const editProfileDetails = async (req: IRequest, res: Response, next: NextFuncti
     }
 
     // modify user data
-    const { fullname, phone, email} = req.body;
+    const { fullname, phone} = req.body;
 
-    const updatedData = await User.findByIdAndUpdate(user,  { email, fullname, phone },
+    const updatedData = await User.findByIdAndUpdate(user,  {  fullname, phone },
       { new: true } // `new: true` returns the updated document
     );
 

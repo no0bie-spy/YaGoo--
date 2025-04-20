@@ -12,7 +12,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
   const { message } = useLocalSearchParams();
-  
+
   const handleLogin = async () => {
     try {
       const userData: any = {
