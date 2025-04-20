@@ -11,9 +11,10 @@ interface ValidationSchemas {
 const validate = (validationSchemas: ValidationSchemas = {}) => {
     return async (req: Request, res: Response, next: NextFunction) => {
         const { body, params, query, headers } = validationSchemas;
-
+       
         try {
             if (body) {
+          
                 const validationResult = body.validate(req.body, { abortEarly: false });
                 if (validationResult.error) throw validationResult.error;
             }
