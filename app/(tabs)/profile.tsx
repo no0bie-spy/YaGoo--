@@ -131,7 +131,7 @@ export default function ProfileScreen() {
               setValue={setnewPassword}
               secureTextEntry
             />
-            
+
             <AppButton title="Change Password" onPress={handleChangePassword} />
             <AppButton
               title="Back to Profile"
@@ -202,7 +202,7 @@ export default function ProfileScreen() {
           </View>
           <AppButton
             title="Edit Profile"
-            onPress={() => setShowEditProfile(true)} // Show Edit Profile view
+            onPress={() => setShowEditProfile(true)}
             Icon={Edit2Icon}
             iconColor="#FFF"
             iconSize={28}
@@ -211,19 +211,18 @@ export default function ProfileScreen() {
           />
           <AppButton
             title="Change Password"
-            onPress={() => setShowChangePassword(true)} // Show Change Password view
+            onPress={() => setShowChangePassword(true)}
             Icon={EditIcon}
             iconColor="#FFF"
             iconSize={28}
             style={{ backgroundColor: '#007AFF' }}
             textStyle={{ color: '#FFF' }}
           />
-
           <AppButton
             title="Logout"
             onPress={handleLogout}
             Icon={LogOut}
-            iconColor="#FF3B30" // red icon
+            iconColor="#FF3B30"
             iconSize={28}
             style={{ backgroundColor: '#fff' }}
             textStyle={{ color: '#FF3B30' }}
@@ -248,15 +247,16 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   formContainer: {
-    width: '90%', // Decrease width for better UI
-    maxWidth: 400, // Limit the width for larger screens
+    width: '90%',
+    maxWidth: 400,
     backgroundColor: '#fff',
     padding: 20,
-    borderRadius: 10,
+    borderRadius: 12,
     shadowColor: '#000',
     shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4, // For Android
   },
   header: {
     alignItems: 'center',
@@ -264,18 +264,20 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     backgroundColor: 'white',
     marginBottom: 20,
-  },
-  subHeading: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 10,
-    color: '#333', // or #555 for lighter shade
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4, // For Android
   },
   avatar: {
     width: 100,
     height: 100,
     borderRadius: 50,
     marginBottom: 16,
+    borderWidth: 2,
+    borderColor: '#007AFF',
   },
   name: {
     fontSize: 24,
@@ -290,12 +292,19 @@ const styles = StyleSheet.create({
   infoContainer: {
     backgroundColor: 'white',
     marginHorizontal: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     padding: 20,
     shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4, // For Android
+  },
+  subHeading: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 10,
+    color: '#333',
   },
   heading: {
     fontSize: 24,
@@ -308,5 +317,16 @@ const styles = StyleSheet.create({
     fontSize: 15,
     marginBottom: 10,
     color: '#333',
+  },
+  button: {
+    width: '90%',
+    alignSelf: 'center',
+    marginVertical: 10,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4, // For Android
   },
 });
