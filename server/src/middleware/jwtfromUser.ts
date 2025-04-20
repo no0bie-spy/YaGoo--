@@ -39,4 +39,6 @@ const getUserfromAuthToken=async(req:IRequest,res:Response,next:NextFunction)=>{
     }
 }
 
+
+
 export default  getUserfromAuthToken

@@ -26,6 +26,9 @@ export default function HomeScreen() {
       alert('Please enter both pickup and destination locations.');
       return;
     }
+
+    const locationDetails={source, destination};
+
     console.log('Ride created from', source, 'to', destination);
   }
 
@@ -114,7 +117,7 @@ export default function HomeScreen() {
           setValue={setDestination}
           keyboardType="default"
         />
-        <AppButton title="Create Ride" onPress={handleRideCreation} />
+        <AppButton title="Find Ride" onPress={handleRideCreation} />
       </View>
     </View>
   );
