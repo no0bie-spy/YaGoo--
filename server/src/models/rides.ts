@@ -7,7 +7,7 @@ interface IRide extends Document {
   destination: string;
   otp_start: string;
   status: 'requested' | 'matched' | 'in-progress' | 'completed' | 'cancelled';
-  createdAt: Date;
+  createdAt: Date;  
   updatedAt: Date;
 }
 
