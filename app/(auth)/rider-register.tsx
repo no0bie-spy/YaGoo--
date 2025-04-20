@@ -79,7 +79,7 @@ export default function RiderRegistration() {
       } as any);
 
       const response = await axios.post(
-        'http://192.168.1.65:8002/registerRider',
+        'http://192.168.1.156:8002/registerRider',
         formData,
         {
           headers: {

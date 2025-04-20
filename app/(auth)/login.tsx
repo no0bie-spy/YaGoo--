@@ -19,7 +19,7 @@ export default function Login() {
         email,
         password
       };
-      const response = await axios.post('http://192.168.1.65:8002/login', userData);
+      const response = await axios.post('http://192.168.1.156:8002/login', userData);
 
       const data = await response.data;
       console.log(data)
