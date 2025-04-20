@@ -1,8 +1,9 @@
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
+import { useEffect, useState } from 'react';
 import { router } from 'expo-router';
 import { clearSession, getSession } from '@/usableFunction/Session';
-import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { LogOut } from 'lucide-react-native';
 
 export default function ProfileScreen() {
   const [role, setRole] = useState<string | null>(null);
@@ -20,7 +21,9 @@ export default function ProfileScreen() {
   const fetchUserDetails = async () => {
     try {
       const token = await getSession('accessToken');
-      const response = await axios.get('http://192.168.1.156:8002/userdetails', {
+      
+      const response = await axios.get('http://192.168.1.149:8002/userdetails', {
+
         headers: {
           Authorization: `${token}`,
         },
@@ -36,7 +39,7 @@ export default function ProfileScreen() {
         setRiderDocuments(data.user.riderDocuments || null);
         setVehicle(data.user.vehicle || null);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error fetching user details:', error);
     }
   };
@@ -47,12 +50,17 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.heading}>Profile</Text>
+      <View style={styles.header}>
+        <Image
+          source={{ uri: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400' }}
+          style={styles.avatar}
+        />
+        <Text style={styles.name}>{fullname || 'Loading...'}</Text>
+        <Text style={styles.email}>{email || 'Loading...'}</Text>
+      </View>
 
       <View style={styles.infoContainer}>
-        <Text style={styles.infoText}>Full Name: {fullname || 'Loading...'}</Text>
         <Text style={styles.infoText}>Phone: {phone || 'Loading...'}</Text>
-        <Text style={styles.infoText}>Email: {email || 'Loading...'}</Text>
         <Text style={styles.infoText}>Role: {role || 'Loading...'}</Text>
 
         {role === 'rider' && riderDocuments && (
@@ -66,16 +74,17 @@ export default function ProfileScreen() {
         {role === 'rider' && vehicle && (
           <>
             <Text style={styles.subHeading}>Vehicle Details</Text>
-            <Text style={styles.infoText}>Vehicle Type: {vehicle.vehicleType}</Text>
-            <Text style={styles.infoText}>Vehicle Name: {vehicle.vehicleName}</Text>
-            <Text style={styles.infoText}>Vehicle Model: {vehicle.vehicleModel}</Text>
-            <Text style={styles.infoText}>Vehicle Number Plate: {vehicle.vehicleNumberPlate}</Text>
+            <Text style={styles.infoText}>Type: {vehicle.vehicleType}</Text>
+            <Text style={styles.infoText}>Name: {vehicle.vehicleName}</Text>
+            <Text style={styles.infoText}>Model: {vehicle.vehicleModel}</Text>
+            <Text style={styles.infoText}>Number Plate: {vehicle.vehicleNumberPlate}</Text>
           </>
         )}
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={handleLogout}>
-        <Text style={styles.buttonText}>Logout</Text>
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <LogOut size={24} color="#FF3B30" />
+        <Text style={styles.logoutText}>Log Out</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -84,56 +93,68 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: '#F9F9F9',
+    backgroundColor: '#f5f5f5',
+    paddingBottom: 30,
+  },
+  header: {
     alignItems: 'center',
-    justifyContent: 'center',
     padding: 20,
+    paddingTop: 60,
+    backgroundColor: 'white',
+    marginBottom: 20,
   },
-  heading: {
-    fontSize: 28,
+  avatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: 16,
+  },
+  name: {
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 30,
+    marginBottom: 4,
     color: '#333',
   },
-  subHeading: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginTop: 20,
-    marginBottom: 10,
-    color: '#333',
+  email: {
+    fontSize: 16,
+    color: '#666',
   },
   infoContainer: {
-    width: '100%',
-    maxWidth: 300,
-    marginBottom: 30,
-    padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: 'white',
+    marginHorizontal: 16,
     borderRadius: 8,
+    padding: 20,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
   },
-  infoText: {
-    fontSize: 15,
-    marginBottom: 12,
+  subHeading: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 16,
+    marginBottom: 8,
     color: '#333',
   },
-  button: {
-    backgroundColor: '#FF3B30',
-    padding: 15,
-    borderRadius: 8,
-    width: '100%',
-    maxWidth: 200,
+  infoText: {
+    fontSize: 15,
+    marginBottom: 10,
+    color: '#333',
   },
-  buttonText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontWeight: 'bold',
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    marginTop: 30,
+    marginHorizontal: 16,
+    padding: 16,
+    borderRadius: 8,
+    justifyContent: 'center',
+  },
+  logoutText: {
+    marginLeft: 12,
     fontSize: 16,
+    color: '#FF3B30',
+    fontWeight: 'bold',
   },
 });
