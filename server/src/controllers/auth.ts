@@ -429,7 +429,11 @@ const logout = async (req: Request, res: Response, next: NextFunction) => {
   try {
     
     res.clearCookie("uid");
-    
+   res.json({
+
+     message:"Succesfully logout"
+    }
+   ) 
 
   } catch (e: unknown) {
     console.error('Verify Error', e);

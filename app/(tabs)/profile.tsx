@@ -18,10 +18,37 @@ export default function ProfileScreen() {
   const [showEditProfile, setShowEditProfile] = useState(false); // State to toggle Edit Profile view
   const [currentpassword, setcurrentPassword] = useState('');
   const [newpassword, setnewPassword] = useState('');
-
+  const [errors, setErrors] = useState<string[]>([]);
   const handleLogout = async () => {
-    await clearSession('accessToken');
-    router.replace('/login');
+    try {
+
+      const token = await getSession('accessToken');
+      const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
+      const response = await axios.post(`http://${IP_Address}:8002/logout`)
+      const message = await response.data.message;
+      console.log(message)
+      await clearSession('accessToken');
+      router.replace({
+        pathname: '/login',
+        params: {
+          message: message
+        }
+      });
+    } catch (error: any) {
+      console.log("Full error:", error);
+
+      if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
+        const errorMessages = error.response.data.details.map((err: any) => err.message);
+        setErrors(errorMessages);
+        alert(errorMessages);
+      } else if (error.response?.data?.message) {
+        setErrors([error.response.data.message]); // fallback if message is provided
+        alert(error.response.data.message);
+      } else {
+        setErrors(["Something went wrong."]);
+        alert("Something went wrong.");
+      }
+    }
   };
 
   const fetchUserDetails = async () => {
