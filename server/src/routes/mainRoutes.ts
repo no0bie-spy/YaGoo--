@@ -13,6 +13,6 @@ mainRoutes.use('',authRouter)
 
 mainRoutes.use('',getUserfromAuthToken,userSettingRouter)
 
-mainRoutes.use("",rideRouter)
+mainRoutes.use("",getUserfromAuthToken,rideRouter)
 
 export default mainRoutes;
