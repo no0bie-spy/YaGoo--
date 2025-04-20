@@ -1,7 +1,7 @@
 import { Schema, model, Types, Document } from 'mongoose';
 
 interface IBid extends Document {
-  ride: Types.ObjectId; 
+  rideId: Types.ObjectId; 
   rider: Types.ObjectId;
   amount: number; 
   createdAt: Date; 
@@ -9,7 +9,7 @@ interface IBid extends Document {
 
 const bidSchema = new Schema<IBid>(
   {
-    ride: {
+    rideId: {
       type: Schema.Types.ObjectId,
       ref: 'Ride',
       required: true,

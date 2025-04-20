@@ -82,12 +82,53 @@ const userDetails = async (req: IRequest, res: Response, next: NextFunction) => 
   }
 };
 
+// edit profile details
+const editProfileDetails = async (req: IRequest, res: Response, next: NextFunction) => {
+  try {
+
+    const user = req.userId; // get user from the middleware token
+
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // Check if user exists
+    const existingUser = await User.findById(user);
+    if (!existingUser) {
+      return res.status(404).json({
+        details: [{ message: 'User does not exist' }],
+      });
+    }
+
+    // modify user data
+    const { fullname, phone, email} = req.body;
+
+    const updatedData = await User.findByIdAndUpdate(user,  { email, fullname, phone },
+      { new: true } // `new: true` returns the updated document
+    );
+
+
+    
+
+    return res.status(200).json({
+      message: 'User Details Updated Successfully',
+       user: updatedData, // to shown if necessary
+    });
+  } catch (e: unknown) {
+    console.error('Error fetching user details:', e);
+    if (e instanceof Error) {
+      return res.status(500).json({ message: e.message });
+    } else {
+      return res.status(500).json({ message: 'An unknown error occurred' });
+    }
+  }
+};
 
 
 
 const homepageController = {
   userDetails,
- 
+  editProfileDetails
 };
 
 export default homepageController;

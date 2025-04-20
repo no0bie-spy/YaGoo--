@@ -28,7 +28,9 @@ export default function Register() {
         alert("Please fill up all the details.");
         return;
       }
-      const response = await axios.post('http://192.168.1.156:8002/register', userData);
+      const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
+      console.log("IP Address:", IP_Address); // Debugging log
+      const response = await axios.post(`http://${IP_Address}:8002/register`, userData);
       const data = await response.data;
       console.log(data);
 

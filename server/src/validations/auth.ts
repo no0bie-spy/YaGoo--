@@ -30,6 +30,7 @@ const userValidation = {
       role: Joi.string().valid('customer', 'rider').optional(),
     }),
   },
+
   login: {
     body: Joi.object({
       email: Joi.string().email().required().messages({
@@ -45,7 +46,6 @@ const userValidation = {
     }),
   },
   
-
   otp: {
     body: Joi.object({
       email: Joi.string().email().required().messages({
@@ -146,6 +146,31 @@ const userValidation = {
         'any.required': 'ReTypePassword is required',
         'string.min': 'ReTypePassword must be at least 6 characters',
       }),
+    }),
+  },
+
+  editProfileDetails: {
+    body: Joi.object({
+      email: Joi.string().email().optional().messages({
+        'any.required': 'Email is required',
+        'string.email': 'Invalid email format',
+      }),
+
+      fullname: Joi.string().min(3).optional().messages({
+        'any.required': 'Fullname is required',
+      }),
+
+      phone: Joi.string()
+        .length(10)
+        .optional()
+        .pattern(/^[0-9]+$/)
+  
+        .messages({
+          'string.length': 'Phone number must be exactly 10 digits',
+          'string.pattern.base': 'Phone number must contain only digits',
+          'any.required': 'Phone number is required',
+        }),
+
     }),
   },
 };

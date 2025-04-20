@@ -1,34 +1,29 @@
 import { Request, Response } from 'express';
 import User from '../models/User';
 import Ride from '../models/rides';
-import Bid from '../models/bid';
 
+export const findRide = async (req: Request, res: Response) => {
+  try {
+    const { email, start_location, destination } = req.body;
 
-interface SetLocationRequest {
-    user_id: string;
-    location: string;
-  }
-  
-  interface CreateRideRequest {
-    customer_id: string;
-    start_location: string;
-    destination: string;
-    otp_start: string;
-    status: 'requested' | 'matched' | 'in-progress' | 'completed' | 'cancelled';
-  }
-  
-  interface BidRideRequest {
-    rider_id: string;
-    ride_id: string;
-    bid_amount: number;
-  }
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found with the provided email' });
+    }
 
-  interface AcceptBidRequest {
-    ride_id: string;
-    bid_id: string;
+    const ride = await Ride.create({
+      customerId: user._id,
+      start_location,
+      destination,
+      status: 'not-started',
+    });
+
+    return res.status(201).json({ success: true, ride });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to save ride info',
+      error: error instanceof Error ? error.message : error,
+    });
   }
-  
-  interface UpdateRideStatusRequest {
-    status: 'requested' | 'matched' | 'in-progress' | 'completed' | 'cancelled';
-  }
-  
+};

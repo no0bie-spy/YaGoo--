@@ -43,3 +43,4 @@ server/.env
 /server/public/
 
 
+.env
