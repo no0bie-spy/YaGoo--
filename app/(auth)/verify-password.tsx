@@ -33,12 +33,14 @@ export default function VerifyPassword() {
                 retypePassword,
             };
 
-            const response = await axios.post('http://192.168.1.156:8002/changePassword', userData);
+            const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
+      console.log("IP Address:", IP_Address); // Debugging log
+      const response = await axios.post(`http://${IP_Address}:8002/changePassword`, userData);
             const data = response.data;
             console.log(data);
 
             await storeSession('accessToken', String(data.token));
-            router.replace('/(tabs)');
+            router.replace('/(tabs)/home');
         } catch (error: any) {
             console.log("Full error:", error);
 

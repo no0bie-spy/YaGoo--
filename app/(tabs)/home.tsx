@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, StyleSheet, Text, Platform, TextInput, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Text, Platform } from 'react-native';
 import { MapPin, Navigation, Search } from 'lucide-react-native';
 import * as Location from 'expo-location';
 import Input from '@/components/Input';
@@ -8,6 +8,7 @@ import AppButton from '@/components/Button';
 // Import MapView conditionally
 let MapView: any = null;
 let Marker: any = null;
+
 if (Platform.OS !== 'web') {
   const Maps = require('react-native-maps');
   MapView = Maps.default;
@@ -16,36 +17,37 @@ if (Platform.OS !== 'web') {
 
 export default function HomeScreen() {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
-
-
   const [source, setSource] = useState('');
   const [destination, setDestination] = useState('');
 
+  // Handle ride creation
   function handleRideCreation() {
     if (!source || !destination) {
-      alert("Please enter both pickup and destination locations.");
+      alert('Please enter both pickup and destination locations.');
       return;
     }
-    // Handle ride creation logic here
-    console.log("Ride created from", source, "to", destination);
+    console.log('Ride created from', source, 'to', destination);
   }
+
+  // Fetch user's location
   useEffect(() => {
     (async () => {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
-          console.log("Location permission not granted");
+          alert('Location permission not granted. Please enable it in your settings.');
           return;
         }
 
         const currentLocation = await Location.getCurrentPositionAsync({});
         setLocation(currentLocation);
       } catch (error) {
-        console.error("Error fetching location:", error);
+        console.error('Error fetching location:', error);
       }
     })();
   }, []);
 
+  // Render the map or placeholder
   const renderMap = () => {
     if (Platform.OS === 'web') {
       return (
@@ -94,33 +96,28 @@ export default function HomeScreen() {
     );
   };
 
-  return <View style={styles.container}>
-    {renderMap()}
-    <View style={styles.inputContainer}>
-      <Input
-        icon={<Search size={20} />}
-        placeholder="Enter pickup Location"
-        value={source}
-        setValue={setSource}
-        keyboardType="default"
-      />
-      <Input
-        icon={<Navigation size={20} />}
-        placeholder='Enter destination'
-        value={destination}
-        setValue={setDestination}
-        keyboardType='default'
-      />
-
-      <AppButton
-        title="Create Ride"
-        onPress={handleRideCreation}
-         />
-
-
-
-    </View >
-  </View >;
+  return (
+    <View style={styles.container}>
+      {renderMap()}
+      <View style={styles.inputContainer}>
+        <Input
+          icon={<Search size={20} />}
+          placeholder="Enter pickup location"
+          value={source}
+          setValue={setSource}
+          keyboardType="default"
+        />
+        <Input
+          icon={<Navigation size={20} />}
+          placeholder="Enter destination"
+          value={destination}
+          setValue={setDestination}
+          keyboardType="default"
+        />
+        <AppButton title="Create Ride" onPress={handleRideCreation} />
+      </View>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
