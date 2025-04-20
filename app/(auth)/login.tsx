@@ -19,12 +19,17 @@ export default function Login() {
         email,
         password
       };
-      const response = await axios.post('http://192.168.1.156:8002/login', userData);
+
+      if (!email || !password) {
+        alert("Please enter both email and password.");
+        return;
+      }
+      const response = await axios.post('http://192.168.1.149:8002/login', userData);
 
       const data = await response.data;
       console.log(data)
       await storeSession('accessToken', String(data.token));
-      router.replace('/(tabs)');
+      router.replace({ pathname: '/(tabs)/home' }); // Adjust the path as needed
     } catch (error: any) {
       console.log("Full error:", error);
 

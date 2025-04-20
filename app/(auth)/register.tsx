@@ -24,7 +24,10 @@ export default function Register() {
         fullname,
         phone,
       };
-
+      if (!email || !password || !fullname || !phone) {
+        alert("Please fill up all the details.");
+        return;
+      }
       const response = await axios.post('http://192.168.1.156:8002/register', userData);
       const data = await response.data;
       console.log(data);
