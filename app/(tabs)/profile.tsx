@@ -21,16 +21,17 @@ export default function ProfileScreen() {
   const fetchUserDetails = async () => {
     try {
       const token = await getSession('accessToken');
-      
-      const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
-      console.log("IP Address:", IP_Address); // Debugging log
-      const response = await axios.post(`http://${IP_Address}:8002/userdetails`, {
+      console.log('Fetched Token:', token); // Debugging log
 
+
+      const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
+
+      console.log("IP Address:", IP_Address); // Debugging log
+      const response = await axios.get(`http://${IP_Address}:8002/userdetails`, {
         headers: {
-          Authorization: `${token}`,
+          Authorization: `Bearer ${token}`, // Add "Bearer" prefix
         },
       });
-
       const data = response.data;
       setRole(data.user.role);
       setFullname(data.user.fullname);

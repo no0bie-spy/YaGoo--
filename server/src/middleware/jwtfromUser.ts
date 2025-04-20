@@ -4,7 +4,7 @@ import env from "../Ienv";
 import IRequest from "./IRequest";
 const getUserfromAuthToken=async(req:IRequest,res:Response,next:NextFunction)=>{
     try{
-         const authToken=req.headers['authorization'];
+        const authToken = req.headers['authorization']?.replace('Bearer ', '');
         //const authToken = req.header('Authorization')?.replace('Bearer ', '');
         
         
