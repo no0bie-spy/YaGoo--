@@ -132,6 +132,12 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
       { expiresIn: '7d' }
     );
 
+    res.cookie("uid", token, {
+      httpOnly: true,      // JS can't access this cookie
+      secure: true,        // Only send over HTTPS
+     
+    });
+    
     return res.status(200).json({
       message: 'Login successful',
       token,
@@ -448,6 +454,23 @@ const changePassword = async (
   }
 };
 
+//Logout
+const logout = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    
+    res.clearCookie("uid");
+    
+    
+  } catch (e: unknown) {
+    console.error('Verify Error', e);
+    if (e instanceof Error) {
+      return res.status(500).json({ message: e.message });
+    } else {
+      return res.status(500).json({ message: 'An unknown error occured' });
+    }
+  }
+};
+
 const authController = {
   register,
   login,
@@ -456,6 +479,7 @@ const authController = {
   forgotPassword,
   changePassword,
   sendOTP,
+  logout
 };
 
 export default authController;

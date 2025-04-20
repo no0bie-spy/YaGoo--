@@ -12,7 +12,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
   const { message } = useLocalSearchParams();
-
+  
   const handleLogin = async () => {
     try {
       const userData: any = {
@@ -26,7 +26,7 @@ export default function Login() {
       }
       const response = await axios.post('http://192.168.1.149:8002/login', userData);
 
-      const data = await response.data;
+      const data = await response.data;   
       console.log(data)
       await storeSession('accessToken', String(data.token));
       router.replace({ pathname: '/(tabs)/home' }); // Adjust the path as needed
