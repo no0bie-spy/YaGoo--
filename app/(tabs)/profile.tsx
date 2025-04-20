@@ -21,6 +21,7 @@ export default function ProfileScreen() {
   const fetchUserDetails = async () => {
     try {
       const token = await getSession('accessToken');
+      
       const response = await axios.get('http://192.168.1.149:8002/userdetails', {
 
         headers: {

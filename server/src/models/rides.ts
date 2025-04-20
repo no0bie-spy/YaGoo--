@@ -3,10 +3,10 @@ import { Schema, model, Types, Document } from 'mongoose';
 interface IRide extends Document {
   customer: Types.ObjectId;
   rider?: Types.ObjectId;
-  origin: string;
+  start_location: string;
   destination: string;
-  fare: number;
-  status: 'pending' | 'accepted' | 'completed' | 'cancelled';
+  otp_start: string;
+  status: 'requested' | 'matched' | 'in-progress' | 'completed' | 'cancelled';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -22,7 +22,7 @@ const rideSchema = new Schema<IRide>(
       type: Schema.Types.ObjectId,
       ref: 'User',
     },
-    origin: {
+    start_location: {
       type: String,
       required: true,
     },
@@ -30,14 +30,14 @@ const rideSchema = new Schema<IRide>(
       type: String,
       required: true,
     },
-    fare: {
-      type: Number,
+    otp_start: {
+      type: String,
       required: true,
     },
     status: {
       type: String,
-      enum: ['pending', 'accepted', 'completed', 'cancelled'],
-      default: 'pending',
+      enum: ['requested', 'matched', 'in-progress', 'completed', 'cancelled'],
+      default: 'requested',
     },
   },
   { timestamps: true }
