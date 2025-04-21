@@ -84,6 +84,11 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
     if (!existingUser) {
       return res.status(400).json({ details: [{ message: 'User not exist' }] });
     }
+    if(existingUser.isEmailVerified === false){
+      return res.status(200).json({
+        message: 'Your Email isnot verified yet ',
+      });
+    }
 
     // check password
     const matched = await bcrypt.compare(password, existingUser.password);
