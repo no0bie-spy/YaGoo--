@@ -6,7 +6,7 @@ interface IRide extends Document {
   start_location: string;
   destination: string;
   otp_start: string;
-  status: 'requested' | 'matched' | 'in-progress' | 'completed' | 'cancelled';
+  status: 'not-started' | 'requested' | 'matched' | 'in-progress' | 'completed' | 'cancelled';
   createdAt: Date;  
   updatedAt: Date;
 }

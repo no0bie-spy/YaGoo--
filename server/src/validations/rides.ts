@@ -12,6 +12,18 @@ const rideValidation = {
         'string.base': 'Destination must be a string',
       }),
     }),
+  },
+  placeBid:{
+    body: Joi.object({
+      rideId: Joi.string().required().messages({
+        'any.required': 'Ride ID is required',
+        'string.base': 'Ride ID must be a string',
+      }),
+      amount: Joi.number().required().messages({
+        'any.required': 'Amount is required',
+        'number.base': 'Amount must be a number',
+      }),
+    }),
   }
 };
 

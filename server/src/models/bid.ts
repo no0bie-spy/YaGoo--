@@ -2,9 +2,9 @@ import { Schema, model, Types, Document } from 'mongoose';
 
 interface IBid extends Document {
   rideId: Types.ObjectId; 
-  rider: Types.ObjectId;
+  userId: Types.ObjectId; // Renamed from "rider" to "userId"
   amount: number; 
-  createdAt: Date; 
+  createdAt: Date;
 }
 
 const bidSchema = new Schema<IBid>(
@@ -14,7 +14,7 @@ const bidSchema = new Schema<IBid>(
       ref: 'Ride',
       required: true,
     },
-    rider: {
+    userId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
@@ -24,7 +24,7 @@ const bidSchema = new Schema<IBid>(
       required: true,
     },
   },
-  { timestamps: { createdAt: true, updatedAt: false } } 
+  { timestamps: { createdAt: true, updatedAt: false } }
 );
 
 const Bid = model<IBid>('Bid', bidSchema);
