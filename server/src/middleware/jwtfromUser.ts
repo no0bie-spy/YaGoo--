@@ -12,7 +12,7 @@ const getUserfromAuthToken=async(req:IRequest,res:Response,next:NextFunction)=>{
        if(decode){
         if(typeof decode==="string"){
             res.status(403).json({
-                message:"You arenot authorized"
+                message:"You are not authorized"
             })
             return
         }

@@ -5,16 +5,18 @@ meta {
 }
 
 post {
-  url: http://localhost:8002/register
+  url: http://localhost:8002/find-ride
   body: json
-  auth: inherit
+  auth: none
+}
+
+headers {
+  Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODAwNGYzZWM4OGJlZGMxYzlhM2I0Y2UiLCJyb2xlIjoicmlkZXIiLCJpYXQiOjE3NDUxNDY3MjMsImV4cCI6MTc0NTc1MTUyM30.YdnDpWqaT_OMoKRaGnE6OEYFjLfnbYz9-dEIPV7-nxU
 }
 
 body:json {
   {
-    "email":"bsaladkari@gmail.com",
-    "fullname":"bishal Adhiakri",
-    "password":"91823981",
-    "phone":"1111111111"
+    "start_location":"Kajipokhari",
+    "destination": "chipledhunga"
   }
 }
