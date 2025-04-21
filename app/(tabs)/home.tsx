@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { View, StyleSheet, Text, Platform } from 'react-native';
-import { MapPin, Navigation, Search } from 'lucide-react-native';
+import { MapPin, Navigation, Search, DollarSign } from 'lucide-react-native';
 import * as Location from 'expo-location';
 import Input from '@/components/Input';
 import AppButton from '@/components/Button';
@@ -23,10 +23,11 @@ export default function HomeScreen() {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [start_location, setstart_location] = useState('');
   const [destination, setDestination] = useState('');
+  const [rideId, setRideId] = useState<string | null>(null);
+  const [price, setPrice] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
-  const [rideId, setRideId] = useState<string | null>(null); // Store ride_id after creation
 
-  // Fetch user's location
+  // Fetch user location
   useEffect(() => {
     (async () => {
       try {
@@ -62,11 +63,10 @@ export default function HomeScreen() {
       });
 
       const ride = response.data.ride;
-      const ride_id = response.data.ride_id || ride?.id;
+      const ride_id = ride._id;
 
-      setRideId(ride_id); // Save ride ID for bid
+      setRideId(ride_id); // Store ride ID
       alert('Ride created successfully');
-      console.log('Ride created from', start_location, 'to', destination, 'Ride ID:', ride_id);
     } catch (error: any) {
       console.log('Full error:', error);
       if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
@@ -91,13 +91,18 @@ export default function HomeScreen() {
         return;
       }
 
+      if (!price) {
+        alert('Please enter a price.');
+        return;
+      }
+
       const token = await getSession('accessToken');
       const bidDetails = {
-        ride_id: rideId,
-        // You can add additional fields like `price`, `note`, etc.
+        rideId: rideId,
+        amount:price,
       };
 
-      const response = await axios.post(`http://${IP_Address}:8002/create-bid`, bidDetails, {
+      const response = await axios.post(`http://${IP_Address}:8002/place-bid`, bidDetails, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -120,7 +125,7 @@ export default function HomeScreen() {
     }
   }
 
-  // Render map or fallback view
+  // Render map or fallback
   const renderMap = () => {
     if (Platform.OS === 'web') {
       return (
@@ -174,28 +179,38 @@ export default function HomeScreen() {
       {renderMap()}
 
       <View style={styles.inputContainer}>
-        <Input
-          icon={<Search size={20} />}
-          placeholder="Enter pickup location"
-          value={start_location}
-          setValue={setstart_location}
-          keyboardType="default"
-        />
-        <Input
-          icon={<Navigation size={20} />}
-          placeholder="Enter destination"
-          value={destination}
-          setValue={setDestination}
-          keyboardType="default"
-        />
-        <AppButton title="Find Ride" onPress={handleRideCreation} />
+        {/* Show Find Ride only if no ride created yet */}
+        {!rideId && (
+          <>
+            <Input
+              icon={<Search size={20} />}
+              placeholder="Enter pickup location"
+              value={start_location}
+              setValue={setstart_location}
+              keyboardType="default"
+            />
+            <Input
+              icon={<Navigation size={20} />}
+              placeholder="Enter destination"
+              value={destination}
+              setValue={setDestination}
+              keyboardType="default"
+            />
+            <AppButton title="Find Ride" onPress={handleRideCreation} />
+          </>
+        )}
 
-        {/* Show bid section only if ride is created */}
+        {/* Show Create Bid section only when ride is created */}
         {rideId && (
           <View style={{ marginTop: 20 }}>
-            <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 10 }}>
-              Create Bid for Ride ID: {rideId}
-            </Text>
+           
+            <Input
+              icon={<DollarSign size={20} />}
+              placeholder="Enter your price"
+              value={price}
+              setValue={setPrice}
+              keyboardType="numeric"
+            />
             <AppButton title="Create Bid" onPress={handleBid} />
           </View>
         )}
