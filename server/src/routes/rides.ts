@@ -7,7 +7,7 @@ import rideController from '../controllers/rides';
 const rideRouter = express.Router();
 
 rideRouter.post('/find-ride', validate(rideValidation.findRide),rideController.findRide);
-// rideRouter.post('/create-ride', validate(rideValidation.createRide), rideController.createRide);
+rideRouter.post('/place-bid', validate(rideValidation.placeBid), rideController.placeBid);
 
 // rideRouter.post('/bid-ride', validate(rideValidation.bidRide));
 
