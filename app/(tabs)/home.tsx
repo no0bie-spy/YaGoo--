@@ -16,6 +16,7 @@ if (Platform.OS !== 'web') {
   MapView = Maps.default;
   Marker = Maps.Marker;
 }
+
 const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
 
 export default function HomeScreen() {
@@ -23,41 +24,7 @@ export default function HomeScreen() {
   const [start_location, setstart_location] = useState('');
   const [destination, setDestination] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
-  // Handle ride creation
-  async function handleRideCreation() {
-    try{
-     
-
-      if (!start_location || !destination) {
-        alert('Please enter both pickup and destination locations.');
-        return;
-      }
-
-      const token = await getSession('accessToken');
-      const locationDetails={start_location, destination};
-      const response=axios.post(`http://${IP_Address}:8002/find-ride`,locationDetails,{
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      alert("Ride created successfully");
-      console.log('Ride created from', start_location, 'to', destination);
-    }catch (error: any) {
-      console.log("Full error:", error);
-
-      if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
-        const errorMessages = error.response.data.details.map((err: any) => err.message);
-        setErrors(errorMessages);
-        alert(errorMessages);
-      } else if (error.response?.data?.message) {
-        setErrors([error.response.data.message]); // fallback if message is provided
-        alert(error.response.data.message);
-      } else {
-        setErrors(["Something went wrong."]);
-        alert("Something went wrong.");
-      }
-    }
-  }
+  const [rideId, setRideId] = useState<string | null>(null); // Store ride_id after creation
 
   // Fetch user's location
   useEffect(() => {
@@ -77,7 +44,83 @@ export default function HomeScreen() {
     })();
   }, []);
 
-  // Render the map or placeholder
+  // Handle ride creation
+  async function handleRideCreation() {
+    try {
+      if (!start_location || !destination) {
+        alert('Please enter both pickup and destination locations.');
+        return;
+      }
+
+      const token = await getSession('accessToken');
+      const locationDetails = { start_location, destination };
+
+      const response = await axios.post(`http://${IP_Address}:8002/find-ride`, locationDetails, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const ride = response.data.ride;
+      const ride_id = response.data.ride_id || ride?.id;
+
+      setRideId(ride_id); // Save ride ID for bid
+      alert('Ride created successfully');
+      console.log('Ride created from', start_location, 'to', destination, 'Ride ID:', ride_id);
+    } catch (error: any) {
+      console.log('Full error:', error);
+      if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
+        const errorMessages = error.response.data.details.map((err: any) => err.message);
+        setErrors(errorMessages);
+        alert(errorMessages.join('\n'));
+      } else if (error.response?.data?.message) {
+        setErrors([error.response.data.message]);
+        alert(error.response.data.message);
+      } else {
+        setErrors(['Something went wrong.']);
+        alert('Something went wrong.');
+      }
+    }
+  }
+
+  // Handle bid creation
+  async function handleBid() {
+    try {
+      if (!rideId) {
+        alert('Ride ID not available.');
+        return;
+      }
+
+      const token = await getSession('accessToken');
+      const bidDetails = {
+        ride_id: rideId,
+        // You can add additional fields like `price`, `note`, etc.
+      };
+
+      const response = await axios.post(`http://${IP_Address}:8002/create-bid`, bidDetails, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      alert('Bid created successfully!');
+    } catch (error: any) {
+      console.log('Full error:', error);
+      if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
+        const errorMessages = error.response.data.details.map((err: any) => err.message);
+        setErrors(errorMessages);
+        alert(errorMessages.join('\n'));
+      } else if (error.response?.data?.message) {
+        setErrors([error.response.data.message]);
+        alert(error.response.data.message);
+      } else {
+        setErrors(['Something went wrong.']);
+        alert('Something went wrong.');
+      }
+    }
+  }
+
+  // Render map or fallback view
   const renderMap = () => {
     if (Platform.OS === 'web') {
       return (
@@ -129,6 +172,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       {renderMap()}
+
       <View style={styles.inputContainer}>
         <Input
           icon={<Search size={20} />}
@@ -145,6 +189,16 @@ export default function HomeScreen() {
           keyboardType="default"
         />
         <AppButton title="Find Ride" onPress={handleRideCreation} />
+
+        {/* Show bid section only if ride is created */}
+        {rideId && (
+          <View style={{ marginTop: 20 }}>
+            <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 10 }}>
+              Create Bid for Ride ID: {rideId}
+            </Text>
+            <AppButton title="Create Bid" onPress={handleBid} />
+          </View>
+        )}
       </View>
     </View>
   );

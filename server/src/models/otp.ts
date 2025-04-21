@@ -18,6 +18,8 @@ const otpSchema = new Schema<IOtp>({
   },
   
   createdAt: { type: Date, default: Date.now },
+},{
+  timestamps:true
 });
 
 export const Otp = mongoose.model<IOtp>('Otp', otpSchema);
