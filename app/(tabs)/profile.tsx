@@ -6,6 +6,10 @@ import axios from 'axios';
 import { Edit2Icon, EditIcon, Lock, LogOut } from 'lucide-react-native';
 import AppButton from '@/components/Button';
 import Input from '@/components/Input';
+import ChangePasswordForm from '@/components/Profile/ChangePasswordForm';
+import EditProfileForm from '@/components/Profile/EditProfileForm';
+import ProfileInfoSection from '@/components/Profile/ProfileInfoSection';
+import ProfileHeader from '@/components/Profile/ProfileHeader';
 
 export default function ProfileScreen() {
   const [role, setRole] = useState<string | null>(null);
@@ -133,100 +137,28 @@ export default function ProfileScreen() {
   return (
     <View style={{ flex: 1 }}>
       {showChangePassword ? (
-        // Change Password View
-        <View style={styles.centeredContainer}>
-          <Text style={styles.heading}>Change Password</Text>
-          <View style={styles.formContainer}>
-            <Input
-              icon={<Lock size={20} />}
-              placeholder="Current Password"
-              value={currentpassword}
-              setValue={setcurrentPassword}
-              secureTextEntry
-            />
-            <Input
-              icon={<Lock size={20} />}
-              placeholder="New Password"
-              value={newpassword}
-              setValue={setnewPassword}
-              secureTextEntry
-            />
-            <Input
-              icon={<Lock size={20} />}
-              placeholder="Confirm Password"
-              value={newpassword}
-              setValue={setnewPassword}
-              secureTextEntry
-            />
-
-            <AppButton title="Change Password" onPress={handleChangePassword} />
-            <AppButton
-              title="Back to Profile"
-              onPress={() => setShowChangePassword(false)} // Go back to Profile view
-              style={{ backgroundColor: '#007AFF' }}
-              textStyle={{ color: '#FFF' }}
-            />
-          </View>
-        </View>
+        <ChangePasswordForm
+          currentpassword={currentpassword}
+          setcurrentPassword={setcurrentPassword}
+          newpassword={newpassword}
+          setnewPassword={setnewPassword}
+          onChange={handleChangePassword}
+          onCancel={() => setShowChangePassword(false)}
+        />
       ) : showEditProfile ? (
-        // Edit Profile View
-        <View style={styles.centeredContainer}>
-          <Text style={styles.heading}>Edit Profile</Text>
-          <View style={styles.formContainer}>
-            <Input
-              placeholder="Full Name"
-              value={fullname}
-              setValue={setFullname}
-            />
-            <Input
-              placeholder="Phone Number"
-              value={phone}
-              setValue={setPhone}
-              keyboardType="phone-pad"
-            />
-            <AppButton title="Save Changes" onPress={handleSaveProfile} />
-            <AppButton
-              title="Back to Profile"
-              onPress={() => setShowEditProfile(false)} // Go back to Profile view
-              style={{ backgroundColor: '#007AFF' }}
-              textStyle={{ color: '#FFF' }}
-            />
-          </View>
-        </View>
+        <EditProfileForm
+          fullname={fullname}
+          setFullname={setFullname}
+          phone={phone}
+          setPhone={setPhone}
+          onSave={handleSaveProfile}
+          onCancel={() => setShowEditProfile(false)}
+        />
       ) : (
-        // Profile View
         <ScrollView contentContainerStyle={styles.container}>
-          <View style={styles.header}>
-            <Image
-              source={{ uri: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400' }}
-              style={styles.avatar}
-            />
-            <Text style={styles.name}>{fullname || 'Loading...'}</Text>
-            <Text style={styles.email}>{email || 'Loading...'}</Text>
-          </View>
+          <ProfileHeader fullname={fullname} email={email} />
+          <ProfileInfoSection role={role as string} phone={phone} riderDocuments={riderDocuments} vehicle={vehicle} />
 
-          <View style={styles.infoContainer}>
-            <Text style={styles.infoText}>Phone: {phone || 'Loading...'}</Text>
-            <Text style={styles.infoText}>Role: {role || 'Loading...'}</Text>
-
-            {role === 'rider' && riderDocuments && (
-              <>
-                <Text style={styles.subHeading}>Rider Documents</Text>
-                <Text style={styles.infoText}>License Number: {riderDocuments.licenseNumber}</Text>
-                <Text style={styles.infoText}>Citizenship Number: {riderDocuments.citizenshipNumber}</Text>
-              </>
-            )}
-
-            {role === 'rider' && vehicle && (
-              <>
-                <Text style={styles.subHeading}>Vehicle Details</Text>
-                <Text style={styles.infoText}>Type: {vehicle.vehicleType}</Text>
-                <Text style={styles.infoText}>Name: {vehicle.vehicleName}</Text>
-                <Text style={styles.infoText}>Model: {vehicle.vehicleModel}</Text>
-                <Text style={styles.infoText}>Number Plate: {vehicle.vehicleNumberPlate}</Text>
-              </>
-            )}
-          </View>
           <AppButton
             title="Edit Profile"
             onPress={() => setShowEditProfile(true)}
@@ -255,7 +187,9 @@ export default function ProfileScreen() {
             textStyle={{ color: '#FF3B30' }}
           />
         </ScrollView>
+
       )}
+
     </View>
   );
 }

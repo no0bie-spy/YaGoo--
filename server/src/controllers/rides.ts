@@ -43,7 +43,8 @@ const placeBid = async (req: IRequest, res: Response) => {
     if (!ride) {
       return res.status(404).json({ success: false, message: 'Ride not found' });
     }
-
+    console.log("Amount:"+amount);
+    console.log("RideId"+rideId)
     if (ride.status !== 'not-started') {
       return res.status(400).json({ success: false, message: 'Ride has already started or completed' });
     }
