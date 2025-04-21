@@ -4,6 +4,8 @@ import { MapPin, Navigation, Search } from 'lucide-react-native';
 import * as Location from 'expo-location';
 import Input from '@/components/Input';
 import AppButton from '@/components/Button';
+import axios from 'axios';
+import { getSession } from '@/usableFunction/Session';
 
 // Import MapView conditionally
 let MapView: any = null;
@@ -14,22 +16,47 @@ if (Platform.OS !== 'web') {
   MapView = Maps.default;
   Marker = Maps.Marker;
 }
+const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
 
 export default function HomeScreen() {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
-  const [source, setSource] = useState('');
+  const [start_location, setstart_location] = useState('');
   const [destination, setDestination] = useState('');
-
+  const [errors, setErrors] = useState<string[]>([]);
   // Handle ride creation
-  function handleRideCreation() {
-    if (!source || !destination) {
-      alert('Please enter both pickup and destination locations.');
-      return;
+  async function handleRideCreation() {
+    try{
+     
+
+      if (!start_location || !destination) {
+        alert('Please enter both pickup and destination locations.');
+        return;
+      }
+
+      const token = await getSession('accessToken');
+      const locationDetails={start_location, destination};
+      const response=axios.post(`http://${IP_Address}:8002/find-ride`,locationDetails,{
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      alert("Ride created successfully");
+      console.log('Ride created from', start_location, 'to', destination);
+    }catch (error: any) {
+      console.log("Full error:", error);
+
+      if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
+        const errorMessages = error.response.data.details.map((err: any) => err.message);
+        setErrors(errorMessages);
+        alert(errorMessages);
+      } else if (error.response?.data?.message) {
+        setErrors([error.response.data.message]); // fallback if message is provided
+        alert(error.response.data.message);
+      } else {
+        setErrors(["Something went wrong."]);
+        alert("Something went wrong.");
+      }
     }
-
-    const locationDetails={source, destination};
-
-    console.log('Ride created from', source, 'to', destination);
   }
 
   // Fetch user's location
@@ -106,8 +133,8 @@ export default function HomeScreen() {
         <Input
           icon={<Search size={20} />}
           placeholder="Enter pickup location"
-          value={source}
-          setValue={setSource}
+          value={start_location}
+          setValue={setstart_location}
           keyboardType="default"
         />
         <Input

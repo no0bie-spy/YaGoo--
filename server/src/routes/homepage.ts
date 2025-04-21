@@ -8,6 +8,6 @@ import userValidation from '../validations/auth';
 const userSettingRouter = Router();
 
 userSettingRouter.get('/userdetails',  homepageController.userDetails )
-userSettingRouter.post('/editProfileDetails', validate(userValidation.editProfileDetails), homepageController.editProfileDetails )
+userSettingRouter.put('/editProfileDetails', validate(userValidation.editProfileDetails), homepageController.editProfileDetails )
 
 export default userSettingRouter

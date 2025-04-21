@@ -151,10 +151,7 @@ const userValidation = {
 
   editProfileDetails: {
     body: Joi.object({
-      email: Joi.string().email().optional().messages({
-        'any.required': 'Email is required',
-        'string.email': 'Invalid email format',
-      }),
+      
 
       fullname: Joi.string().min(3).optional().messages({
         'any.required': 'Fullname is required',
