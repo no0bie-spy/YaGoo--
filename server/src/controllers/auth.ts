@@ -75,45 +75,54 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 //login
-const login = async (req: Request, res: Response) => {
+const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email, password } = req.body;
-    console.log('Login attempt:', { email });
-
-    // Check if the user exists
+    console.log('email:', email);
+    console.log('password:', password);
     const existingUser = await User.findOne({ email });
+    console.log('existingUser:', existingUser);
     if (!existingUser) {
-      return res.status(400).json({ details: [{ message: 'User does not exist' }] });
+      return res.status(400).json({ details: [{ message: 'User not exist' }] });
+    }
+    if (existingUser.isEmailVerified === false) {
+      return res
+        .status(200)
+        .json({ details: [{ message: 'Your Email isnot verified yet ' }] });
     }
 
-    // Check if the email is verified
-    if (!existingUser.isEmailVerified) {
-      return res.status(400).json({ details: [{ message: 'Your email is not verified yet' }] });
+    // check password
+    const matched = await bcrypt.compare(password, existingUser.password);
+    if (!matched) {
+      return res
+        .status(400)
+        .json({ details: [{ message: 'Invalid Email or Password ' }] });
     }
+    console.log('matched:', matched);
 
-    // Validate the password
-    const isPasswordValid = await bcrypt.compare(password, existingUser.password);
-    if (!isPasswordValid) {
-      return res.status(400).json({ details: [{ message: 'Invalid email or password' }] });
-    }
-
-    // Generate a JWT token
     const token = jwt.sign(
-      { userId: existingUser._id, role: existingUser.role },
+      {
+        userId: existingUser._id,
+        role: existingUser.role,
+      },
       env.JWT_SECRET,
       { expiresIn: '7d' }
     );
-    console.log('Generated token:', token);
+    console.log('token:' + token);
 
-    // Send the token in the response
+    res.cookie('uid', token, {
+      httpOnly: true, // JS can't access this cookie
+      secure: true, // Only send over HTTPS
+    });
+
     return res.status(200).json({
       message: 'Login successful',
       token,
     });
-  } catch (error: unknown) {
-    console.error('Login error:', error);
-    if (error instanceof Error) {
-      return res.status(500).json({ message: error.message });
+  } catch (e: unknown) {
+    console.error('Register error:', e);
+    if (e instanceof Error) {
+      return res.status(500).json({ message: e.message });
     } else {
       return res.status(500).json({ message: 'An unknown error occurred' });
     }
@@ -434,18 +443,20 @@ const changePassword = async (
 };
 
 //Logout
-const logout = async (req: Request, res: Response, next: NextFunction) => {
+const logout = async (req: Request, res: Response) => {
   try {
-    res.clearCookie('uid');
-    res.json({
-      message: 'Succesfully logout',
+    console.log('Clearing cookie: uid'); // Debugging log
+    res.clearCookie('uid', { path: '/' }); // Ensure the path matches the one used when setting the cookie
+
+    return res.status(200).json({
+      message: 'Logout successful',
     });
   } catch (e: unknown) {
-    console.error('Verify Error', e);
+    console.error('Logout error:', e);
     if (e instanceof Error) {
       return res.status(500).json({ message: e.message });
     } else {
-      return res.status(500).json({ message: 'An unknown error occured' });
+      return res.status(500).json({ message: 'An unknown error occurred' });
     }
   }
 };
