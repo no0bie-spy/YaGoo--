@@ -5,7 +5,6 @@ interface OSRMResponse {
   routes: { distance: number }[];
 }
 
-// Function to calculate road distance using OSRM API
 export async function calculateRoadDistance(
   startLat: number, 
   startLng: number, 
@@ -23,7 +22,11 @@ export async function calculateRoadDistance(
     }
     return null;
   } catch (error) {
-    console.error('Error calculating road distance:', error);
+    if (error instanceof Error) {
+      console.error('Error calculating road distance:', error.message);
+    } else {
+      console.error('Error calculating road distance:', error);
+    }
     return null;
   }
 }

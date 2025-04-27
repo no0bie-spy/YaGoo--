@@ -2,21 +2,26 @@ import { useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import * as Location from 'expo-location';
 import axios from 'axios';
+import { useRouter } from 'expo-router';
 import { getSession } from '@/usableFunction/Session';
 import MapComponent from '@/components/Home/MapComponent';
 import FindRideForm from '@/components/Home/FindRideForm';
 import BidForm from '@/components/Home/BidForm';
+import { useLocationSetter } from '@/components/LocationSetterContext';
 
 const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
 
 export default function HomeScreen() {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
-  const [start_location, setstart_location] = useState('');
-  const [destination, setDestination] = useState('');
+  const [pickup, setPickup] = useState({ address: '', coordinates: null });
+  const [destination, setDestination] = useState({ address: '', coordinates: null });
   const [rideId, setRideId] = useState<string | null>(null);
   const [price, setPrice] = useState('');
+  const router = useRouter();
+  const { setSetter } = useLocationSetter();
   const [errors, setErrors] = useState<string[]>([]);
-
+  const [minimumPrice, setMinimumPrice] = useState<number | null>(null);
+  // Request location permissions and get the current location
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -26,24 +31,61 @@ export default function HomeScreen() {
     })();
   }, []);
 
+  // Open the map picker screen
+  const openMap = (setterFn: typeof setPickup) => {
+    setSetter(() => setterFn); // Set the context setter
+    router.push('/MapPickerScreen'); // Navigate to the map picker screen
+  };
+
+  // Handle ride creation
   const handleRideCreation = async () => {
-    if (!start_location || !destination) return alert('Please enter all fields');
+    if (!pickup.address || !destination.address) {
+      return alert('Please enter all fields');
+    }
     try {
       const token = await getSession('accessToken');
+      if (!token) {
+        return alert('You are not logged in. Please log in to continue.');
+      }
+      console.log("token:"+token)
+
       const response = await axios.post(`http://${IP_Address}:8002/find-ride`, {
-        start_location,
-        destination,
+        start_location: {
+          address: pickup.address,
+          coordinates: pickup.coordinates,
+        },
+        destination: {
+          address: destination.address,
+          coordinates: destination.coordinates,
+        },
       }, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setRideId(response.data.ride._id);
+
+      const data = response.data;
+      const minimumPrice = data.ride.minimumPrice;
+      console.log('Minimum Price:', minimumPrice);
+      setMinimumPrice(minimumPrice);
+      setRideId(data.ride._id);
     } catch (error: any) {
-      alert('Error finding ride.');
+      console.log("Full error:", error);
+
+      if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
+        const errorMessages = error.response.data.details.map((err: any) => err.message);
+        setErrors(errorMessages);
+      } else if (error.response?.data?.message) {
+        setErrors([error.response.data.message]);
+      } else {
+        setErrors(["Something went wrong."]);
+      }
     }
   };
 
+  // Handle bid placement
   const handleBid = async () => {
-    if (!price || !rideId) return;
+    if (!price || !rideId) {
+      return alert('Please enter a valid bid amount');
+    }
     try {
       const token = await getSession('accessToken');
       await axios.post(`http://${IP_Address}:8002/place-bid`, {
@@ -52,9 +94,18 @@ export default function HomeScreen() {
       }, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      alert('Bid placed!');
-    } catch (e) {
-      alert('Error placing bid');
+      alert('Bid placed successfully!');
+    } catch (error: any) {
+      console.log("Full error:", error);
+
+      if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
+        const errorMessages = error.response.data.details.map((err: any) => err.message);
+        setErrors(errorMessages);
+      } else if (error.response?.data?.message) {
+        setErrors([error.response.data.message]); // Fallback if message is provided
+      } else {
+        setErrors(["Something went wrong."]);
+      }
     }
   };
 
@@ -64,10 +115,11 @@ export default function HomeScreen() {
       <View style={styles.overlay}>
         {!rideId ? (
           <FindRideForm
-            startLocation={start_location}
+            pickup={pickup}
             destination={destination}
-            setStartLocation={setstart_location}
+            setPickup={setPickup}
             setDestination={setDestination}
+            onOpenMap={openMap}
             onSubmit={handleRideCreation}
           />
         ) : (
@@ -79,8 +131,10 @@ export default function HomeScreen() {
               setRideId(null);
               setPrice('');
             }}
-            startLocation={start_location}
-            destination={destination}
+            startLocation={pickup.address}
+            destination={destination.address}
+            minimumPrice={minimumPrice}
+            
           />
         )}
       </View>

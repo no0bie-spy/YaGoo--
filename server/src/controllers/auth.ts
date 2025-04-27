@@ -75,52 +75,45 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 //login
-const login = async (req: Request, res: Response, next: NextFunction) => {
+const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
+    console.log('Login attempt:', { email });
 
+    // Check if the user exists
     const existingUser = await User.findOne({ email });
-
     if (!existingUser) {
-      return res.status(400).json({ details: [{ message: 'User not exist' }] });
-    }
-    if(existingUser.isEmailVerified === false){
-      return res.status(200).json({
-        message: 'Your Email isnot verified yet ',
-      });
+      return res.status(400).json({ details: [{ message: 'User does not exist' }] });
     }
 
-    // check password
-    const matched = await bcrypt.compare(password, existingUser.password);
-    if (!matched) {
-      return res
-        .status(400)
-        .json({ details: [{ message: 'Invalid Email or Password ' }] });
+    // Check if the email is verified
+    if (!existingUser.isEmailVerified) {
+      return res.status(400).json({ details: [{ message: 'Your email is not verified yet' }] });
     }
 
+    // Validate the password
+    const isPasswordValid = await bcrypt.compare(password, existingUser.password);
+    if (!isPasswordValid) {
+      return res.status(400).json({ details: [{ message: 'Invalid email or password' }] });
+    }
+
+    // Generate a JWT token
     const token = jwt.sign(
-      {
-        userId: existingUser._id,
-        role: existingUser.role,
-      },
+      { userId: existingUser._id, role: existingUser.role },
       env.JWT_SECRET,
       { expiresIn: '7d' }
     );
+    console.log('Generated token:', token);
 
-    res.cookie("uid", token, {
-      httpOnly: true,      // JS can't access this cookie
-      secure: true,        // Only send over HTTPS
-    });
-
-   
+    // Send the token in the response
     return res.status(200).json({
       message: 'Login successful',
       token,
     });
-  } catch (e: unknown) {
-    console.error('Register error:', e);
-    if (e instanceof Error) {
-      return res.status(500).json({ message: e.message });
+  } catch (error: unknown) {
+    console.error('Login error:', error);
+    if (error instanceof Error) {
+      return res.status(500).json({ message: error.message });
     } else {
       return res.status(500).json({ message: 'An unknown error occurred' });
     }
@@ -140,51 +133,61 @@ const registerRider = async (
       vehicleType,
       vehicleName,
       vehicleModel,
-      vehicleNumberPlate
+      vehicleNumberPlate,
     } = req.body;
 
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-    console.log("Request Body:", req.body);
-    console.log("Uploaded Files:", req.files);
+    console.log('Request Body:', req.body);
+    console.log('Uploaded Files:', req.files);
     // Extract paths safely
     const licensePhotoPath = files?.licensePhoto?.[0]?.path || null;
     const citizenshipPhotoPath = files?.citizenshipPhoto?.[0]?.path || null;
     const vehiclePhotoPath = files?.vehiclePhoto?.[0]?.path || null;
-    const vehicleNumberPlatePhotoPath = files?.vehicleNumberPlatePhoto?.[0]?.path || null;
-    const vehicleBlueBookPhotoPath = files?.vehicleBlueBookPhoto?.[0]?.path || null;
+    const vehicleNumberPlatePhotoPath =
+      files?.vehicleNumberPlatePhoto?.[0]?.path || null;
+    const vehicleBlueBookPhotoPath =
+      files?.vehicleBlueBookPhoto?.[0]?.path || null;
 
-    if (!licensePhotoPath || !citizenshipPhotoPath || !vehiclePhotoPath || !vehicleNumberPlatePhotoPath || !vehicleBlueBookPhotoPath) {
+    if (
+      !licensePhotoPath ||
+      !citizenshipPhotoPath ||
+      !vehiclePhotoPath ||
+      !vehicleNumberPlatePhotoPath ||
+      !vehicleBlueBookPhotoPath
+    ) {
       return res.status(400).json({
-        message: "All required documents must be uploaded.",
+        message: 'All required documents must be uploaded.',
       });
     }
     const user = await User.findOne({ email });
     if (!user) {
-        console.error("User not found with email:", email); // Log the email being searched
-        return res.status(404).json({
-            message: "User not found. Please register first.",
-        });
+      console.error('User not found with email:', email); // Log the email being searched
+      return res.status(404).json({
+        message: 'User not found. Please register first.',
+      });
     }
     user.role = 'rider';
     await user.save();
 
     if (user.role !== 'rider') {
       return res.status(403).json({
-        message: "Only users with rider role can register rider documents.",
+        message: 'Only users with rider role can register rider documents.',
       });
     }
 
-    const existingRiderDocs = await RiderDocuments.findOne({ riderId: user._id });
+    const existingRiderDocs = await RiderDocuments.findOne({
+      riderId: user._id,
+    });
     if (existingRiderDocs) {
       return res.status(409).json({
-        message: "Rider documents already submitted.",
+        message: 'Rider documents already submitted.',
       });
     }
 
     const existingVehicle = await Vehicle.findOne({ riderId: user._id });
     if (existingVehicle) {
       return res.status(409).json({
-        message: "Vehicle already registered for this rider.",
+        message: 'Vehicle already registered for this rider.',
       });
     }
 
@@ -210,7 +213,7 @@ const registerRider = async (
     await vehicle.save();
 
     const { token, info } = await sendRecoveryEmail(email);
-    console.log("OTP sent:", token, info);
+    console.log('OTP sent:', token, info);
 
     // Hash the OTP and save it in the database
     const hashedToken = await bcrypt.hash(token, 10);
@@ -228,22 +231,23 @@ const registerRider = async (
     );
 
     return res.status(201).json({
-      message: "Rider documents and vehicle registered successfully.",
+      message: 'Rider documents and vehicle registered successfully.',
       riderDocuments: riderDocs,
       vehicle,
     });
-    
   } catch (error: any) {
     if (error instanceof multer.MulterError) {
       if (error.code === 'LIMIT_FILE_SIZE') {
-        return res.status(400).json({ message: 'File size exceeds the limit of 10 MB.' });
+        return res
+          .status(400)
+          .json({ message: 'File size exceeds the limit of 10 MB.' });
       }
       return res.status(400).json({ message: error.message });
     }
 
-    console.error("Error registering rider:", error);
+    console.error('Error registering rider:', error);
     return res.status(500).json({
-      message: "Something went wrong while registering rider documents.",
+      message: 'Something went wrong while registering rider documents.',
       error: error instanceof Error ? error.message : error,
     });
   }
@@ -432,14 +436,10 @@ const changePassword = async (
 //Logout
 const logout = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    
-    res.clearCookie("uid");
-   res.json({
-
-     message:"Succesfully logout"
-    }
-   ) 
-
+    res.clearCookie('uid');
+    res.json({
+      message: 'Succesfully logout',
+    });
   } catch (e: unknown) {
     console.error('Verify Error', e);
     if (e instanceof Error) {
@@ -458,7 +458,7 @@ const authController = {
   forgotPassword,
   changePassword,
   sendOTP,
-  logout
+  logout,
 };
 
 export default authController;

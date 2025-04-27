@@ -2,6 +2,9 @@ import { Request, Response } from 'express';
 import Ride from '../models/rides';
 import IRequest from '../middleware/IRequest';
 import Bid from '../models/bid';
+import { calculateRoadDistance } from '../services/distance';
+
+const BASE_RATE = 15; // Rs. 15 per km
 
 const findRide = async (req: IRequest, res: Response) => {
   try {
@@ -9,18 +12,62 @@ const findRide = async (req: IRequest, res: Response) => {
     const customerId = req.userId;
 
     if (!customerId) {
-      return res.status(400).json({ details: [{ success: false, message: 'Customer ID is missing' }] });
+      return res.status(400).json({
+        details: [{ message: 'Customer ID is missing' }],
+      });
     }
 
+    if (!start_location || !destination) {
+      return res.status(400).json({
+        success: false,
+        message:"Validation error",
+        details: [{ message: 'Start location and destination are required' }],
+      });
+    }
+
+    // Further validation for coordinates (lat range check)
+    if (
+      start_location.coordinates.latitude < -90 ||
+      start_location.coordinates.latitude > 90 ||
+      destination.coordinates.latitude < -90 ||
+      destination.coordinates.latitude > 90
+    ) {
+      return res.status(400).json({
+        details: [{ message: 'Invalid latitude/longitude values' }],
+      });
+    }
+
+    const distance = await calculateRoadDistance(
+      start_location.coordinates.latitude,
+      start_location.coordinates.longitude,
+      destination.coordinates.latitude,
+      destination.coordinates.longitude
+    );
+    console.log('Distance:', distance);
+
+    if (!distance || distance <= 0) {
+      return res.status(400).json({
+        details: [{ message: 'Unable to calculate valid route distance' }],
+      });
+    }
+
+    const minimumPrice = Math.round(distance * BASE_RATE);
+    console.log('Minimum Price:', minimumPrice);
     const ride = await Ride.create({
       customerId,
       start_location,
       destination,
+      distance,
+      minimumPrice,
       status: 'not-started',
-      bids: [],
     });
 
-    return res.status(201).json({ success: true, ride });
+    return res.status(201).json({
+      success: true,
+      ride,
+      minimumPrice, 
+      message: 'Ride created successfully',
+    });
   } catch (e: unknown) {
     console.error('Register error:', e);
     if (e instanceof Error) {
@@ -30,24 +77,47 @@ const findRide = async (req: IRequest, res: Response) => {
     }
   }
 };
+
 const placeBid = async (req: IRequest, res: Response) => {
   try {
     const { amount, rideId } = req.body;
     const userId = req.userId;
 
     if (!userId) {
-      return res.status(400).json({ success: false, message: 'User ID is missing from auth middleware' });
+      return res.status(400).json({
+        details: [{ message: 'User ID is missing' }],
+      });
     }
 
     const ride = await Ride.findById(rideId);
+
     if (!ride) {
-      return res.status(404).json({ success: false, message: 'Ride not found' });
+      return res.status(404).json({
+        details: [{ message: 'Ride not found' }],
+      });
     }
-    console.log("Amount:"+amount);
-    console.log("RideId"+rideId)
+
     if (ride.status !== 'not-started') {
-      return res.status(400).json({ success: false, message: 'Ride has already started or completed' });
+      return res.status(400).json({
+        details: [{ message: 'Ride has already started or completed' }],
+      });
     }
+
+    if (amount < ride.minimumPrice) {
+      return res.status(400).json({
+        details: [
+          { message: `Bid amount must be at least Rs. ${ride.minimumPrice}` },
+        ],
+      });
+    }
+
+    const existingBid = await Bid.findOne({ rideId, userId });
+    if (existingBid) {
+      return res.status(400).json({
+        details: [{ message: 'You have already placed a bid on this ride' }],
+      });
+    }
+
     const bid = new Bid({
       rideId,
       userId,
@@ -56,9 +126,18 @@ const placeBid = async (req: IRequest, res: Response) => {
 
     await bid.save();
 
-    return res.status(200).json({ success: true, message: 'Bid placed successfully', bid });
+    return res.status(200).json({
+      success: true,
+      message: 'Bid placed successfully',
+      bid: {
+        rideId: bid.rideId,
+        userId: bid.userId,
+        amount: bid.amount,
+        createdAt: bid.createdAt,
+      },
+    });
   } catch (e: unknown) {
-    console.error('Bid error:', e);
+    console.error('Register error:', e);
     if (e instanceof Error) {
       return res.status(500).json({ message: e.message });
     } else {
@@ -66,6 +145,7 @@ const placeBid = async (req: IRequest, res: Response) => {
     }
   }
 };
+
 const rideController = {
   findRide,
   placeBid,
