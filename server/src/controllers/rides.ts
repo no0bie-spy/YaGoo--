@@ -22,7 +22,7 @@ const findRide = async (req: IRequest, res: Response) => {
     if (!start_location || !destination) {
       return res.status(400).json({
         success: false,
-        message:"Validation error",
+        message: 'Validation error',
         details: [{ message: 'Start location and destination are required' }],
       });
     }
@@ -67,7 +67,7 @@ const findRide = async (req: IRequest, res: Response) => {
     return res.status(201).json({
       success: true,
       ride,
-      minimumPrice, 
+      minimumPrice,
       message: 'Ride created successfully',
     });
   } catch (e: unknown) {
@@ -151,7 +151,7 @@ const placeBid = async (req: IRequest, res: Response) => {
 const requestRideByRider = async (req: IRequest, res: Response) => {
   try {
     const { rideId } = req.body;
-    const riderId = req.userId; 
+    const riderId = req.userId;
 
     if (!riderId) {
       return res.status(400).json({
@@ -176,8 +176,8 @@ const requestRideByRider = async (req: IRequest, res: Response) => {
     // Ensure rideId is treated as a valid ObjectId
     const rideRequest = await RiderList.create({
       riderId,
-      rideId, 
-      status:'not-accepted',
+      rideId,
+      status: 'not-accepted',
     });
 
     return res.status(201).json({
@@ -187,6 +187,113 @@ const requestRideByRider = async (req: IRequest, res: Response) => {
     });
   } catch (e: unknown) {
     console.error('Request ride by rider error:', e);
+    if (e instanceof Error) {
+      return res.status(500).json({ message: e.message });
+    } else {
+      return res.status(500).json({ message: 'An unknown error occurred' });
+    }
+  }
+};
+
+
+const findRideByRider = async (req: Request, res: Response) => {
+  try {
+
+    // const customerId = req.userId;
+    const ride = await Ride.find({status: "requested"});
+
+    if(!ride){
+      return res.status(400).json({
+        details: [{ message: 'No any ride is available . Try after some moment' }],
+      });
+    }
+
+    return res.status(201).json({
+      success: true,
+   ride,
+      message: 'Ride created successfully',
+    });
+  } catch (e: unknown) {
+    console.error('Register error:', e);
+  }}
+
+const findRider = async (req: IRequest, res: Response) => {
+  try {
+    const riders = await RiderList.find({ status: 'accepted' }).lean();
+
+    const riderIds = riders.map((r) => r.riderId);
+
+    const users = await User.find({ _id: { $in: riderIds } }).lean();
+
+    const vehicles = await Vehicle.find({ riderId: { $in: riderIds } }).lean();
+
+    const reviews = await Review.find({ riderId: { _id: riderIds } }).lean();
+
+    const data = riders.map((rider) => {
+      const user = users.find(
+        (u) => u._id.toString() === rider.riderId.toString()
+      );
+      const vehicle = vehicles.find(
+        (v) => v.riderId.toString() === rider.riderId.toString()
+      );
+      const review = reviews.find(
+        (r) => r.riderId.toString() === rider.riderId.toString()
+      );
+      return {
+        
+        name: user?.fullname || 'N/A',
+        rating: review?.averageRating || 0,
+        vehicle: vehicle?.vehicleName || 'Not registered',
+      };
+    });
+
+    return res.status(200).json({
+      message: 'Successfully retrieved riders details',
+      data,
+    });
+  } catch (e: unknown) {
+    console.error('Logout error:', e);
+
+    if (e instanceof Error) {
+      return res.status(500).json({ message: e.message });
+    } else {
+      return res.status(500).json({ message: 'An unknown error occurred' });
+    }
+  }
+};
+
+const verifyRiderOtp = async (req: IRequest, res: Response) => {
+  try {
+    const { email, riderOtp } = req.body;
+
+    const otpRecord = await Otp.findOne({ email: email });
+
+    if (!otpRecord) {
+      return res.json({
+        details: [
+          {
+            message: 'Opt not found',
+          },
+        ],
+      });
+    }
+
+    if (otpRecord.OTP !== riderOtp) {
+      return res.json({
+        details: [
+          {
+            message: 'Incorrect Otp',
+          },
+        ],
+      });
+    } else if (otpRecord.OTP === riderOtp) {
+    
+      return res.json({
+        message: 'Otp verified',
+      });
+    }
+  } catch (e: unknown) {
+    console.error('Register error:', e);
     if (e instanceof Error) {
       return res.status(500).json({ message: e.message });
     } else {
@@ -261,7 +368,10 @@ const customerAcceptRide = async (req: IRequest, res: Response) => {
 const rideController = {
   findRide,
   placeBid,
+  findRider,
+
   requestRideByRider,
+,
   customerAcceptRide,  
 };
 
