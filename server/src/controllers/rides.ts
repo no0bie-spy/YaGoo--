@@ -3,12 +3,11 @@ import Ride from '../models/rides';
 import IRequest from '../middleware/IRequest';
 import Bid from '../models/bid';
 import { calculateRoadDistance } from '../services/distance';
-import RiderList from '../models/riderList';
+import RiderList from '../models/riderLIst';
 import User from '../models/User';
-import Vehicle from '../models/vehicle';
+import { Otp } from '../models/otp';
 import Review from '../models/review';
-import  {Otp } from '../models/otp';
-
+import Vehicle from '../models/vehicle';
 const BASE_RATE = 15; // Rs. 15 per km
 
 const findRide = async (req: IRequest, res: Response) => {
@@ -150,6 +149,7 @@ const placeBid = async (req: IRequest, res: Response) => {
     }
   }
 };
+
 const requestRideByRider = async (req: IRequest, res: Response) => {
   try {
     const { rideId } = req.body;
@@ -304,6 +304,69 @@ const verifyRiderOtp = async (req: IRequest, res: Response) => {
     }
   }
 };
+const customerAcceptRide = async (req: IRequest, res: Response) => {
+  try {
+    const { rideListId } = req.body;
+    const customerId = req.userId;
+
+    if (!customerId) {
+      return res.status(400).json({
+        details: [{ message: 'Customer ID is missing' }],
+      });
+    }
+
+    if (!rideListId) {
+      return res.status(400).json({
+        success: false,
+        message: 'RideList ID is required',
+        details: [{ message: 'RideList ID is required' }],
+      });
+    }
+
+    // Find the ride request in RiderList using RideListId
+    const rideRequest = await RiderList.findById(rideListId);
+
+    if (!rideRequest || rideRequest.status !== 'not-accepted') {
+      return res.status(404).json({
+        success: false,
+        message: 'Ride request not found or already accepted',
+      });
+    }
+
+    // Update the RiderList status to accepted
+    rideRequest.status = 'accepted';
+    await rideRequest.save();
+
+    // Find the Ride by rideId (the rideId should be same as the one in RiderList)
+    const ride = await Ride.findById(rideRequest.rideId);
+
+    if (!ride) {
+      return res.status(404).json({
+        success: false,
+        message: 'Ride not found',
+      });
+    }
+
+    // Update the Ride model with matched status
+    ride.status = 'matched';
+    ride.riderId = rideRequest.riderId;  // Use riderId from the RideList
+    await ride.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Ride accepted and matched successfully',
+      rideRequest,
+      ride,
+    });
+  } catch (e: unknown) {
+    console.error('Customer accept ride error:', e);
+    if (e instanceof Error) {
+      return res.status(500).json({ message: e.message });
+    } else {
+      return res.status(500).json({ message: 'An unknown error occurred' });
+    }
+  }
+};
 
 const rideController = {
   findRide,
@@ -312,6 +375,7 @@ const rideController = {
 
   requestRideByRider,
 
+  customerAcceptRide,  
 };
 
 export default rideController;

@@ -5,18 +5,17 @@ meta {
 }
 
 post {
-  url: ws://localhost:8002/place-bid
+  url: http://localhost:8002/rider-request
   body: json
   auth: none
 }
 
 headers {
-  Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODAwNGYzZWM4OGJlZGMxYzlhM2I0Y2UiLCJyb2xlIjoicmlkZXIiLCJpYXQiOjE3NDUyMTg1NTYsImV4cCI6MTc0NTgyMzM1Nn0.rCJxn12I_L42sD8gsJZd9Lr8GLuuMtvdnbFKacVmrbg
+  Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODBmNWU1MjIxZDE1NzE3NTE4ZmI3N2IiLCJyb2xlIjoicmlkZXIiLCJpYXQiOjE3NDU4Mzc4NjksImV4cCI6MTc0NjQ0MjY2OX0.fKvYx8xwnSEzhdIlYG5BZQ2Pioz_Yne1Eg9thV1x4_c
 }
 
 body:json {
   {
-    "rideId":"6804cf7f3cb5128388598763",
-    "amount":"123"
+    "rideId":"68049f667f89d016f7dc951d"
   }
 }
