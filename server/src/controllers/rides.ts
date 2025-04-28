@@ -7,6 +7,7 @@ import RiderList from '../models/riderList';
 import User from '../models/User';
 import Vehicle from '../models/vehicle';
 import Review from '../models/review';
+import  {Otp } from '../models/otp';
 
 const BASE_RATE = 15; // Rs. 15 per km
 
@@ -152,7 +153,7 @@ const placeBid = async (req: IRequest, res: Response) => {
 const requestRideByRider = async (req: IRequest, res: Response) => {
   try {
     const { rideId } = req.body;
-    const riderId = req.userId; 
+    const riderId = req.userId;
 
     if (!riderId) {
       return res.status(400).json({
@@ -177,8 +178,8 @@ const requestRideByRider = async (req: IRequest, res: Response) => {
     // Ensure rideId is treated as a valid ObjectId
     const rideRequest = await RiderList.create({
       riderId,
-      rideId, 
-      status:'not-accepted',
+      rideId,
+      status: 'not-accepted',
     });
 
     return res.status(201).json({
@@ -239,11 +240,53 @@ const findRider = async (req: IRequest, res: Response) => {
   }
 };
 
+const verifyRiderOtp = async (req: IRequest, res: Response) => {
+  try {
+    const {email,riderOtp}=req.body;
+
+     const otpRecord=await Otp.findOne({email:email});
+
+     if(!otpRecord){
+      return res.json({
+        details:[{
+         message: "Opt not found"
+        }]
+      })
+     };
+
+     if(otpRecord.OTP!==riderOtp){
+        return res.json({
+          details:[
+            {
+             message: "Incorrect Otp"
+            }
+          ]
+        })
+     }
+     else if(otpRecord.OTP===riderOtp){
+
+       return res.json({
+        message:"Otp verified",
+  
+       })
+     }
+
+     
+  } catch (e: unknown) {
+    console.error('Register error:', e);
+    if (e instanceof Error) {
+      return res.status(500).json({ message: e.message });
+    } else {
+      return res.status(500).json({ message: 'An unknown error occurred' });
+    }
+  }
+};
+
 const rideController = {
   findRide,
   placeBid,
   findRider,
-  requestRideByRider
+  requestRideByRider,
 };
 
 export default rideController;
