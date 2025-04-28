@@ -7,8 +7,9 @@ interface IRide extends Document {
   destination: string;
   otp_start: string;
   status: 'not-started' | 'requested' | 'matched' | 'in-progress' | 'completed' | 'cancelled';
-  createdAt: Date;  
+  createdAt: Date;
   updatedAt: Date;
+  bids: Types.ObjectId[];  // Add this field to hold bid references
 }
 
 const rideSchema = new Schema<IRide>(
@@ -35,9 +36,13 @@ const rideSchema = new Schema<IRide>(
     },
     status: {
       type: String,
-      enum: ['not-started','requested', 'matched', 'in-progress', 'completed', 'cancelled'],
+      enum: ['not-started', 'requested', 'matched', 'in-progress', 'completed', 'cancelled'],
       default: 'requested',
     },
+    bids: [{
+      type: Schema.Types.ObjectId,
+      ref: 'Bid',
+    }],
   },
   { timestamps: true }
 );

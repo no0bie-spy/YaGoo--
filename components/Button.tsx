@@ -26,8 +26,8 @@ const AppButton: React.FC<AppButtonProps> = ({
   style,
   textStyle,
   Icon,
-  iconColor = '#fff', // default icon color
-  iconSize = 24,       // default icon size
+  iconColor = '#fff', 
+  iconSize = 24,     
 }) => {
   return (
     <TouchableOpacity style={[styles.button, style]} onPress={onPress}>
