@@ -3,6 +3,7 @@ import Ride from '../models/rides';
 import IRequest from '../middleware/IRequest';
 import Bid from '../models/bid';
 import { calculateRoadDistance } from '../services/distance';
+import RiderList from '../models/riderLIst';
 
 const BASE_RATE = 15; // Rs. 15 per km
 
@@ -146,8 +147,51 @@ const placeBid = async (req: IRequest, res: Response) => {
   }
 };
 const requestRideByRider = async (req: IRequest, res: Response) => {
+  try {
+    const { rideId } = req.body;
+    const riderId = req.userId; 
 
-}
+    if (!riderId) {
+      return res.status(400).json({
+        details: [{ message: 'User ID (riderId) is missing' }],
+      });
+    }
+
+    if (!rideId) {
+      return res.status(400).json({
+        error: 'rideId is required',
+        details: [
+          {
+            message: 'rideId is required',
+            path: ['rideId'],
+            type: 'any.required',
+            context: { label: 'rideId', key: 'rideId' },
+          },
+        ],
+      });
+    }
+
+    // Ensure rideId is treated as a valid ObjectId
+    const rideRequest = await RiderList.create({
+      riderId,
+      rideId, 
+      status:'not-accepted',
+    });
+
+    return res.status(201).json({
+      success: true,
+      rideRequest,
+      message: 'Ride request created successfully',
+    });
+  } catch (e: unknown) {
+    console.error('Request ride by rider error:', e);
+    if (e instanceof Error) {
+      return res.status(500).json({ message: e.message });
+    } else {
+      return res.status(500).json({ message: 'An unknown error occurred' });
+    }
+  }
+};
 
 const rideController = {
   findRide,

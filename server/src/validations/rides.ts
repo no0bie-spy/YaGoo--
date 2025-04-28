@@ -42,10 +42,6 @@ const rideValidation = {
   },
   requestRideByRider:{
     body: Joi.object({
-      riderId: Joi.string().required().messages({
-        'any.required': 'riderId is required',
-        'string.base': 'riderId must be a string',
-      }),
       rideId: Joi.string().required().messages({
         'any.required': 'rideId is required',
         'string.base': 'rideId must be a string',
