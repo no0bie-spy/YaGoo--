@@ -40,7 +40,7 @@ const rideValidation = {
       }),
     }),
   },
-  requestRideByRider:{
+  requestRideByRider: {
     body: Joi.object({
       rideId: Joi.string().required().messages({
         'any.required': 'rideId is required',
@@ -51,7 +51,19 @@ const rideValidation = {
         'string.base': 'Status must be a string',
       }),
     }),
-  }
+  },
+  customerAccept: {
+    body: Joi.object({
+      rideId: Joi.string().required().messages({
+        'any.required': 'Ride ID is required',
+        'string.base': 'Ride ID must be a string',
+      }),
+      username: Joi.string().required().messages({
+        'any.required': 'Username is required',
+        'string.base': 'Username must be a string',
+      }),
+    }),
+  },
 };
 
 export default rideValidation;

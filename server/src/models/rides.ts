@@ -13,7 +13,7 @@ interface Location {
 
 interface IRide extends Document {
   customerId: Types.ObjectId;
-  rider?: Types.ObjectId;
+  riderId?: Types.ObjectId;
   start_location: Location;
   destination: Location;
   otp_start: string;
@@ -54,7 +54,7 @@ const rideSchema = new Schema<IRide>(
       ref: 'User',
       required: true,
     },
-    rider: {
+    riderId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
     },
