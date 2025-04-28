@@ -5,7 +5,9 @@ import Bid from '../models/bid';
 import { calculateRoadDistance } from '../services/distance';
 import RiderList from '../models/riderLIst';
 import User from '../models/User';
-
+import { Otp } from '../models/otp';
+import Review from '../models/review';
+import Vehicle from '../models/vehicle';
 const BASE_RATE = 15; // Rs. 15 per km
 
 const findRide = async (req: IRequest, res: Response) => {
@@ -371,7 +373,7 @@ const rideController = {
   findRider,
 
   requestRideByRider,
-,
+
   customerAcceptRide,  
 };
 
