@@ -145,10 +145,14 @@ const placeBid = async (req: IRequest, res: Response) => {
     }
   }
 };
+const requestRideByRider = async (req: IRequest, res: Response) => {
+
+}
 
 const rideController = {
   findRide,
   placeBid,
+  requestRideByRider
 };
 
 export default rideController;

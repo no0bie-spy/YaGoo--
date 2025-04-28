@@ -17,15 +17,11 @@ interface IRide extends Document {
   destination: Location;
   otp_start: string;
   status: 'not-started' | 'requested' | 'matched' | 'in-progress' | 'completed' | 'cancelled';
-<<<<<<< HEAD
-  createdAt: Date;
-=======
   distance: number;
   minimumPrice: number;
-  createdAt: Date;  
->>>>>>> 7b89f3686c2b73f9ece0983631c9cd7b815d118b
+  createdAt: Date;
   updatedAt: Date;
-  bids: Types.ObjectId[];  // Add this field to hold bid references
+  bids: Types.ObjectId[];
 }
 
 
@@ -66,12 +62,6 @@ const rideSchema = new Schema<IRide>(
       enum: ['not-started', 'requested', 'matched', 'in-progress', 'completed', 'cancelled'],
       default: 'requested',
     },
-<<<<<<< HEAD
-    bids: [{
-      type: Schema.Types.ObjectId,
-      ref: 'Bid',
-    }],
-=======
     distance: {
       type: Number,
       required: true,
@@ -80,7 +70,6 @@ const rideSchema = new Schema<IRide>(
       type: Number,
       required: true,
     },
->>>>>>> 7b89f3686c2b73f9ece0983631c9cd7b815d118b
   },
   { timestamps: true }
 );
