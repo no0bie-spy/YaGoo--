@@ -40,6 +40,18 @@ const rideValidation = {
       }),
     }),
   },
+  requestRideByRider:{
+    body: Joi.object({
+      rideId: Joi.string().required().messages({
+        'any.required': 'rideId is required',
+        'string.base': 'rideId must be a string',
+      }),
+      status: Joi.string().valid('not-accepted').optional().messages({
+        'any.only': 'Status must be "not-accepted"',
+        'string.base': 'Status must be a string',
+      }),
+    }),
+  }
 };
 
 export default rideValidation;
