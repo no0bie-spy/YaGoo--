@@ -221,7 +221,8 @@ const findRideByRider = async (req: Request, res: Response) => {
 
 const findRider = async (req: IRequest, res: Response) => {
   try {
-    const riders = await RiderList.find({ status: 'accepted' }).lean();
+    const riders = await RiderList.find({  }).lean();
+    const riderListIds=riders.map((rl)=>rl._id)
 
     const riderIds = riders.map((r) => r.riderId);
 
@@ -242,7 +243,7 @@ const findRider = async (req: IRequest, res: Response) => {
         (r) => r.riderId.toString() === rider.riderId.toString()
       );
       return {
-        
+        riderListIds:riderListIds,
         name: user?.fullname || 'N/A',
         rating: review?.averageRating || 0,
         vehicle: vehicle?.vehicleName || 'Not registered',
