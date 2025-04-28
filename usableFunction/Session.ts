@@ -11,9 +11,10 @@ export const storeSession = async (key: string, value: string) => {
 };
 
 export const getSession = async (key: string) => {
-  const value = Platform.OS !== 'web'
-    ? await SecureStore.getItemAsync(key)
-    : localStorage.getItem(key);
+  const value =
+    Platform.OS !== 'web'
+      ? await SecureStore.getItemAsync(key)
+      : localStorage.getItem(key);
   console.log(`Retrieved session: ${key} = ${value}`); // Debugging log
   return value;
 };
@@ -25,3 +26,10 @@ export const clearSession = async (key: string) => {
     localStorage.removeItem(key);
   }
 };
+
+// Other exports
+
+export async function getUserRole(): Promise<string> {
+  // Mock implementation or actual logic to fetch user role
+  return 'rider'; // Replace with actual logic
+}
