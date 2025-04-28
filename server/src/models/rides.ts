@@ -1,3 +1,4 @@
+
 import { Schema, model, Types, Document } from 'mongoose';
 
 interface Coordinates {
@@ -16,24 +17,35 @@ interface IRide extends Document {
   start_location: Location;
   destination: Location;
   otp_start: string;
-  status: 'not-started' | 'requested' | 'matched' | 'in-progress' | 'completed' | 'cancelled';
+  status:
+    | 'not-started'
+    | 'requested'
+    | 'matched'
+    | 'in-progress'
+    | 'completed'
+    | 'cancelled';
   distance: number;
   minimumPrice: number;
+  bidId: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
-  bids: Types.ObjectId[];
 }
 
+const coordinatesSchema = new Schema<Coordinates>(
+  {
+    latitude: { type: Number, required: true },
+    longitude: { type: Number, required: true },
+  },
+  { _id: false }
+);
 
-const coordinatesSchema = new Schema<Coordinates>({
-  latitude: { type: Number, required: true },
-  longitude: { type: Number, required: true },
-}, { _id: false });
-
-const locationSchema = new Schema<Location>({
-  address: { type: String, required: true },
-  coordinates: { type: coordinatesSchema, required: true },
-}, { _id: false });
+const locationSchema = new Schema<Location>(
+  {
+    address: { type: String, required: true },
+    coordinates: { type: coordinatesSchema, required: true },
+  },
+  { _id: false }
+);
 
 const rideSchema = new Schema<IRide>(
   {
@@ -59,7 +71,14 @@ const rideSchema = new Schema<IRide>(
     },
     status: {
       type: String,
-      enum: ['not-started', 'requested', 'matched', 'in-progress', 'completed', 'cancelled'],
+      enum: [
+        'not-started',
+        'requested',
+        'matched',
+        'in-progress',
+        'completed',
+        'cancelled',
+      ],
       default: 'requested',
     },
     distance: {
@@ -70,10 +89,12 @@ const rideSchema = new Schema<IRide>(
       type: Number,
       required: true,
     },
+    bidId: {
+      type: Schema.Types.ObjectId,
+    },
   },
   { timestamps: true }
 );
-
 
 const Ride = model<IRide>('Ride', rideSchema);
 

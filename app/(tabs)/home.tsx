@@ -3,11 +3,13 @@ import { View, StyleSheet } from 'react-native';
 import * as Location from 'expo-location';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
-import { getSession } from '@/usableFunction/Session';
+import { getSession, getUserRole } from '@/usableFunction/Session';
 import MapComponent from '@/components/Home/MapComponent';
 import FindRideForm from '@/components/Home/FindRideForm';
 import BidForm from '@/components/Home/BidForm';
+
 import { useLocationSetter } from '@/components/LocationSetterContext';
+import RiderDashboard from '@/components/Rider/RiderDahsboard';
 
 const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
 
@@ -17,10 +19,12 @@ export default function HomeScreen() {
   const [destination, setDestination] = useState({ address: '', coordinates: null });
   const [rideId, setRideId] = useState<string | null>(null);
   const [price, setPrice] = useState('');
+  const [role, setRole] = useState<string | null>(null); // Store user role
   const router = useRouter();
   const { setSetter } = useLocationSetter();
   const [errors, setErrors] = useState<string[]>([]);
   const [minimumPrice, setMinimumPrice] = useState<number | null>(null);
+
   // Request location permissions and get the current location
   useEffect(() => {
     (async () => {
@@ -28,6 +32,10 @@ export default function HomeScreen() {
       if (status !== 'granted') return;
       const currentLocation = await Location.getCurrentPositionAsync({});
       setLocation(currentLocation);
+
+      // Fetch user role
+      const userRole = await getUserRole();
+      setRole(userRole);
     })();
   }, []);
 
@@ -47,7 +55,6 @@ export default function HomeScreen() {
       if (!token) {
         return alert('You are not logged in. Please log in to continue.');
       }
-      console.log("token:"+token)
 
       const response = await axios.post(`http://${IP_Address}:8002/find-ride`, {
         start_location: {
@@ -64,11 +71,10 @@ export default function HomeScreen() {
 
       const data = response.data;
       const minimumPrice = data.ride.minimumPrice;
-      console.log('Minimum Price:', minimumPrice);
       setMinimumPrice(minimumPrice);
       setRideId(data.ride._id);
     } catch (error: any) {
-      console.log("Full error:", error);
+      console.error('Full error:', error);
 
       if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
         const errorMessages = error.response.data.details.map((err: any) => err.message);
@@ -76,7 +82,7 @@ export default function HomeScreen() {
       } else if (error.response?.data?.message) {
         setErrors([error.response.data.message]);
       } else {
-        setErrors(["Something went wrong."]);
+        setErrors(['Something went wrong.']);
       }
     }
   };
@@ -96,18 +102,28 @@ export default function HomeScreen() {
       });
       alert('Bid placed successfully!');
     } catch (error: any) {
-      console.log("Full error:", error);
+      console.error('Full error:', error);
 
       if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
         const errorMessages = error.response.data.details.map((err: any) => err.message);
         setErrors(errorMessages);
       } else if (error.response?.data?.message) {
-        setErrors([error.response.data.message]); // Fallback if message is provided
+        setErrors([error.response.data.message]);
       } else {
-        setErrors(["Something went wrong."]);
+        setErrors(['Something went wrong.']);
       }
     }
   };
+
+  // if (role === 'rider') {
+
+  //   return (
+  //     <View style={styles.container}>
+  //       <MapComponent location={location} />
+  //       <RiderDashboard />;
+  //     </View>
+  //   )
+  // }
 
   return (
     <View style={styles.container}>
@@ -134,7 +150,6 @@ export default function HomeScreen() {
             startLocation={pickup.address}
             destination={destination.address}
             minimumPrice={minimumPrice}
-            
           />
         )}
       </View>
