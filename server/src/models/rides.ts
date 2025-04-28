@@ -17,6 +17,7 @@ interface IRide extends Document {
   start_location: Location;
   destination: Location;
   otp_start: string;
+<<<<<<< HEAD
   status:
     | 'not-started'
     | 'requested'
@@ -28,7 +29,18 @@ interface IRide extends Document {
   minimumPrice: number;
   bidId: Types.ObjectId;
   createdAt: Date;
+=======
+  status: 'not-started' | 'requested' | 'matched' | 'in-progress' | 'completed' | 'cancelled';
+<<<<<<< HEAD
+  createdAt: Date;
+=======
+  distance: number;
+  minimumPrice: number;
+  createdAt: Date;  
+>>>>>>> 7b89f3686c2b73f9ece0983631c9cd7b815d118b
+>>>>>>> refs/remotes/origin/main
   updatedAt: Date;
+  bids: Types.ObjectId[];  // Add this field to hold bid references
 }
 
 const coordinatesSchema = new Schema<Coordinates>(
@@ -81,6 +93,12 @@ const rideSchema = new Schema<IRide>(
       ],
       default: 'requested',
     },
+<<<<<<< HEAD
+    bids: [{
+      type: Schema.Types.ObjectId,
+      ref: 'Bid',
+    }],
+=======
     distance: {
       type: Number,
       required: true,
@@ -89,9 +107,13 @@ const rideSchema = new Schema<IRide>(
       type: Number,
       required: true,
     },
+<<<<<<< HEAD
     bidId: {
       type: Schema.Types.ObjectId,
     },
+=======
+>>>>>>> 7b89f3686c2b73f9ece0983631c9cd7b815d118b
+>>>>>>> refs/remotes/origin/main
   },
   { timestamps: true }
 );

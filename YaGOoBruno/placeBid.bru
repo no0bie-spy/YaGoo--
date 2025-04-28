@@ -1,0 +1,22 @@
+meta {
+  name: placeBid
+  type: http
+  seq: 6
+}
+
+post {
+  url: ws://localhost:8002/place-bid
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODAwNGYzZWM4OGJlZGMxYzlhM2I0Y2UiLCJyb2xlIjoicmlkZXIiLCJpYXQiOjE3NDUyMTg1NTYsImV4cCI6MTc0NTgyMzM1Nn0.rCJxn12I_L42sD8gsJZd9Lr8GLuuMtvdnbFKacVmrbg
+}
+
+body:json {
+  {
+    "rideId":"6804cf7f3cb5128388598763",
+    "amount":"123"
+  }
+}
