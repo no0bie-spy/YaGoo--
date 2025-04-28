@@ -1,9 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Input from '@/components/Input';
 import AppButton from '@/components/Button';
 import { IndianRupee } from 'lucide-react-native';
-
 type Props = {
   price: string;
   setPrice: (val: string) => void;
@@ -11,7 +10,9 @@ type Props = {
   onCancel: () => void;
   startLocation: string;
   destination: string;
+  minimumPrice: number | null; // Add minimumPrice prop
 };
+
 
 const BidForm = ({
   price,
@@ -20,6 +21,7 @@ const BidForm = ({
   onCancel,
   startLocation,
   destination,
+  minimumPrice,
 }: Props) => {
   return (
     <View style={styles.card}>
@@ -28,6 +30,12 @@ const BidForm = ({
         <Text style={styles.bold}>{destination}</Text>
       </Text>
 
+      {minimumPrice !== null && (
+        <Text style={styles.minimumPrice}>
+          Minimum Price: Rs. <Text style={styles.bold}>{minimumPrice}</Text>
+        </Text>
+      )}
+    
       <Input
         icon={<IndianRupee size={20} />}
         placeholder="Your Bid Price"
@@ -52,12 +60,25 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     textAlign: 'center',
   },
+  minimumPrice: {
+    fontSize: 14,
+    marginBottom: 10,
+    textAlign: 'center',
+    color: '#555',
+  },
   bold: {
     fontWeight: '600',
     color: '#333',
   },
   cancelBtn: {
     marginTop: 10,
+  },
+  
+  error: {
+    color: 'red',
+    fontSize: 12,
+    marginBottom: 5,
+    textAlign: 'center',
   },
 });
 

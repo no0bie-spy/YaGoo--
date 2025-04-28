@@ -25,32 +25,30 @@ export default function ProfileScreen() {
   const [errors, setErrors] = useState<string[]>([]);
   const handleLogout = async () => {
     try {
+     
 
-      const token = await getSession('accessToken');
       const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
-      const response = await axios.post(`http://${IP_Address}:8002/logout`)
-      const message = await response.data.message;
-      console.log(message)
-      await clearSession('accessToken');
-      router.replace({
-        pathname: '/login',
-        params: {
-          message: message
-        }
-      });
-    } catch (error: any) {
-      console.log("Full error:", error);
+      console.log('IP Address:', IP_Address); // Debugging log
+      const response = await axios.post(
+        `http://${IP_Address}:8002/logout`,
+        
+      );
 
-      if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
-        const errorMessages = error.response.data.details.map((err: any) => err.message);
-        setErrors(errorMessages);
-        alert(errorMessages);
-      } else if (error.response?.data?.message) {
-        setErrors([error.response.data.message]); // fallback if message is provided
+      const message = response.data.message;
+      console.log('Logout message:', message);
+
+      // Clear the session
+      await clearSession('accessToken');
+
+      // Redirect to login
+      router.replace('/(auth)/login');
+    } catch (error: any) {
+      console.log('Full error:', error);
+
+      if (error.response?.data?.message) {
         alert(error.response.data.message);
       } else {
-        setErrors(["Something went wrong."]);
-        alert("Something went wrong.");
+        alert('Something went wrong. Please try again.');
       }
     }
   };

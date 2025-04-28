@@ -3,41 +3,45 @@ import { View, Text, StyleSheet } from 'react-native';
 import Input from '@/components/Input';
 import AppButton from '@/components/Button';
 import { Search, Navigation } from 'lucide-react-native';
+import LocationPicker from './LocationPicker';
 
 type Props = {
-  startLocation: string;
-  destination: string;
-  setStartLocation: (val: string) => void;
-  setDestination: (val: string) => void;
+  pickup: any;
+  destination: any;
+  setPickup: (loc: any) => void;
+  setDestination: (loc: any) => void;
+  onOpenMap: (setter: any) => void;
   onSubmit: () => void;
 };
 
 const FindRideForm = ({
-  startLocation,
+  pickup,
   destination,
-  setStartLocation,
+  setPickup,
   setDestination,
+  onOpenMap,
   onSubmit,
 }: Props) => {
   return (
     <View>
       <Text style={styles.title}>Find a Ride</Text>
-      <Input
-        icon={<Search size={20} />}
-        placeholder="Pickup location"
-        value={startLocation}
-        setValue={setStartLocation}
+      <LocationPicker
+        label="Pickup Location"
+        location={pickup}
+        setLocation={setPickup}
+        onOpenMap={() => onOpenMap(setPickup)}
       />
-      <Input
-        icon={<Navigation size={20} />}
-        placeholder="Destination"
-        value={destination}
-        setValue={setDestination}
+      <LocationPicker
+        label="Destination"
+        location={destination}
+        setLocation={setDestination}
+        onOpenMap={() => onOpenMap(setDestination)}
       />
       <AppButton title="Search Ride" onPress={onSubmit} />
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   title: {

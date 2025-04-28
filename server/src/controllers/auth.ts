@@ -78,16 +78,17 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
 const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email, password } = req.body;
-
+    console.log('email:', email);
+    console.log('password:', password);
     const existingUser = await User.findOne({ email });
-
+    console.log('existingUser:', existingUser);
     if (!existingUser) {
       return res.status(400).json({ details: [{ message: 'User not exist' }] });
     }
-    if(existingUser.isEmailVerified === false){
-      return res.status(200).json({
-        message: 'Your Email isnot verified yet ',
-      });
+    if (existingUser.isEmailVerified === false) {
+      return res
+        .status(200)
+        .json({ details: [{ message: 'Your Email isnot verified yet ' }] });
     }
 
     // check password
@@ -97,6 +98,7 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
         .status(400)
         .json({ details: [{ message: 'Invalid Email or Password ' }] });
     }
+    console.log('matched:', matched);
 
     const token = jwt.sign(
       {
@@ -106,13 +108,13 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
       env.JWT_SECRET,
       { expiresIn: '7d' }
     );
+    console.log('token:' + token);
 
-    res.cookie("uid", token, {
-      httpOnly: true,      // JS can't access this cookie
-      secure: true,        // Only send over HTTPS
+    res.cookie('uid', token, {
+      httpOnly: true, // JS can't access this cookie
+      secure: true, // Only send over HTTPS
     });
 
-   
     return res.status(200).json({
       message: 'Login successful',
       token,
@@ -140,51 +142,61 @@ const registerRider = async (
       vehicleType,
       vehicleName,
       vehicleModel,
-      vehicleNumberPlate
+      vehicleNumberPlate,
     } = req.body;
 
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-    console.log("Request Body:", req.body);
-    console.log("Uploaded Files:", req.files);
+    console.log('Request Body:', req.body);
+    console.log('Uploaded Files:', req.files);
     // Extract paths safely
     const licensePhotoPath = files?.licensePhoto?.[0]?.path || null;
     const citizenshipPhotoPath = files?.citizenshipPhoto?.[0]?.path || null;
     const vehiclePhotoPath = files?.vehiclePhoto?.[0]?.path || null;
-    const vehicleNumberPlatePhotoPath = files?.vehicleNumberPlatePhoto?.[0]?.path || null;
-    const vehicleBlueBookPhotoPath = files?.vehicleBlueBookPhoto?.[0]?.path || null;
+    const vehicleNumberPlatePhotoPath =
+      files?.vehicleNumberPlatePhoto?.[0]?.path || null;
+    const vehicleBlueBookPhotoPath =
+      files?.vehicleBlueBookPhoto?.[0]?.path || null;
 
-    if (!licensePhotoPath || !citizenshipPhotoPath || !vehiclePhotoPath || !vehicleNumberPlatePhotoPath || !vehicleBlueBookPhotoPath) {
+    if (
+      !licensePhotoPath ||
+      !citizenshipPhotoPath ||
+      !vehiclePhotoPath ||
+      !vehicleNumberPlatePhotoPath ||
+      !vehicleBlueBookPhotoPath
+    ) {
       return res.status(400).json({
-        message: "All required documents must be uploaded.",
+        message: 'All required documents must be uploaded.',
       });
     }
     const user = await User.findOne({ email });
     if (!user) {
-        console.error("User not found with email:", email); // Log the email being searched
-        return res.status(404).json({
-            message: "User not found. Please register first.",
-        });
+      console.error('User not found with email:', email); // Log the email being searched
+      return res.status(404).json({
+        message: 'User not found. Please register first.',
+      });
     }
     user.role = 'rider';
     await user.save();
 
     if (user.role !== 'rider') {
       return res.status(403).json({
-        message: "Only users with rider role can register rider documents.",
+        message: 'Only users with rider role can register rider documents.',
       });
     }
 
-    const existingRiderDocs = await RiderDocuments.findOne({ riderId: user._id });
+    const existingRiderDocs = await RiderDocuments.findOne({
+      riderId: user._id,
+    });
     if (existingRiderDocs) {
       return res.status(409).json({
-        message: "Rider documents already submitted.",
+        message: 'Rider documents already submitted.',
       });
     }
 
     const existingVehicle = await Vehicle.findOne({ riderId: user._id });
     if (existingVehicle) {
       return res.status(409).json({
-        message: "Vehicle already registered for this rider.",
+        message: 'Vehicle already registered for this rider.',
       });
     }
 
@@ -210,7 +222,7 @@ const registerRider = async (
     await vehicle.save();
 
     const { token, info } = await sendRecoveryEmail(email);
-    console.log("OTP sent:", token, info);
+    console.log('OTP sent:', token, info);
 
     // Hash the OTP and save it in the database
     const hashedToken = await bcrypt.hash(token, 10);
@@ -228,22 +240,23 @@ const registerRider = async (
     );
 
     return res.status(201).json({
-      message: "Rider documents and vehicle registered successfully.",
+      message: 'Rider documents and vehicle registered successfully.',
       riderDocuments: riderDocs,
       vehicle,
     });
-    
   } catch (error: any) {
     if (error instanceof multer.MulterError) {
       if (error.code === 'LIMIT_FILE_SIZE') {
-        return res.status(400).json({ message: 'File size exceeds the limit of 10 MB.' });
+        return res
+          .status(400)
+          .json({ message: 'File size exceeds the limit of 10 MB.' });
       }
       return res.status(400).json({ message: error.message });
     }
 
-    console.error("Error registering rider:", error);
+    console.error('Error registering rider:', error);
     return res.status(500).json({
-      message: "Something went wrong while registering rider documents.",
+      message: 'Something went wrong while registering rider documents.',
       error: error instanceof Error ? error.message : error,
     });
   }
@@ -430,22 +443,20 @@ const changePassword = async (
 };
 
 //Logout
-const logout = async (req: Request, res: Response, next: NextFunction) => {
+const logout = async (req: Request, res: Response) => {
   try {
-    
-    res.clearCookie("uid");
-   res.json({
+    console.log('Clearing cookie: uid'); // Debugging log
+    res.clearCookie('uid', { path: '/' }); // Ensure the path matches the one used when setting the cookie
 
-     message:"Succesfully logout"
-    }
-   ) 
-
+    return res.status(200).json({
+      message: 'Logout successful',
+    });
   } catch (e: unknown) {
-    console.error('Verify Error', e);
+    console.error('Logout error:', e);
     if (e instanceof Error) {
       return res.status(500).json({ message: e.message });
     } else {
-      return res.status(500).json({ message: 'An unknown error occured' });
+      return res.status(500).json({ message: 'An unknown error occurred' });
     }
   }
 };
@@ -458,7 +469,7 @@ const authController = {
   forgotPassword,
   changePassword,
   sendOTP,
-  logout
+  logout,
 };
 
 export default authController;

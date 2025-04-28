@@ -1,47 +1,56 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { Lock, Mail } from 'lucide-react-native';
-import { useLocalSearchParams } from 'expo-router';
 import axios from 'axios';
 import Input from '@/components/Input';
 import AppButton from '@/components/Button';
 import { storeSession } from '@/usableFunction/Session';
+
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
-  const { message } = useLocalSearchParams();
 
   const handleLogin = async () => {
     try {
-      const userData: any = {
-        email,
-        password
-      };
-
       if (!email || !password) {
-        alert("Please enter both email and password.");
+        alert('Please enter both email and password.');
         return;
       }
+
       const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
-      console.log("IP Address:", IP_Address); // Debugging log
-      const response = await axios.post(`http://${IP_Address}:8002/login`, userData);
-      console.log("Response:", response); // Debugging log
-      const data = await response.data;
-      console.log(data)
-      await storeSession('accessToken', String(data.token));
-      router.replace({ pathname: '/(tabs)/home' }); // Adjust the path as needed
+      console.log('IP Address:', IP_Address); // Debugging log
+
+      const response = await axios.post(`http://${IP_Address}:8002/login`, {
+        email,
+        password,
+      });
+
+      console.log('Response:', response.data); // Debugging log
+      const { token } = response.data;
+
+      if (!token) {
+        console.error('Token is missing in the response.');
+        alert('Login failed. Please try again.');
+        return;
+      }
+
+      console.log('Token received:', token); // Debugging log
+      await storeSession('accessToken', token);
+      console.log('Token stored successfully:', token); // Debugging log
+
+      router.replace('/(tabs)/home'); // Navigate to the home screen
     } catch (error: any) {
-      console.log("Full error:", error);
+      console.log('Full error:', error);
 
       if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
         const errorMessages = error.response.data.details.map((err: any) => err.message);
         setErrors(errorMessages);
       } else if (error.response?.data?.message) {
-        setErrors([error.response.data.message]); // fallback if message is provided
+        setErrors([error.response.data.message]);
       } else {
-        setErrors(["Something went wrong."]);
+        setErrors(['Something went wrong.']);
       }
     }
   };
@@ -50,16 +59,13 @@ export default function Login() {
     <View style={styles.container}>
       <Text style={styles.title}>Welcome Back</Text>
 
-      {message ? (
-        <Text style={styles.success}>{message}</Text>
-      ) : null}
-
       {errors.length > 0 &&
         errors.map((err, index) => (
           <Text key={index} style={styles.error}>
             {err}
           </Text>
         ))}
+
       <Input
         icon={<Mail size={20} />}
         placeholder="Email"
@@ -76,20 +82,12 @@ export default function Login() {
       />
 
       <AppButton title="Login" onPress={handleLogin} />
-
       <AppButton
         title="Don't have an account? Register"
         onPress={() => router.push('/register')}
         style={{ backgroundColor: 'transparent' }}
         textStyle={{ color: '#2196F3' }}
       />
-      <AppButton
-        title="Forget Password?"
-        onPress={() => router.replace('/forgot-password')} // Corrected route name
-        style={{ backgroundColor: 'transparent' }}
-        textStyle={{ color: '#2196F3' }}
-      />
-
     </View>
   );
 }
@@ -101,52 +99,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#fff',
   },
-  success: {
-    color: 'green',
-    marginBottom: 15,
-    textAlign: 'center',
-    fontWeight: 'bold',
-  },
-
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 30,
     textAlign: 'center',
   },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    marginBottom: 15,
-    paddingHorizontal: 10,
-  },
-  input: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    padding: 15,
-    borderRadius: 8,
-    marginTop: 10,
-  },
-  buttonText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontWeight: 'bold',
-  },
   error: {
     color: 'red',
     marginBottom: 15,
     textAlign: 'center',
-  },
-  link: {
-    color: '#007AFF',
-    textAlign: 'center',
-    marginTop: 15,
   },
 });

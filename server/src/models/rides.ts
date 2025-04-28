@@ -1,16 +1,43 @@
 import { Schema, model, Types, Document } from 'mongoose';
 
+interface Coordinates {
+  latitude: number;
+  longitude: number;
+}
+
+interface Location {
+  address: string;
+  coordinates: Coordinates;
+}
+
 interface IRide extends Document {
   customerId: Types.ObjectId;
   rider?: Types.ObjectId;
-  start_location: string;
-  destination: string;
+  start_location: Location;
+  destination: Location;
   otp_start: string;
   status: 'not-started' | 'requested' | 'matched' | 'in-progress' | 'completed' | 'cancelled';
+<<<<<<< HEAD
   createdAt: Date;
+=======
+  distance: number;
+  minimumPrice: number;
+  createdAt: Date;  
+>>>>>>> 7b89f3686c2b73f9ece0983631c9cd7b815d118b
   updatedAt: Date;
   bids: Types.ObjectId[];  // Add this field to hold bid references
 }
+
+
+const coordinatesSchema = new Schema<Coordinates>({
+  latitude: { type: Number, required: true },
+  longitude: { type: Number, required: true },
+}, { _id: false });
+
+const locationSchema = new Schema<Location>({
+  address: { type: String, required: true },
+  coordinates: { type: coordinatesSchema, required: true },
+}, { _id: false });
 
 const rideSchema = new Schema<IRide>(
   {
@@ -24,11 +51,11 @@ const rideSchema = new Schema<IRide>(
       ref: 'User',
     },
     start_location: {
-      type: String,
+      type: locationSchema,
       required: true,
     },
     destination: {
-      type: String,
+      type: locationSchema,
       required: true,
     },
     otp_start: {
@@ -39,13 +66,25 @@ const rideSchema = new Schema<IRide>(
       enum: ['not-started', 'requested', 'matched', 'in-progress', 'completed', 'cancelled'],
       default: 'requested',
     },
+<<<<<<< HEAD
     bids: [{
       type: Schema.Types.ObjectId,
       ref: 'Bid',
     }],
+=======
+    distance: {
+      type: Number,
+      required: true,
+    },
+    minimumPrice: {
+      type: Number,
+      required: true,
+    },
+>>>>>>> 7b89f3686c2b73f9ece0983631c9cd7b815d118b
   },
   { timestamps: true }
 );
+
 
 const Ride = model<IRide>('Ride', rideSchema);
 
