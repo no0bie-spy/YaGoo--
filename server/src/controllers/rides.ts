@@ -242,6 +242,7 @@ const findRider = async (req: IRequest, res: Response) => {
         (r) => r.riderId.toString() === rider.riderId.toString()
       );
       return {
+        
         name: user?.fullname || 'N/A',
         rating: review?.averageRating || 0,
         vehicle: vehicle?.vehicleName || 'Not registered',
@@ -288,6 +289,7 @@ const verifyRiderOtp = async (req: IRequest, res: Response) => {
         ],
       });
     } else if (otpRecord.OTP === riderOtp) {
+    
       return res.json({
         message: 'Otp verified',
       });
