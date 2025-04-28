@@ -197,6 +197,28 @@ const requestRideByRider = async (req: IRequest, res: Response) => {
   }
 };
 
+
+const findRideByRider = async (req: Request, res: Response) => {
+  try {
+
+    // const customerId = req.userId;
+    const ride = await Ride.find({status: "requested"});
+
+    if(!ride){
+      return res.status(400).json({
+        details: [{ message: 'No any ride is available . Try after some moment' }],
+      });
+    }
+
+    return res.status(201).json({
+      success: true,
+   ride,
+      message: 'Ride created successfully',
+    });
+  } catch (e: unknown) {
+    console.error('Register error:', e);
+  }}
+
 const findRider = async (req: IRequest, res: Response) => {
   try {
     const riders = await RiderList.find({ status: 'accepted' }).lean();
@@ -232,6 +254,7 @@ const findRider = async (req: IRequest, res: Response) => {
     });
   } catch (e: unknown) {
     console.error('Logout error:', e);
+
     if (e instanceof Error) {
       return res.status(500).json({ message: e.message });
     } else {
@@ -242,36 +265,33 @@ const findRider = async (req: IRequest, res: Response) => {
 
 const verifyRiderOtp = async (req: IRequest, res: Response) => {
   try {
-    const {email,riderOtp}=req.body;
+    const { email, riderOtp } = req.body;
 
-     const otpRecord=await Otp.findOne({email:email});
+    const otpRecord = await Otp.findOne({ email: email });
 
-     if(!otpRecord){
+    if (!otpRecord) {
       return res.json({
-        details:[{
-         message: "Opt not found"
-        }]
-      })
-     };
+        details: [
+          {
+            message: 'Opt not found',
+          },
+        ],
+      });
+    }
 
-     if(otpRecord.OTP!==riderOtp){
-        return res.json({
-          details:[
-            {
-             message: "Incorrect Otp"
-            }
-          ]
-        })
-     }
-     else if(otpRecord.OTP===riderOtp){
-
-       return res.json({
-        message:"Otp verified",
-  
-       })
-     }
-
-     
+    if (otpRecord.OTP !== riderOtp) {
+      return res.json({
+        details: [
+          {
+            message: 'Incorrect Otp',
+          },
+        ],
+      });
+    } else if (otpRecord.OTP === riderOtp) {
+      return res.json({
+        message: 'Otp verified',
+      });
+    }
   } catch (e: unknown) {
     console.error('Register error:', e);
     if (e instanceof Error) {
@@ -286,7 +306,9 @@ const rideController = {
   findRide,
   placeBid,
   findRider,
+
   requestRideByRider,
+
 };
 
 export default rideController;
