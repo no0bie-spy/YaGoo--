@@ -4,6 +4,7 @@ import IRequest from '../middleware/IRequest';
 import Bid from '../models/bid';
 import { calculateRoadDistance } from '../services/distance';
 
+
 const BASE_RATE = 15; // Rs. 15 per km
 
 const findRide = async (req: IRequest, res: Response) => {
@@ -146,9 +147,38 @@ const placeBid = async (req: IRequest, res: Response) => {
   }
 };
 
+const findRideByRider = async (req: Request, res: Response) => {
+  try {
+
+    // const customerId = req.userId;
+    const ride = await Ride.find({status: "requested"});
+
+    if(!ride){
+      return res.status(400).json({
+        details: [{ message: 'No any ride is available . Try after some moment' }],
+      });
+    }
+
+    return res.status(201).json({
+      success: true,
+   ride,
+      message: 'Ride created successfully',
+    });
+  } catch (e: unknown) {
+    console.error('Register error:', e);
+    if (e instanceof Error) {
+      return res.status(500).json({ message: e.message });
+    } else {
+      return res.status(500).json({ message: 'An unknown error occurred' });
+    }
+  }
+};
+
+
 const rideController = {
   findRide,
   placeBid,
+  findRideByRider
 };
 
 export default rideController;

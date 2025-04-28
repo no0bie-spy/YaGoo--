@@ -7,5 +7,6 @@ const rideRouter = express.Router();
 
 rideRouter.post('/find-ride', validate(rideValidation.findRide), rideController.findRide);
 rideRouter.post('/place-bid', validate(rideValidation.placeBid), rideController.placeBid);
+rideRouter.get('/find-ride-by-rider',  rideController.findRideByRider);
 
 export default rideRouter;
