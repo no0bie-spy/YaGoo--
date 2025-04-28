@@ -3,6 +3,10 @@ import Ride from '../models/rides';
 import IRequest from '../middleware/IRequest';
 import Bid from '../models/bid';
 import { calculateRoadDistance } from '../services/distance';
+import RiderList from '../models/riderList';
+import User from '../models/User';
+import Vehicle from '../models/vehicle';
+import Review from '../models/review';
 
 const BASE_RATE = 15; // Rs. 15 per km
 
@@ -20,7 +24,7 @@ const findRide = async (req: IRequest, res: Response) => {
     if (!start_location || !destination) {
       return res.status(400).json({
         success: false,
-        message:"Validation error",
+        message: 'Validation error',
         details: [{ message: 'Start location and destination are required' }],
       });
     }
@@ -65,7 +69,7 @@ const findRide = async (req: IRequest, res: Response) => {
     return res.status(201).json({
       success: true,
       ride,
-      minimumPrice, 
+      minimumPrice,
       message: 'Ride created successfully',
     });
   } catch (e: unknown) {
@@ -146,9 +150,53 @@ const placeBid = async (req: IRequest, res: Response) => {
   }
 };
 
+const findRider = async (req: IRequest, res: Response) => {
+  try {
+    const riders = await RiderList.find({ status: 'accepted' }).lean();
+
+    const riderIds = riders.map((r) => r.riderId);
+
+    const users = await User.find({ _id: { $in: riderIds } }).lean();
+
+    const vehicles = await Vehicle.find({ riderId: { $in: riderIds } }).lean();
+
+    const reviews = await Review.find({ riderId: { _id: riderIds } }).lean();
+
+    const data = riders.map((rider) => {
+      const user = users.find(
+        (u) => u._id.toString() === rider.riderId.toString()
+      );
+      const vehicle = vehicles.find(
+        (v) => v.riderId.toString() === rider.riderId.toString()
+      );
+      const review = reviews.find(
+        (r) => r.riderId.toString() === rider.riderId.toString()
+      );
+      return {
+        name: user?.fullname || 'N/A',
+        rating: review?.averageRating || 0,
+        vehicle: vehicle?.vehicleName || 'Not registered',
+      };
+    });
+
+    return res.status(200).json({
+      message: 'Successfully retrieved riders details',
+      data,
+    });
+  } catch (e: unknown) {
+    console.error('Logout error:', e);
+    if (e instanceof Error) {
+      return res.status(500).json({ message: e.message });
+    } else {
+      return res.status(500).json({ message: 'An unknown error occurred' });
+    }
+  }
+};
+
 const rideController = {
   findRide,
   placeBid,
+  findRider,
 };
 
 export default rideController;

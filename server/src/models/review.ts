@@ -6,7 +6,10 @@ interface IReview extends Document{
     rideId:Types.ObjectId,
     riderId:Types.ObjectId,
     comment?:string,
-    rating:string
+    rating:number,
+    averageRating:number,
+    totalRating:number
+
 }
 
 const ReviewSchema=new Schema<IReview>({
@@ -22,8 +25,15 @@ const ReviewSchema=new Schema<IReview>({
         types:Schema.Types.ObjectId,
     },
     rating:{
-        types:String,
+        types:Number,
         required:true
+    },
+    averageRating:{
+        types:Number,
+       
+    },
+    totalRating:{
+        types:Number,
     }
 },{
     timestamps:true
