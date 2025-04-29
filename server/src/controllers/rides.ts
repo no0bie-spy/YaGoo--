@@ -201,35 +201,44 @@ const requestRideByRider = async (req: IRequest, res: Response) => {
 
 const findRideByRider = async (req: Request, res: Response) => {
   try {
-    // const customerId = req.userId;
-    const rides = await Ride.find({ status: 'requested' });
-    console.log(rides);
+    // Fetch rides where status is "requested"
+    const rides = await Ride.find({ status: "requested" });
 
-    
     // Check if no rides were found
     if (rides.length === 0) {
       return res.status(400).json({
-        details: [{ message: 'No rides with accepted status found.' }],
+        details: [{ message: 'No rides with requested status found.' }],
       });
     }
-    
+
     // Map over the rides to send a specific structure to the frontend
-    const rideDetails = rides.map((ride) => ({
-      rideId: ride._id,
-      startDestination: ride.start_location,
-      endDestination: ride.destination,
-      riderId: ride.riderId,
-    }));
+    const rideDetails = await Promise.all(
+      rides.map(async (ride) => {
+        // Fetch customer by the customerId for each ride
+        const customer = await User.findById(ride.customerId); // Get customer details using customerId
 
+        return {
+          customerName: customer?.fullname, // Assuming customer has a fullname field
+          customerEmail: customer?.email, // Assuming customer has an email field
+          rideId: ride._id,
+          startDestination: ride.start_location,
+          endDestination: ride.destination,
+          riderId: ride.riderId,
+        };
+      })
+    );
 
+    // Return the rides with customer details
     return res.status(200).json({
       success: true,
       rides: rideDetails,
     });
   } catch (e: unknown) {
-    console.error('Register error:', e);
+    console.error('Error:', e);
+    return res.status(500).json({ message: 'Internal Server Error' });
   }
 };
+
 
 const findRider = async (req: IRequest, res: Response) => {
   try {
