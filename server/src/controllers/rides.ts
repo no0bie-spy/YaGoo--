@@ -205,7 +205,7 @@ const findRideByRider = async (req: Request, res: Response) => {
     const rides = await Ride.find({ status: 'requested' });
     console.log(rides);
 
-    if(!ride){
+    if(!rides){
       return res.status(400).json({
         details: [
           { message: 'No any ride is available . Try after some moment' },
@@ -215,7 +215,7 @@ const findRideByRider = async (req: Request, res: Response) => {
 
     return res.status(201).json({
       success: true,
-   ride,
+   rides,
       message: 'Ride created successfully',
     });
   } catch (e: unknown) {
@@ -522,9 +522,6 @@ const rideController = {
   findRideByRider,
   findRider,
   verifyRiderOtp,
-<<<<<<< HEAD
-  customerAcceptRide,  
-=======
   customerAcceptRide,
   completedRide,
   reviewRide,
