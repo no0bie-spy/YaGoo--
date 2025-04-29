@@ -56,7 +56,7 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
     //   user,info
     // });
 
-    next(email);
+    
     return res.status(201).json({
       details: [
         {

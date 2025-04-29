@@ -8,6 +8,8 @@ import User from '../models/User';
 import { Otp } from '../models/otp';
 import Review from '../models/review';
 import Vehicle from '../models/vehicle';
+import { defaultMaxListeners } from 'events';
+import Rider from '../models/rider';
 const BASE_RATE = 15; // Rs. 15 per km
 
 const findRide = async (req: IRequest, res: Response) => {
@@ -223,45 +225,46 @@ const findRider = async (req: IRequest, res: Response) => {
   try {
     const riders = await RiderList.find({}).lean();
     const riderListIds = riders.map((rl) => rl._id);
-
     const riderIds = riders.map((r) => r.riderId);
 
     const users = await User.find({ _id: { $in: riderIds } }).lean();
-
+    const riderUserIds = users.map((u) => u._id);
+    const ridersData = await Rider.find({
+      userId: { $in: riderUserIds },
+    }).lean();
     const vehicles = await Vehicle.find({ riderId: { $in: riderIds } }).lean();
-
-    const reviews = await Review.find({ riderId: { _id: riderIds } }).lean();
 
     const data = riders.map((rider) => {
       const user = users.find(
         (u) => u._id.toString() === rider.riderId.toString()
       );
+
+      const riderInfo = ridersData.find(
+        (r) => r.userId.toString() === rider.riderId.toString()
+      );
+
       const vehicle = vehicles.find(
         (v) => v.riderId.toString() === rider.riderId.toString()
       );
-      const review = reviews.find(
-        (r) => r.riderId.toString() === rider.riderId.toString()
-      );
+
       return {
-        riderListIds: riderListIds,
+        riderListId: rider._id,
         name: user?.fullname || 'N/A',
-        rating: review?.averageRating || 0,
+        rating: riderInfo?.averageRating?.toFixed(1) || '0',
         vehicle: vehicle?.vehicleName || 'Not registered',
       };
     });
 
     return res.status(200).json({
-      message: 'Successfully retrieved riders details',
+      message: 'Successfully retrieved rider details',
       data,
     });
   } catch (e: unknown) {
-    console.error('Logout error:', e);
+    console.error('Find rider error:', e);
 
-    if (e instanceof Error) {
-      return res.status(500).json({ message: e.message });
-    } else {
-      return res.status(500).json({ message: 'An unknown error occurred' });
-    }
+    return res.status(500).json({
+      message: e instanceof Error ? e.message : 'An unknown error occurred',
+    });
   }
 };
 
@@ -293,10 +296,10 @@ const verifyRiderOtp = async (req: IRequest, res: Response) => {
         message: 'Ride not found',
       });
     }
-    ride.status="in-progress";
+    ride.status = 'in-progress';
     ride.startTimer = new Date();
     await ride.save();
-
+    await Otp.deleteOne({ email });
     return res.status(200).json({
       status: true,
       message: 'Otp verified',
@@ -394,24 +397,24 @@ const completedRide = async (req: IRequest, res: Response) => {
     if (!existingRide) {
       return res.status(404).json({
         status: false,
-        message: 'Ride not found',
+        details: [{ message: 'Ride not found' }],
       });
     }
 
     if (!existingRide.startTimer) {
       return res.status(400).json({
         status: false,
-        message: 'Ride has not started yet',
+        details: [{ message: 'Ride has not started yet' }],
       });
     }
 
-    existingRide.status = "completed";
+    existingRide.status = 'completed';
     existingRide.endTimer = new Date();
 
-    const timeDifferenceMs = existingRide.endTimer.getTime() - existingRide.startTimer.getTime();
-    const durationInMinutes = Math.ceil(timeDifferenceMs / (1000 * 60)); 
+    const timeDifferenceMs =
+      existingRide.endTimer.getTime() - existingRide.startTimer.getTime();
+    const durationInMinutes = Math.ceil(timeDifferenceMs / (1000 * 60));
 
-   
     (existingRide as any).totalTime = durationInMinutes;
 
     await existingRide.save();
@@ -430,6 +433,49 @@ const completedRide = async (req: IRequest, res: Response) => {
   }
 };
 
+const reviewRide = async (req: IRequest, res: Response) => {
+  try {
+    const { rideId, riderId, comment, rating } = req.body;
+    const existingRide = await Ride.findOne({ _id: rideId });
+    if (!existingRide) {
+      return res.status(400).json({
+        status: false,
+        details: [
+          {
+            message: 'Ride not found',
+          },
+        ],
+      });
+    }
+    if (!riderId) {
+      return res.status(400).json({
+        status: false,
+        details: [
+          {
+            message: 'Rider not found',
+          },
+        ],
+      });
+    }
+    const review = await Review.create({
+      rideId,
+      riderId,
+      comment,
+      rating,
+    });
+
+    return res.json({
+      review,
+      message: 'Reviewed Successfully',
+    });
+  } catch (e: unknown) {
+    console.error('Complete ride error', e);
+    return res.status(500).json({
+      status: false,
+      message: e instanceof Error ? e.message : 'An unknown error occurred',
+    });
+  }
+};
 const rideController = {
   findRide,
   placeBid,
@@ -437,7 +483,14 @@ const rideController = {
   findRideByRider,
   findRider,
   verifyRiderOtp,
+<<<<<<< HEAD
   customerAcceptRide,  
+=======
+  customerAcceptRide,
+  completedRide,       
+  reviewRide           
+>>>>>>> cbe8400 (create ride controller:review ride)
 };
+
 
 export default rideController;

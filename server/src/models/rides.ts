@@ -59,7 +59,7 @@ const rideSchema = new Schema<IRide>(
     },
     riderId: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'Rider',
     },
     start_location: {
       type: locationSchema,
