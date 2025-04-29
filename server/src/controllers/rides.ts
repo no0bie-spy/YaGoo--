@@ -3,12 +3,12 @@ import Ride from '../models/rides';
 import IRequest from '../middleware/IRequest';
 import Bid from '../models/bid';
 import { calculateRoadDistance } from '../services/distance';
-import RiderList from '../models/riderList';
+import RiderList from '../models/riderLIst';
 import User from '../models/User';
 import { Otp } from '../models/otp';
 import Review from '../models/review';
 import Vehicle from '../models/vehicle';
-
+import { defaultMaxListeners } from 'events';
 import Rider from '../models/rider';
 const BASE_RATE = 15; // Rs. 15 per km
 
@@ -205,18 +205,26 @@ const findRideByRider = async (req: Request, res: Response) => {
     const rides = await Ride.find({ status: 'requested' });
     console.log(rides);
 
-    if(!rides){
+    
+    // Check if no rides were found
+    if (rides.length === 0) {
       return res.status(400).json({
-        details: [
-          { message: 'No any ride is available . Try after some moment' },
-        ],
+        details: [{ message: 'No rides with accepted status found.' }],
       });
     }
+    
+    // Map over the rides to send a specific structure to the frontend
+    const rideDetails = rides.map((ride) => ({
+      rideId: ride._id,
+      startDestination: ride.start_location,
+      endDestination: ride.destination,
+      riderId: ride.riderId,
+    }));
 
-    return res.status(201).json({
+
+    return res.status(200).json({
       success: true,
-   rides,
-      message: 'Ride created successfully',
+      rides: rideDetails,
     });
   } catch (e: unknown) {
     console.error('Register error:', e);
@@ -371,7 +379,7 @@ const customerAcceptRide = async (req: IRequest, res: Response) => {
     }
 
     ride.status = 'matched';
-    ride.riderId = rideRequest.riderId; // Use riderId from the RideList
+    ride.riderId = rideRequest.riderId;  // Use riderId from the RideList
     await ride.save();
 
     return res.status(200).json({
@@ -514,7 +522,6 @@ const reviewRide = async (req: IRequest, res: Response) => {
     });
   }
 };
-
 const rideController = {
   findRide,
   placeBid,
@@ -523,8 +530,10 @@ const rideController = {
   findRider,
   verifyRiderOtp,
   customerAcceptRide,
-  completedRide,
-  reviewRide,
+  rejectRider,
+  completedRide,       
+  reviewRide           
 };
+
 
 export default rideController;
