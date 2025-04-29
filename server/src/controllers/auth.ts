@@ -445,8 +445,8 @@ const changePassword = async (
 //Logout
 const logout = async (req: Request, res: Response) => {
   try {
-    console.log('Clearing cookie: uid'); // Debugging log
-    res.clearCookie('uid', { path: '/' }); // Ensure the path matches the one used when setting the cookie
+    console.log('Clearing cookie: uid');
+    res.clearCookie('uid', { path: '/' });
 
     return res.status(200).json({
       message: 'Logout successful',
