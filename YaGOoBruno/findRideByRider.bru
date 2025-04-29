@@ -4,10 +4,14 @@ meta {
   seq: 7
 }
 
-post {
-  url: http://localhost:8002/registerRider
-  body: multipartForm
-  auth: inherit
+get {
+  url: http://localhost:8002/findRideByRider
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODEwODVlMDZlZDg3MjZjODgwOTZhMTUiLCJyb2xlIjoiY3VzdG9tZXIiLCJpYXQiOjE3NDU5MTMzNzgsImV4cCI6MTc0NjUxODE3OH0.znWKl8K6zUEOTOGizbI4UJC-8-xkJA3hP5ZAHZsdUFE
 }
 
 body:json {

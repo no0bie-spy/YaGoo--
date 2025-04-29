@@ -27,6 +27,9 @@ interface IRide extends Document {
   distance: number;
   minimumPrice: number;
   bidId: Types.ObjectId;
+  startTimer?:Date;
+  endTimer?:Date;
+  toalTime?:Number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -56,7 +59,7 @@ const rideSchema = new Schema<IRide>(
     },
     riderId: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'Rider',
     },
     start_location: {
       type: locationSchema,
@@ -92,6 +95,16 @@ const rideSchema = new Schema<IRide>(
     bidId: {
       type: Schema.Types.ObjectId,
     },
+    startTimer:{
+      type:Date,
+
+    },
+    endTimer:{
+      type:Date
+    },
+    toalTime:{
+      type:Number
+    }
   },
   { timestamps: true }
 );
