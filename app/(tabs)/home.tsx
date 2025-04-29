@@ -114,16 +114,17 @@ export default function HomeScreen() {
       }
     }
   };
+  if (role === 'rider') {
+    return (
+      <View style={styles.container}>
+        <MapComponent location={location} />
+        <View style={styles.overlay}>
+          <RiderDashboard />
 
-  // if (role === 'rider') {
-
-  //   return (
-  //     <View style={styles.container}>
-  //       <MapComponent location={location} />
-  //       <RiderDashboard />;
-  //     </View>
-  //   )
-  // }
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
