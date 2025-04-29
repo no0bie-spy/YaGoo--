@@ -3,7 +3,7 @@ import Ride from '../models/rides';
 import IRequest from '../middleware/IRequest';
 import Bid from '../models/bid';
 import { calculateRoadDistance } from '../services/distance';
-import RiderList from '../models/riderList';
+import RiderList from '../models/riderLIst';
 import User from '../models/User';
 import { Otp } from '../models/otp';
 import Review from '../models/review';
@@ -304,7 +304,9 @@ const verifyRiderOtp = async (req: IRequest, res: Response) => {
     }
   }
 };
-const customerAcceptRide = async (req: IRequest, res: Response) => {
+
+
+const customerAcceptRider = async (req: IRequest, res: Response) => {
   try {
     const { rideListId } = req.body;
     const customerId = req.userId;
@@ -323,7 +325,7 @@ const customerAcceptRide = async (req: IRequest, res: Response) => {
       });
     }
 
-    // Find the ride request in RiderList using RideListId
+    // Find the ride request
     const rideRequest = await RiderList.findById(rideListId);
 
     if (!rideRequest || rideRequest.status !== 'not-accepted') {
@@ -333,11 +335,23 @@ const customerAcceptRide = async (req: IRequest, res: Response) => {
       });
     }
 
-    // Update the RiderList status to accepted
+    // Accept the ride request
     rideRequest.status = 'accepted';
     await rideRequest.save();
 
-    // Find the Ride by rideId (the rideId should be same as the one in RiderList)
+    // Find ALL riderLists for that rideId
+    const allRideRequests = await RiderList.find({
+      rideId: rideRequest.rideId,
+    });
+
+    // Remove all except the accepted one
+    for (const request of allRideRequests) {
+      if (request._id.toString() !== rideListId) {
+        await RiderList.findByIdAndDelete(request._id);
+      }
+    }
+
+    // Find and update the ride
     const ride = await Ride.findById(rideRequest.rideId);
 
     if (!ride) {
@@ -347,9 +361,8 @@ const customerAcceptRide = async (req: IRequest, res: Response) => {
       });
     }
 
-    // Update the Ride model with matched status
     ride.status = 'matched';
-    ride.riderId = rideRequest.riderId;  // Use riderId from the RideList
+    ride.riderId = rideRequest.riderId;
     await ride.save();
 
     return res.status(200).json({
@@ -375,7 +388,7 @@ const rideController = {
   findRideByRider,
   findRider,
   verifyRiderOtp,
-  customerAcceptRide,  
+  customerAcceptRider,  
 };
 
 export default rideController;

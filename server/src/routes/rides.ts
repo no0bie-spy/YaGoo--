@@ -10,4 +10,5 @@ rideRouter.post('/place-bid', validate(rideValidation.placeBid), rideController.
 rideRouter.post('/rider-request', validate(rideValidation.requestRideByRider), rideController.requestRideByRider)
 rideRouter.get('/find-ride-by-rider',  rideController.findRideByRider);
 
+rideRouter.post('/customer-accept-rider',rideController.customerAcceptRider)
 export default rideRouter;
