@@ -3,7 +3,7 @@ import Ride from '../models/rides';
 import IRequest from '../middleware/IRequest';
 import Bid from '../models/bid';
 import { calculateRoadDistance } from '../services/distance';
-import RiderList from '../models/riderList';
+import RiderList from '../models/riderLIst';
 import User from '../models/User';
 import { Otp } from '../models/otp';
 import Review from '../models/review';
@@ -580,6 +580,7 @@ const submitRideReview = async (req: IRequest, res: Response) => {
 const rideController = {
   createRideRequest,//successfully create ride by customer
   submitBid, //customer place bids and send
+  cancelRide, //cancel ride by customer before requesting
   getAllRequestedRides, //rider gets all the ride requests from customer
   requestRideAsRider, //Rider requests the ride
   getAvailableRiders, //customer gets all the requests from riders
