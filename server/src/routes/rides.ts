@@ -9,5 +9,7 @@ rideRouter.post('/find-ride', validate(rideValidation.findRide), rideController.
 rideRouter.post('/place-bid', validate(rideValidation.placeBid), rideController.placeBid);
 rideRouter.post('/rider-request', validate(rideValidation.requestRideByRider), rideController.requestRideByRider)
 rideRouter.get('/find-ride-by-rider',  rideController.findRideByRider);
+rideRouter.get('/findRideByRider',  rideController.findRideByRider);
+
 
 export default rideRouter;

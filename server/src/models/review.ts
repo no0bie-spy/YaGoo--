@@ -14,26 +14,26 @@ interface IReview extends Document{
 
 const ReviewSchema=new Schema<IReview>({
     rideId:{
-        types:Schema.Types.ObjectId,
+        type:Schema.Types.ObjectId,
         required:true
     },
     riderId:{
-        types:Schema.Types.ObjectId,
+        type:Schema.Types.ObjectId,
         required:true
     },
     comment:{
-        types:Schema.Types.ObjectId,
+        type:Schema.Types.ObjectId,
     },
     rating:{
-        types:Number,
+        type:Number,
         required:true
     },
     averageRating:{
-        types:Number,
+        type:Number,
        
     },
     totalRating:{
-        types:Number,
+        type:Number,
     }
 },{
     timestamps:true
