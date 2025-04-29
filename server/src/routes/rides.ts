@@ -12,5 +12,5 @@ rideRouter.get('/find-ride-by-rider',  rideController.findRideByRider);
 rideRouter.get('/findRideByRider',  rideController.findRideByRider);
 
 
-rideRouter.post('/customer-accept-rider',rideController.customerAcceptRider)
+rideRouter.post('/customer-accept-rider',rideController.customerAcceptRide)
 export default rideRouter;

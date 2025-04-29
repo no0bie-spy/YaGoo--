@@ -205,7 +205,7 @@ const findRideByRider = async (req: Request, res: Response) => {
     const rides = await Ride.find({ status: 'requested' });
     console.log(rides);
 
-    if(!ride){
+    if(!rides){
       return res.status(400).json({
         details: [{ message: 'No any ride is available . Try after some moment' }],
       });
@@ -213,7 +213,7 @@ const findRideByRider = async (req: Request, res: Response) => {
 
     return res.status(201).json({
       success: true,
-   ride,
+   rides,
       message: 'Ride created successfully',
     });
   } catch (e: unknown) {
@@ -424,42 +424,6 @@ const rejectRider = async (req: IRequest, res: Response) => {
 };
 
 
-const rejectRider = async (req: IRequest, res: Response) => {
-  try {
-    const { rideListId } = req.body;
-
-    if (!rideListId) {
-      return res.status(400).json({
-        success: false,
-        message: 'RideList ID is required',
-      });
-    }
-
-    
-    const deletedRideRequest = await RiderList.findByIdAndDelete(rideListId);
-
-    if (!deletedRideRequest) {
-      return res.status(404).json({
-        success: false,
-        message: 'Ride request not found',
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: 'Ride request rejected and deleted successfully',
-    });
-  } catch (e: unknown) {
-    console.error('Reject rider error:', e);
-    if (e instanceof Error) {
-      return res.status(500).json({ message: e.message });
-    } else {
-      return res.status(500).json({ message: 'An unknown error occurred' });
-    }
-  }
-};
-
-
 const completedRide = async (req: IRequest, res: Response) => {
   try {
     const { rideId } = req.body;
@@ -555,13 +519,10 @@ const rideController = {
   findRideByRider,
   findRider,
   verifyRiderOtp,
-<<<<<<< HEAD
-  customerAcceptRide,  
-=======
   customerAcceptRide,
+  rejectRider,
   completedRide,       
   reviewRide           
->>>>>>> cbe8400 (create ride controller:review ride)
 };
 
 
