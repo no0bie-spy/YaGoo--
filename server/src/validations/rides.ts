@@ -32,11 +32,10 @@ const rideValidation = {
         'any.required': 'Ride ID is required',
         'string.base': 'Ride ID must be a string',
       }),
-      amount: Joi.number().min(100).max(10000).required().messages({
+      amount: Joi.number().required().messages({
         'any.required': 'Amount is required',
         'number.base': 'Amount must be a number',
-        'number.min': 'Amount must be at least Rs. 100',
-        'number.max': 'Amount must not exceed Rs. 10,000',
+        
       }),
     }),
   },

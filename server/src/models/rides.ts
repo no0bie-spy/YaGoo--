@@ -94,6 +94,7 @@ const rideSchema = new Schema<IRide>(
     },
     bidId: {
       type: Schema.Types.ObjectId,
+      ref: 'Bid',
     },
     startTimer:{
       type:Date,

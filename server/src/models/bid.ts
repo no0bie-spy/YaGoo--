@@ -1,6 +1,7 @@
 import { Schema, model, Types, Document } from 'mongoose';
 
 interface IBid extends Document {
+  _id: Types.ObjectId;
   rideId: Types.ObjectId; 
   userId: Types.ObjectId; // Renamed from "rider" to "userId"
   amount: number; 

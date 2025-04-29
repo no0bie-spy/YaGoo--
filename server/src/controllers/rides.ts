@@ -3,7 +3,7 @@ import Ride from '../models/rides';
 import IRequest from '../middleware/IRequest';
 import Bid from '../models/bid';
 import { calculateRoadDistance } from '../services/distance';
-import RiderList from '../models/riderLIst';
+import RiderList from '../models/riderList';
 import User from '../models/User';
 import { Otp } from '../models/otp';
 import Review from '../models/review';
@@ -124,6 +124,7 @@ const submitBid = async (req: IRequest, res: Response) => {
       });
     }
 
+    
     const bid = new Bid({
       rideId,
       userId,
@@ -131,6 +132,14 @@ const submitBid = async (req: IRequest, res: Response) => {
     });
 
     await bid.save();
+   
+    ride.status = "requested";
+    ride.bidId = bid._id;
+    await ride.save();
+    
+
+    
+  
 
     return res.status(200).json({
       success: true,
@@ -251,14 +260,15 @@ const getAllRequestedRides = async (req: Request, res: Response) => {
       rides.map(async (ride) => {
         // Fetch customer by the customerId for each ride
         const customer = await User.findById(ride.customerId); // Get customer details using customerId
-
+        const bid = await Bid.findOne({_id: ride.bidId}); // get bid amount from bidModel
         return {
           customerName: customer?.fullname, // Assuming customer has a fullname field
           customerEmail: customer?.email, // Assuming customer has an email field
           rideId: ride._id,
-          startDestination: ride.start_location,
-          endDestination: ride.destination,
+          startDestination: ride.start_location.address,
+          endDestination: ride.destination.address,
           riderId: ride.riderId,
+          bid: bid?.amount,
         };
       })
     );

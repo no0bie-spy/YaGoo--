@@ -30,7 +30,7 @@ export default function ProfileScreen() {
       const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
       console.log('IP Address:', IP_Address); // Debugging log
       const response = await axios.post(
-        `http://${IP_Address}:8002/logout`,
+        `http://${IP_Address}:8002/auth/logout`,
         
       );
 
@@ -61,7 +61,7 @@ export default function ProfileScreen() {
       const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
 
       console.log('IP Address:', IP_Address); // Debugging log
-      const response = await axios.get(`http://${IP_Address}:8002/userdetails`, {
+      const response = await axios.get(`http://${IP_Address}:8002/profile/userdetails`, {
         headers: {
           Authorization: `Bearer ${token}`, // Add "Bearer" prefix
         },
@@ -87,7 +87,7 @@ export default function ProfileScreen() {
       const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
 
       const response = await axios.put(
-        `http://${IP_Address}:8002/editProfileDetails`,
+        `http://${IP_Address}:8002/profile/editProfileDetails`,
         { fullname, phone },
         {
           headers: {
@@ -110,7 +110,7 @@ export default function ProfileScreen() {
       const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
 
       const response = await axios.put(
-        `http://${IP_Address}:8002/changePassword`,
+        `http://${IP_Address}:8002/profile/changePassword`,
         { currentpassword, newpassword },
         {
           headers: {
