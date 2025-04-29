@@ -8,11 +8,10 @@ import rideRouter from "./rides";
 
 const mainRoutes=Router();
 
-mainRoutes.use('',authRouter)
+mainRoutes.use('/auth',authRouter)
 
+mainRoutes.use('/profile',getUserfromAuthToken,userSettingRouter)
 
-mainRoutes.use('',getUserfromAuthToken,userSettingRouter)
-
-mainRoutes.use('',getUserfromAuthToken,rideRouter)
+mainRoutes.use('/rides',getUserfromAuthToken,rideRouter)
 
 export default mainRoutes;

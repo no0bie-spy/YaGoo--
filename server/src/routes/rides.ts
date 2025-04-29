@@ -5,12 +5,15 @@ import rideController from '../controllers/rides';
 
 const rideRouter = express.Router();
 
-rideRouter.post('/find-ride', validate(rideValidation.findRide), rideController.findRide);
-rideRouter.post('/place-bid', validate(rideValidation.placeBid), rideController.placeBid);
-rideRouter.post('/rider-request', validate(rideValidation.requestRideByRider), rideController.requestRideByRider)
-rideRouter.get('/find-ride-by-rider',  rideController.findRideByRider);
-rideRouter.get('/findRideByRider',  rideController.findRideByRider);
+rideRouter.post('/create', validate(rideValidation.findRide), rideController.createRideRequest);
+rideRouter.post('/bid', validate(rideValidation.placeBid), rideController.submitBid);
+rideRouter.post('/rider-request', validate(rideValidation.requestRideByRider), rideController.requestRideAsRider)
+rideRouter.get('/requests',  rideController.getAllRequestedRides);
+rideRouter.get('/available-riders',  rideController.getAvailableRiders);
+rideRouter.get('/verify-ride-otp',rideController.verifyRideOtp);
+rideRouter.post('/accept',rideController.acceptRideRequestByCustomer);
+rideRouter.delete('/reject-rider',rideController.rejectRider);
+rideRouter.post('/complete-ride',rideController.completedRide)
+rideRouter.post('/submit-ride-review',rideController.submitRideReview)
 
-
-rideRouter.post('/customer-accept-rider',rideController.customerAcceptRide)
 export default rideRouter;

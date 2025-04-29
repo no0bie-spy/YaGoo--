@@ -12,7 +12,7 @@ import { defaultMaxListeners } from 'events';
 import Rider from '../models/rider';
 const BASE_RATE = 15; // Rs. 15 per km
 
-const findRide = async (req: IRequest, res: Response) => {
+const createRideRequest = async (req: IRequest, res: Response) => {
   try {
     const { start_location, destination } = req.body;
     const customerId = req.userId;
@@ -84,7 +84,7 @@ const findRide = async (req: IRequest, res: Response) => {
   }
 };
 
-const placeBid = async (req: IRequest, res: Response) => {
+const submitBid = async (req: IRequest, res: Response) => {
   try {
     const { amount, rideId } = req.body;
     const userId = req.userId;
@@ -152,7 +152,7 @@ const placeBid = async (req: IRequest, res: Response) => {
   }
 };
 
-const requestRideByRider = async (req: IRequest, res: Response) => {
+const requestRideAsRider = async (req: IRequest, res: Response) => {
   try {
     const { rideId } = req.body;
     const riderId = req.userId;
@@ -199,7 +199,7 @@ const requestRideByRider = async (req: IRequest, res: Response) => {
   }
 };
 
-const findRideByRider = async (req: Request, res: Response) => {
+const getAllRequestedRides = async (req: Request, res: Response) => {
   try {
     // Fetch rides where status is "requested"
     const rides = await Ride.find({ status: "requested" });
@@ -240,7 +240,8 @@ const findRideByRider = async (req: Request, res: Response) => {
 };
 
 
-const findRider = async (req: IRequest, res: Response) => {
+
+const getAvailableRiders = async (req: IRequest, res: Response) => {
   try {
     const riders = await RiderList.find({}).lean();
     const riderListIds = riders.map((rl) => rl._id);
@@ -287,7 +288,7 @@ const findRider = async (req: IRequest, res: Response) => {
   }
 };
 
-const verifyRiderOtp = async (req: IRequest, res: Response) => {
+const verifyRideOtp = async (req: IRequest, res: Response) => {
   try {
     const { email, rideId, riderOtp } = req.body;
 
@@ -332,7 +333,7 @@ const verifyRiderOtp = async (req: IRequest, res: Response) => {
     }
   }
 };
-const customerAcceptRide = async (req: IRequest, res: Response) => {
+const acceptRideRequestByCustomer = async (req: IRequest, res: Response) => {
   try {
     const { rideListId } = req.body;
     const customerId = req.userId;
@@ -488,7 +489,7 @@ const completedRide = async (req: IRequest, res: Response) => {
   }
 };
 
-const reviewRide = async (req: IRequest, res: Response) => {
+const submitRideReview = async (req: IRequest, res: Response) => {
   try {
     const { rideId, riderId, comment, rating } = req.body;
     const existingRide = await Ride.findOne({ _id: rideId });
@@ -532,16 +533,16 @@ const reviewRide = async (req: IRequest, res: Response) => {
   }
 };
 const rideController = {
-  findRide,
-  placeBid,
-  requestRideByRider,
-  findRideByRider,
-  findRider,
-  verifyRiderOtp,
-  customerAcceptRide,
+  createRideRequest,
+  submitBid,
+  requestRideAsRider,
+  getAllRequestedRides,
+  getAvailableRiders,
+  verifyRideOtp,
+  acceptRideRequestByCustomer,
   rejectRider,
   completedRide,       
-  reviewRide           
+  submitRideReview           
 };
 
 
