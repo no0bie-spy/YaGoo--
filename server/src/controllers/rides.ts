@@ -543,16 +543,16 @@ const submitRideReview = async (req: IRequest, res: Response) => {
   }
 };
 const rideController = {
-  createRideRequest,
-  submitBid,
-  requestRideAsRider,
-  getAllRequestedRides,
-  getAvailableRiders,
-  verifyRideOtp,
-  acceptRideRequestByCustomer,
-  rejectRider,
-  completedRide,       
-  submitRideReview           
+  createRideRequest,//successfully create ride by customer
+  submitBid, //customer place bids and send
+  getAllRequestedRides, //rider gets all the ride requests from customer
+  requestRideAsRider, //Rider requests the ride
+  getAvailableRiders, //customer gets all the requests from riders
+  acceptRideRequestByCustomer, //customer accepts one rider and send otp to rider
+  rejectRider, //customer rejects rider
+  verifyRideOtp, //customer verifies rider by otp
+  completedRide, //ride completes
+  submitRideReview  //customer sends ride review
 };
 
 
