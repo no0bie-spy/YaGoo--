@@ -7,6 +7,7 @@ const rideRouter = express.Router();
 
 rideRouter.post('/create', validate(rideValidation.findRide), rideController.createRideRequest);//successfully create ride by customer
 rideRouter.post('/bid', validate(rideValidation.placeBid), rideController.submitBid);//customer place bids and send
+rideRouter.delete('/cancel',rideController.cancelRide)
 rideRouter.get('/requests',  rideController.getAllRequestedRides);//rider gets all the ride requests from customer
 rideRouter.post('/rider-request', validate(rideValidation.requestRideByRider), rideController.requestRideAsRider)//Rider requests the ride
 rideRouter.get('/available-riders',  rideController.getAvailableRiders); //customer gets all the requests from riders
@@ -15,5 +16,6 @@ rideRouter.delete('/reject-rider',rideController.rejectRider); //customer reject
 rideRouter.get('/verify-ride-otp',rideController.verifyRideOtp); //customer verifies rider by otp
 rideRouter.post('/complete-ride',rideController.completedRide) //ride completes
 rideRouter.post('/submit-ride-review',rideController.submitRideReview) //customer sends ride review
+
 
 export default rideRouter;

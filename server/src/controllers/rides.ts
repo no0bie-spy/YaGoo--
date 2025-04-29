@@ -152,6 +152,41 @@ const submitBid = async (req: IRequest, res: Response) => {
   }
 };
 
+const cancelRide = async (req: IRequest, res: Response) => {
+  try {
+    const { rideId } = req.body;
+
+    if (!rideId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Ride ID is required',
+      });
+    }
+
+    const deletedRide = await Ride.findByIdAndDelete(rideId);
+
+    if (!deletedRide) {
+      return res.status(404).json({
+        success: false,
+        message: 'Ride not found',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Ride cancelled and deleted successfully',
+    });
+  } catch (e: unknown) {
+    console.error('Cancel ride error:', e);
+    if (e instanceof Error) {
+      return res.status(500).json({ message: e.message });
+    } else {
+      return res.status(500).json({ message: 'An unknown error occurred' });
+    }
+  }
+};
+
+
 const requestRideAsRider = async (req: IRequest, res: Response) => {
   try {
     const { rideId } = req.body;
