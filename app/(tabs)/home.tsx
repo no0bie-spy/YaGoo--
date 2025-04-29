@@ -24,18 +24,20 @@ export default function HomeScreen() {
   const { setSetter } = useLocationSetter();
   const [errors, setErrors] = useState<string[]>([]);
   const [minimumPrice, setMinimumPrice] = useState<number | null>(null);
-
+  const [isLoading, setIsLoading] = useState(true);
   // Request location permissions and get the current location
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') return;
+
       const currentLocation = await Location.getCurrentPositionAsync({});
       setLocation(currentLocation);
 
-      // Fetch user role
       const userRole = await getUserRole();
       setRole(userRole);
+
+      setIsLoading(false); // Finished loading
     })();
   }, []);
 
@@ -56,7 +58,7 @@ export default function HomeScreen() {
         return alert('You are not logged in. Please log in to continue.');
       }
 
-      const response = await axios.post(`http://${IP_Address}:8002/find-ride`, {
+      const response = await axios.post(`http://${IP_Address}:8002/rides/create`, {
         start_location: {
           address: pickup.address,
           coordinates: pickup.coordinates,
@@ -93,9 +95,11 @@ export default function HomeScreen() {
       return alert('Please enter a valid bid amount');
     }
     try {
+      console.log("RideId"+rideId)
+   
       const token = await getSession('accessToken');
-      await axios.post(`http://${IP_Address}:8002/place-bid`, {
-        rideId,
+      await axios.post(`http://${IP_Address}:8002/rides/bid`, {
+        rideId:rideId,
         amount: price,
       }, {
         headers: { Authorization: `Bearer ${token}` },
@@ -103,7 +107,7 @@ export default function HomeScreen() {
       alert('Bid placed successfully!');
     } catch (error: any) {
       console.error('Full error:', error);
-
+      alert(errors)
       if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
         const errorMessages = error.response.data.details.map((err: any) => err.message);
         setErrors(errorMessages);

@@ -22,7 +22,7 @@ export default function Login() {
       const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
       console.log('IP Address:', IP_Address); // Debugging log
 
-      const response = await axios.post(`http://${IP_Address}:8002/login`, {
+      const response = await axios.post(`http://${IP_Address}:8002/auth/login`, {
         email,
         password,
       });

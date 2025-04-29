@@ -35,7 +35,7 @@ export default function VerifyPassword() {
 
             const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
       console.log("IP Address:", IP_Address); // Debugging log
-      const response = await axios.post(`http://${IP_Address}:8002/changePassword`, userData);
+      const response = await axios.post(`http://${IP_Address}:8002/auth/changePassword`, userData);
             const data = response.data;
             console.log(data);
 

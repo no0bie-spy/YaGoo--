@@ -1,3 +1,4 @@
+import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
@@ -29,7 +30,28 @@ export const clearSession = async (key: string) => {
 
 // Other exports
 
+
+const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
+
 export async function getUserRole(): Promise<string> {
-  // Mock implementation or actual logic to fetch user role
-  return 'rider'; // Replace with actual logic
+  try {
+    const token = await getSession('accessToken');
+    if (!token) throw new Error('Access token not found');
+
+    const response = await axios.get(
+      `http://${IP_Address}:8002/profile/userdetails`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // Bearer token
+        },
+      }
+    );
+
+    const role = response.data.user?.role;
+    return role === 'rider' ? 'rider' : 'customer';
+  } catch (error) {
+    console.error('Error fetching user role:', error);
+    return 'guest'; // Fallback or handle as needed
+  }
 }
+
