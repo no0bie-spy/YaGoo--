@@ -1,12 +1,12 @@
 meta {
-  name: findRideByRider
+  name: submi bit
   type: http
-  seq: 7
+  seq: 11
 }
 
-get {
-  url: http://localhost:8002/rides/requests
-  body: none
+post {
+  url: http://localhost:8002/find-ride
+  body: json
   auth: none
 }
 
@@ -16,14 +16,22 @@ headers {
 
 body:json {
   {
-    "licenseNumber":"122312313",
-    "citizenshipNumber":"123198231",
-    "vehicleType":"bike",
-        "vehicleName":"Pafsa",
-        "vehicleModel":"jkasd",
-        "vehicleNumberPlate":"123"
-    
+    "start_location": {
+      "address": "America",
+      "coordinates": {
+        "latitude": 28.2096,
+        "longitude": 83.9856
+      }
+    },
+    "destination": {
+      "address": "Canada",
+      "coordinates": {
+        "latitude": 27.7156,
+        "longitude": 85.3123
+      }
+    }
   }
+  
 }
 
 body:multipart-form {
