@@ -36,8 +36,36 @@ const RiderDashboard = () => {
     }
   };
 
-  const handleAccept = (rideId: string) => {
-    alert(`Accepted ride: ${rideId}`);
+  const handleAccept = async (rideId: string) => {
+    try {
+      const token = await getSession('accessToken');
+      if (!token) {
+        setErrors(['You are not logged in. Please log in to continue.']);
+        return;
+      }
+
+      const response = await axios.post(`http://${IP_Address}:8002/rides/rider-request`, {
+        rideId
+      }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.status === 201) {
+        setRideRequests(rideRequests.filter(ride => ride.rideId !== rideId)); // Remove accepted ride from the list
+        alert(`You have accepted ride: ${rideId}`);
+      }
+
+      setErrors([]);
+    } catch (error: any) {
+      console.error('Full error:', error);
+      if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
+        setErrors(error.response.data.details.map((err: any) => err.message));
+      } else if (error.response?.data?.message) {
+        setErrors([error.response.data.message]);
+      } else {
+        setErrors(['Something went wrong.']);
+      }
+    }
   };
 
   const handleReject = (rideId: string) => {
