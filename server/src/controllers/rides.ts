@@ -3,12 +3,12 @@ import Ride from '../models/rides';
 import IRequest from '../middleware/IRequest';
 import Bid from '../models/bid';
 import { calculateRoadDistance } from '../services/distance';
-import RiderList from '../models/riderLIst';
+import RiderList from '../models/riderList';
 import User from '../models/User';
 import { Otp } from '../models/otp';
 import Review from '../models/review';
 import Vehicle from '../models/vehicle';
-import { defaultMaxListeners } from 'events';
+
 import Rider from '../models/rider';
 const BASE_RATE = 15; // Rs. 15 per km
 
@@ -205,15 +205,17 @@ const findRideByRider = async (req: Request, res: Response) => {
     const rides = await Ride.find({ status: 'requested' });
     console.log(rides);
 
-    if(!ride){
+    if (!rides) {
       return res.status(400).json({
-        details: [{ message: 'No any ride is available . Try after some moment' }],
+        details: [
+          { message: 'No any ride is available . Try after some moment' },
+        ],
       });
     }
 
     return res.status(201).json({
       success: true,
-   ride,
+      rides,
       message: 'Ride created successfully',
     });
   } catch (e: unknown) {
@@ -369,7 +371,7 @@ const customerAcceptRide = async (req: IRequest, res: Response) => {
     }
 
     ride.status = 'matched';
-    ride.riderId = rideRequest.riderId;  // Use riderId from the RideList
+    ride.riderId = rideRequest.riderId; // Use riderId from the RideList
     await ride.save();
 
     return res.status(200).json({
@@ -476,6 +478,7 @@ const reviewRide = async (req: IRequest, res: Response) => {
     });
   }
 };
+
 const rideController = {
   findRide,
   placeBid,
@@ -483,14 +486,9 @@ const rideController = {
   findRideByRider,
   findRider,
   verifyRiderOtp,
-<<<<<<< HEAD
-  customerAcceptRide,  
-=======
   customerAcceptRide,
-  completedRide,       
-  reviewRide           
->>>>>>> cbe8400 (create ride controller:review ride)
+  completedRide,
+  reviewRide,
 };
-
 
 export default rideController;
