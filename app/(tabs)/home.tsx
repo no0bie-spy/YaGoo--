@@ -7,7 +7,9 @@ import { getSession, getUserRole } from '@/usableFunction/Session';
 import MapComponent from '@/components/Home/MapComponent';
 import FindRideForm from '@/components/Home/FindRideForm';
 import BidForm from '@/components/Home/BidForm';
+import { Dimensions } from 'react-native';
 
+const screenHeight = Dimensions.get('window').height;
 import { useLocationSetter } from '@/components/LocationSetterContext';
 import RiderDashboard from '@/components/Rider/RiderDahsboard';
 
@@ -95,11 +97,11 @@ export default function HomeScreen() {
       return alert('Please enter a valid bid amount');
     }
     try {
-      console.log("RideId"+rideId)
-   
+      console.log("RideId" + rideId)
+
       const token = await getSession('accessToken');
       await axios.post(`http://${IP_Address}:8002/rides/bid`, {
-        rideId:rideId,
+        rideId: rideId,
         amount: price,
       }, {
         headers: { Authorization: `Bearer ${token}` },
@@ -169,6 +171,7 @@ const styles = StyleSheet.create({
     top: 40,
     left: 20,
     right: 20,
+    maxHeight: screenHeight * 0.7, // 💡 restrict to 70% of screen
     backgroundColor: 'white',
     borderRadius: 12,
     padding: 20,
