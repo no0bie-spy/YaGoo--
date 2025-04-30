@@ -172,12 +172,20 @@ const cancelRide = async (req: IRequest, res: Response) => {
       });
     }
 
-    const deletedRide = await Ride.findByIdAndDelete(rideId);
-
-    if (!deletedRide) {
+    const deletedRide = await Ride.findByIdAndDelete(rideId); // to delete ride document
+   
+    if (!deletedRide ) {
       return res.status(404).json({
         success: false,
         message: 'Ride not found',
+      });
+    }
+
+    const deletedBid = await Bid.findOneAndDelete({rideId : rideId}); //to delete bid document
+    if (!deletedBid ) {
+      return res.status(404).json({
+        success: false,
+        message: 'Bid not found',
       });
     }
 
