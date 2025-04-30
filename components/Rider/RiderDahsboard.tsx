@@ -53,6 +53,7 @@ const RiderDashboard = () => {
       if (response.status === 201) {
         setRideRequests(rideRequests.filter(ride => ride.rideId !== rideId)); // Remove accepted ride from the list
         alert(`You have accepted ride: ${rideId}`);
+        
       }
 
       setErrors([]);
