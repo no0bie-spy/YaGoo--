@@ -3,7 +3,7 @@ import Ride from '../models/rides';
 import IRequest from '../middleware/IRequest';
 import Bid from '../models/bid';
 import { calculateRoadDistance } from '../services/distance';
-import RiderList from '../models/riderList';
+import RiderList from '../models/riderLIst';
 import User from '../models/User';
 import { Otp } from '../models/otp';
 import Review from '../models/review';
@@ -221,6 +221,15 @@ const requestRideAsRider = async (req: IRequest, res: Response) => {
       });
     }
 
+    //to check it already exists or not
+    const existingRequest = await RiderList.findOne({
+      riderId,
+      rideId,
+    });
+    
+    if (existingRequest) {
+      return res.status(400).json({ message: 'Ride request already exists.' });
+    }
     // Ensure rideId is treated as a valid ObjectId
     const rideRequest = await RiderList.create({
       riderId,
