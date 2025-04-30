@@ -8,13 +8,16 @@ const screenHeight = Dimensions.get('window').height;
 const RiderDashboard = () => {
   const [rideRequests, setRideRequests] = useState<any[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
 
   const fetchRideRequests = async () => {
     try {
+      setIsLoading(true); // Start loading
       const token = await getSession('accessToken');
       if (!token) {
         setErrors(['You are not logged in. Please log in to continue.']);
+        setIsLoading(false);
         return;
       }
 
@@ -22,10 +25,12 @@ const RiderDashboard = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      console.log("Fetched ride requests:", response.data.rides);
+
       setRideRequests(Array.isArray(response.data.rides) ? response.data.rides : []);
       setErrors([]);
     } catch (error: any) {
-      console.error('Full error:', error);
+      console.error('Fetch ride requests error:', error);
       if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
         setErrors(error.response.data.details.map((err: any) => err.message));
       } else if (error.response?.data?.message) {
@@ -33,6 +38,8 @@ const RiderDashboard = () => {
       } else {
         setErrors(['Something went wrong.']);
       }
+    } finally {
+      setIsLoading(false); // End loading
     }
   };
 
@@ -45,15 +52,15 @@ const RiderDashboard = () => {
       }
 
       const response = await axios.post(`http://${IP_Address}:8002/rides/rider-request`, {
-        rideId
+        rideId,
       }, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       if (response.status === 201) {
-        setRideRequests(rideRequests.filter(ride => ride.rideId !== rideId)); // Remove accepted ride from the list
+        // Remove the accepted ride from the list
+        setRideRequests(prevRequests => prevRequests.filter(ride => ride.rideId !== rideId));
         alert(`You have accepted ride: ${rideId}`);
-        
       }
 
       setErrors([]);
@@ -70,55 +77,64 @@ const RiderDashboard = () => {
   };
 
   const handleReject = (rideId: string) => {
+    setRideRequests(prevRequests => prevRequests.filter(ride => ride.rideId !== rideId));
     alert(`Rejected ride: ${rideId}`);
   };
 
   useEffect(() => {
-    fetchRideRequests();
-    const interval = setInterval(fetchRideRequests, 5000);
-    return () => clearInterval(interval);
+    fetchRideRequests(); // Fetch data initially
+    const interval = setInterval(() => {
+      fetchRideRequests(); // Fetch data every 5 seconds
+    }, 5000);
+    return () => clearInterval(interval); // Cleanup interval on unmount
   }, []);
 
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Available Ride Requests</Text>
 
-      {errors.map((err, idx) => (
-        <Text key={idx} style={styles.error}>{err}</Text>
-      ))}
+      {isLoading ? (
+        <Text style={styles.loading}>Loading...</Text>
+      ) : (
+        <>
+          {errors.map((err, idx) => (
+            <Text key={idx} style={styles.error}>{err}</Text>
+          ))}
 
-      <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContainer}>
-        {rideRequests.length > 0 ? (
-          rideRequests.map((item, idx) => (
-            <View key={item.rideId || idx} style={styles.card}>
-              <View style={styles.cardContent}>
-                <Text style={styles.name}>{item.customerName}</Text>
-                <Text style={styles.label}>📍 Pickup: <Text style={styles.value}>{item.startDestination}</Text></Text>
-                <Text style={styles.label}>🏁 Drop-off: <Text style={styles.value}>{item.endDestination}</Text></Text>
-                <Text style={styles.label}>✉️ Email: <Text style={styles.value}>{item.customerEmail}</Text></Text>
-                <Text style={styles.label}>💰 Bid: <Text style={styles.value}>Rs. {item.bid}</Text></Text>
-              </View>
+          <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContainer}>
+            {rideRequests.length > 0 ? (
+              rideRequests.map((item, idx) => (
+                <View key={item.rideId || idx} style={styles.card}>
+                  <View style={styles.cardContent}>
+                    <Text style={styles.name}>{item.customerName}</Text>
+                    <Text style={styles.label}>📍 Pickup: <Text style={styles.value}>{item.startDestination}</Text></Text>
+                    <Text style={styles.label}>🏁 Drop-off: <Text style={styles.value}>{item.endDestination}</Text></Text>
+                    <Text style={styles.label}>✉️ Email: <Text style={styles.value}>{item.customerEmail}</Text></Text>
+                    <Text style={styles.label}>💰 Bid: <Text style={styles.value}>Rs. {item.bid}</Text></Text>
+                  </View>
 
-              <View style={styles.buttonGroup}>
-                <TouchableOpacity
-                  style={[styles.button, styles.acceptButton]}
-                  onPress={() => handleAccept(item.rideId)}
-                >
-                  <Text style={styles.buttonText}>Accept</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.button, styles.rejectButton]}
-                  onPress={() => handleReject(item.rideId)}
-                >
-                  <Text style={styles.buttonText}>Reject</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))
-        ) : (
-          <Text style={styles.noData}>No ride requests available.</Text>
-        )}
-      </ScrollView>
+                  <View style={styles.buttonGroup}>
+                    <TouchableOpacity
+                      style={[styles.button, styles.acceptButton]}
+                      onPress={() => handleAccept(item.rideId)}
+                    >
+                      <Text style={styles.buttonText}>Accept</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.button, styles.rejectButton]}
+                      onPress={() => handleReject(item.rideId)}
+                    >
+                      <Text style={styles.buttonText}>Reject</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.noData}>No ride requests available.</Text>
+            )}
+          </ScrollView>
+        </>
+      )}
     </View>
   );
 };
@@ -198,6 +214,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   noData: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#666',
+    marginTop: 20,
+  },
+  loading: {
     textAlign: 'center',
     fontSize: 16,
     color: '#666',

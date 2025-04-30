@@ -1,178 +1,219 @@
 import { useEffect, useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Dimensions,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
 import * as Location from 'expo-location';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
-import { getSession, getUserRole } from '@/usableFunction/Session';
+
 import MapComponent from '@/components/Home/MapComponent';
 import FindRideForm from '@/components/Home/FindRideForm';
 import BidForm from '@/components/Home/BidForm';
-import { Dimensions } from 'react-native';
-
-const screenHeight = Dimensions.get('window').height;
-import { useLocationSetter } from '@/components/LocationSetterContext';
 import RiderDashboard from '@/components/Rider/RiderDahsboard';
 import AvailableRidersList from '@/components/Rides/AvailableRidersList';
+import { useLocationSetter } from '@/components/LocationSetterContext';
+import { getSession, getUserRole } from '@/usableFunction/Session';
 
+const screenHeight = Dimensions.get('window').height;
 const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
 
 export default function HomeScreen() {
+  const router = useRouter();
+  const { setSetter } = useLocationSetter();
+
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [pickup, setPickup] = useState({ address: '', coordinates: null });
   const [destination, setDestination] = useState({ address: '', coordinates: null });
+
   const [rideId, setRideId] = useState<string | null>(null);
   const [price, setPrice] = useState('');
-  const [role, setRole] = useState<string | null>(null); // Store user role
-  const router = useRouter();
-  const { setSetter } = useLocationSetter();
+  const [availableRiders, setAvailableRiders] = useState<any[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
   const [minimumPrice, setMinimumPrice] = useState<number | null>(null);
+  const [isCanceling, setIsCanceling] = useState(false);
+  const [role, setRole] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [availableRiders, setAvailableRiders] = useState<any[]>([]); // Store available riders
-  // Request location permissions and get the current location
+
+  // Get location & user role
   useEffect(() => {
     (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') return;
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') return;
 
-      const currentLocation = await Location.getCurrentPositionAsync({});
-      setLocation(currentLocation);
+        const currentLocation = await Location.getCurrentPositionAsync({});
+        setLocation(currentLocation);
 
-      const userRole = await getUserRole();
-      setRole(userRole);
-
-      setIsLoading(false); // Finished loading
+        const userRole = await getUserRole();
+        setRole(userRole);
+      } catch (err) {
+        console.error('Location Error:', err);
+      } finally {
+        setIsLoading(false);
+      }
     })();
   }, []);
 
-  // Open the map picker screen
+  // Context Map Picker Setup
   const openMap = (setterFn: typeof setPickup) => {
-    setSetter(() => setterFn); // Set the context setter
-    router.push('/MapPickerScreen'); // Navigate to the map picker screen
+    setSetter(() => setterFn);
+    router.push('/MapPickerScreen');
   };
 
-  // Handle ride creation
+  // Create ride
   const handleRideCreation = async () => {
     if (!pickup.address || !destination.address) {
-      return alert('Please enter all fields');
+      return Alert.alert('Please enter both pickup and destination');
     }
+
     try {
       const token = await getSession('accessToken');
       if (!token) {
-        return alert('You are not logged in. Please log in to continue.');
+        return Alert.alert('You are not logged in. Please log in to continue.');
       }
-
-      const response = await axios.post(`http://${IP_Address}:8002/rides/create`, {
-        start_location: {
-          address: pickup.address,
-          coordinates: pickup.coordinates,
+      console.log('Pickup:', pickup);
+      const response = await axios.post(
+        `http://${IP_Address}:8002/rides/create`,
+        {
+          start_location: {
+            address: pickup.address,
+            coordinates: pickup.coordinates,
+          },
+          destination: {
+            address: destination.address,
+            coordinates: destination.coordinates,
+          },
         },
-        destination: {
-          address: destination.address,
-          coordinates: destination.coordinates,
-        },
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const { ride, minimumPrice } = response.data;
 
-      const data = response.data;
-      const minimumPrice = data.ride.minimumPrice;
+      console.log('Ride created:', ride);
+      setRideId(ride._id);           // ✅ Use the ride ID
       setMinimumPrice(minimumPrice);
-      setRideId(data.ride._id);
+      
     } catch (error: any) {
-      console.error('Full error:', error);
-
-      if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
-        const errorMessages = error.response.data.details.map((err: any) => err.message);
-        setErrors(errorMessages);
-      } else if (error.response?.data?.message) {
-        setErrors([error.response.data.message]);
-      } else {
-        setErrors(['Something went wrong.']);
-      }
+      console.error('Create Ride Error:', error);
+      handleError(error);
     }
   };
 
-  // Handle bid placement
+  // Place bid
   const handleBid = async () => {
-    if (!price || !rideId) {
-      return alert('Please enter a valid bid amount');
-    }
-    try {
-      console.log("RideId" + rideId)
+    if (!price || !rideId) return Alert.alert('Enter a valid bid amount');
 
+    try {
       const token = await getSession('accessToken');
-      await axios.post(`http://${IP_Address}:8002/rides/bid`, {
-        rideId: rideId,
-        amount: price,
-      }, {
+
+      await axios.post(
+        `http://${IP_Address}:8002/rides/bid`,
+        {
+          rideId,
+          amount: price,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      Alert.alert('Bid placed successfully!');
+
+      fetchAvailableRiders(); // Immediate fetch after bidding
+    } catch (error: any) {
+      console.error('Bid Error:', error);
+      handleError(error);
+    }
+  };
+
+  // Cancel ride
+  const handleCancelRide = async () => {
+    try {
+      const token = await getSession('accessToken');
+      if (!token || !rideId) return;
+
+      const response = await axios.delete(
+        `http://${IP_Address}:8002/rides/cancel`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          data: { rideId },
+        }
+      );
+
+      Alert.alert(response.data.message || 'Ride canceled successfully');
+      setRideId(null);
+      setPrice('');
+      setAvailableRiders([]);
+    } catch (error: any) {
+      console.error('Cancel Ride Error:', error);
+      handleError(error);
+    }
+  };
+
+  // Fetch available riders (polling every 5 seconds)
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (rideId) {
+      fetchAvailableRiders(); // immediate
+      interval = setInterval(fetchAvailableRiders, 5000);
+    }
+
+    return () => clearInterval(interval);
+  }, [rideId]);
+
+  const fetchAvailableRiders = async () => {
+    try {
+      const token = await getSession('accessToken');
+      const res = await axios.get(`http://${IP_Address}:8002/rides/available-riders`, {
+        params: { rideId },
         headers: { Authorization: `Bearer ${token}` },
       });
-      alert('Bid placed successfully!');
-    } catch (error: any) {
-      console.error('Full error:', error);
-      alert(errors)
-      if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
-        const errorMessages = error.response.data.details.map((err: any) => err.message);
-        setErrors(errorMessages);
-      } else if (error.response?.data?.message) {
-        setErrors([error.response.data.message]);
-      } else {
-        setErrors(['Something went wrong.']);
-      }
+
+      setAvailableRiders(res.data.data || []);
+    } catch (error) {
+      console.error('Error fetching available riders:', error);
     }
   };
 
-  const [isCanceling, setIsCanceling] = useState(false);
-
-const handleCancelRide = async () => {
-  try {
-   
-    const token = await getSession('accessToken');
-    if (!token) {
-      alert('Token not found');
-      return;
-    }
-    console.log("RideId" + rideId)
-    const response = await axios.delete(`http://${IP_Address}:8002/rides/cancel`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      data: {
-        rideId: rideId, 
-      },
-    });
-
-    // Reset the state
-    setRideId(null);
-    setPrice('');
-    setAvailableRiders([]);
-    alert(response.data.message || 'Ride canceled successfully!');
-  } catch (error: any) {
-    console.error('Full error:', error);
-    alert(errors)
+  // Error handler utility
+  const handleError = (error: any) => {
     if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
-      const errorMessages = error.response.data.details.map((err: any) => err.message);
-      setErrors(errorMessages);
+      const messages = error.response.data.details.map((err: any) => err.message);
+      setErrors(messages);
     } else if (error.response?.data?.message) {
       setErrors([error.response.data.message]);
     } else {
       setErrors(['Something went wrong.']);
     }
+  };
+
+  // Rider view
+  if (isLoading) {
+    return (
+      <View style={styles.loader}>
+        <ActivityIndicator size="large" color="#4B7BE5" />
+      </View>
+    );
   }
-};
+
   if (role === 'rider') {
     return (
       <View style={styles.container}>
         <MapComponent location={location} />
         <View style={styles.overlay}>
           <RiderDashboard />
-
         </View>
       </View>
     );
   }
 
+  // Passenger view
   return (
     <View style={styles.container}>
       <MapComponent location={location} />
@@ -186,21 +227,22 @@ const handleCancelRide = async () => {
             onOpenMap={openMap}
             onSubmit={handleRideCreation}
           />
+        ) : availableRiders.length > 0 ? (
+          <AvailableRidersList
+            riders={availableRiders}
+            disabled={isCanceling}
+          />
         ) : (
           <BidForm
             price={price}
             setPrice={setPrice}
             onSubmit={handleBid}
             onCancel={handleCancelRide}
-           
             startLocation={pickup.address}
             destination={destination.address}
             minimumPrice={minimumPrice}
           />
         )}
-        {availableRiders.length > 0 && (
-        <AvailableRidersList riders={availableRiders} disabled={isCanceling} />
-      )}
       </View>
     </View>
   );
@@ -213,10 +255,15 @@ const styles = StyleSheet.create({
     top: 40,
     left: 20,
     right: 20,
-    maxHeight: screenHeight * 0.7, // 💡 restrict to 70% of screen
+    maxHeight: screenHeight * 0.7,
     backgroundColor: 'white',
     borderRadius: 12,
     padding: 20,
     elevation: 6,
+  },
+  loader: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
