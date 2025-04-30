@@ -12,6 +12,7 @@ import { Dimensions } from 'react-native';
 const screenHeight = Dimensions.get('window').height;
 import { useLocationSetter } from '@/components/LocationSetterContext';
 import RiderDashboard from '@/components/Rider/RiderDahsboard';
+import AvailableRidersList from '@/components/Rides/AvailableRidersList';
 
 const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
 
@@ -27,6 +28,7 @@ export default function HomeScreen() {
   const [errors, setErrors] = useState<string[]>([]);
   const [minimumPrice, setMinimumPrice] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [availableRiders, setAvailableRiders] = useState<any[]>([]); // Store available riders
   // Request location permissions and get the current location
   useEffect(() => {
     (async () => {
@@ -120,6 +122,45 @@ export default function HomeScreen() {
       }
     }
   };
+
+  const [isCanceling, setIsCanceling] = useState(false);
+
+const handleCancelRide = async () => {
+  try {
+   
+    const token = await getSession('accessToken');
+    if (!token) {
+      alert('Token not found');
+      return;
+    }
+    console.log("RideId" + rideId)
+    const response = await axios.delete(`http://${IP_Address}:8002/rides/cancel`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      data: {
+        rideId: rideId, 
+      },
+    });
+
+    // Reset the state
+    setRideId(null);
+    setPrice('');
+    setAvailableRiders([]);
+    alert(response.data.message || 'Ride canceled successfully!');
+  } catch (error: any) {
+    console.error('Full error:', error);
+    alert(errors)
+    if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
+      const errorMessages = error.response.data.details.map((err: any) => err.message);
+      setErrors(errorMessages);
+    } else if (error.response?.data?.message) {
+      setErrors([error.response.data.message]);
+    } else {
+      setErrors(['Something went wrong.']);
+    }
+  }
+};
   if (role === 'rider') {
     return (
       <View style={styles.container}>
@@ -150,15 +191,16 @@ export default function HomeScreen() {
             price={price}
             setPrice={setPrice}
             onSubmit={handleBid}
-            onCancel={() => {
-              setRideId(null);
-              setPrice('');
-            }}
+            onCancel={handleCancelRide}
+           
             startLocation={pickup.address}
             destination={destination.address}
             minimumPrice={minimumPrice}
           />
         )}
+        {availableRiders.length > 0 && (
+        <AvailableRidersList riders={availableRiders} disabled={isCanceling} />
+      )}
       </View>
     </View>
   );

@@ -11,6 +11,7 @@ type Props = {
   startLocation: string;
   destination: string;
   minimumPrice: number | null; // Add minimumPrice prop
+ 
 };
 
 
@@ -22,6 +23,7 @@ const BidForm = ({
   startLocation,
   destination,
   minimumPrice,
+  
 }: Props) => {
   return (
     <View style={styles.card}>
@@ -35,7 +37,7 @@ const BidForm = ({
           Minimum Price: Rs. <Text style={styles.bold}>{minimumPrice}</Text>
         </Text>
       )}
-    
+
       <Input
         icon={<IndianRupee size={20} />}
         placeholder="Your Bid Price"
@@ -44,7 +46,13 @@ const BidForm = ({
         keyboardType="numeric"
       />
       <AppButton title="Submit Bid" onPress={onSubmit} />
-      <AppButton title="Cancel" onPress={onCancel} style={styles.cancelBtn} />
+      <AppButton
+        title={'Cancel Ride'}
+        onPress={onCancel}
+       
+        style={styles.cancelBtn}
+      />
+    
     </View>
   );
 };
@@ -73,7 +81,7 @@ const styles = StyleSheet.create({
   cancelBtn: {
     marginTop: 10,
   },
-  
+
   error: {
     color: 'red',
     fontSize: 12,

@@ -3,7 +3,7 @@ import Ride from '../models/rides';
 import IRequest from '../middleware/IRequest';
 import Bid from '../models/bid';
 import { calculateRoadDistance } from '../services/distance';
-import RiderList from '../models/riderLIst';
+import RiderList from '../models/riderList';
 import User from '../models/User';
 import { Otp } from '../models/otp';
 import Review from '../models/review';
@@ -171,10 +171,10 @@ const cancelRide = async (req: IRequest, res: Response) => {
         message: 'Ride ID is required',
       });
     }
+    console.log("cancel"+rideId)
+    const deletedRide = await Ride.findByIdAndDelete(rideId);
 
-    const deletedRide = await Ride.findByIdAndDelete(rideId); // to delete ride document
-   
-    if (!deletedRide ) {
+    if (!deletedRide) {
       return res.status(404).json({
         success: false,
         message: 'Ride not found',

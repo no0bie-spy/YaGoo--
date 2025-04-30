@@ -10,6 +10,7 @@ type Rider = {
 
 type Props = {
   riders: Rider[];
+  disabled: boolean; 
 };
 
 const AvailableRidersList = ({ riders }: Props) => {
