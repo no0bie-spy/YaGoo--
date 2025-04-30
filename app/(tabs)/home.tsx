@@ -24,11 +24,11 @@ const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
 export default function HomeScreen() {
   const router = useRouter();
   const { setSetter } = useLocationSetter();
-
+  
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [pickup, setPickup] = useState({ address: '', coordinates: null });
   const [destination, setDestination] = useState({ address: '', coordinates: null });
-
+  
   const [rideId, setRideId] = useState<string | null>(null);
   const [price, setPrice] = useState('');
   const [availableRiders, setAvailableRiders] = useState<any[]>([]);
@@ -37,6 +37,7 @@ export default function HomeScreen() {
   const [isCanceling, setIsCanceling] = useState(false);
   const [role, setRole] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasPlacedBid, setHasPlacedBid] = useState(false);
 
   // Get location & user role
   useEffect(() => {
@@ -97,7 +98,7 @@ export default function HomeScreen() {
       console.log('Ride created:', ride);
       setRideId(ride._id);           // ✅ Use the ride ID
       setMinimumPrice(minimumPrice);
-      
+
     } catch (error: any) {
       console.error('Create Ride Error:', error);
       handleError(error);
@@ -123,7 +124,7 @@ export default function HomeScreen() {
       );
 
       Alert.alert('Bid placed successfully!');
-
+      setHasPlacedBid(true);
       fetchAvailableRiders(); // Immediate fetch after bidding
     } catch (error: any) {
       console.error('Bid Error:', error);
@@ -175,7 +176,9 @@ export default function HomeScreen() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      setAvailableRiders(res.data.data || []);
+      const data = await res.data;
+      console.log('Available riders:', data.data);
+      setAvailableRiders(data.data || []);
     } catch (error) {
       console.error('Error fetching available riders:', error);
     }
@@ -227,7 +230,7 @@ export default function HomeScreen() {
             onOpenMap={openMap}
             onSubmit={handleRideCreation}
           />
-        ) : availableRiders.length > 0 ? (
+        ) :  hasPlacedBid ? (
           <AvailableRidersList
             riders={availableRiders}
             disabled={isCanceling}
