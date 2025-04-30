@@ -1,24 +1,19 @@
 meta {
-  name: create ride
+  name: login
   type: http
-  seq: 10
+  seq: 2
 }
 
 post {
-  url: http://localhost:8002/find-ride
+  url: http://localhost:8002/login
   body: json
-  auth: none
-}
-
-headers {
-  Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODEwODVlMDZlZDg3MjZjODgwOTZhMTUiLCJyb2xlIjoiY3VzdG9tZXIiLCJpYXQiOjE3NDU5MTMzNzgsImV4cCI6MTc0NjUxODE3OH0.znWKl8K6zUEOTOGizbI4UJC-8-xkJA3hP5ZAHZsdUFE
+  auth: inherit
 }
 
 body:json {
   {
-    "start_location":"pokhara",
-    "destination":"ktm"
-    
+      "email":"bighitnepal@gmail.com",
+   "password":"91823981"
   }
 }
 

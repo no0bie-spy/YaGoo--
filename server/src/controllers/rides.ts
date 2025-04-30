@@ -181,14 +181,6 @@ const cancelRide = async (req: IRequest, res: Response) => {
       });
     }
 
-    const deletedBid = await Bid.findOneAndDelete({rideId : rideId}); //to delete bid document
-    if (!deletedBid ) {
-      return res.status(404).json({
-        success: false,
-        message: 'Bid not found',
-      });
-    }
-
     return res.status(200).json({
       success: true,
       message: 'Ride cancelled and deleted successfully',

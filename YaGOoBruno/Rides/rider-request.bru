@@ -1,12 +1,12 @@
 meta {
-  name: findRideByRider
+  name: rider-request
   type: http
   seq: 7
 }
 
-get {
-  url: http://localhost:8002/rides/requests
-  body: none
+post {
+  url: http://localhost:8002/rides/create
+  body: json
   auth: none
 }
 
@@ -16,14 +16,22 @@ headers {
 
 body:json {
   {
-    "licenseNumber":"122312313",
-    "citizenshipNumber":"123198231",
-    "vehicleType":"bike",
-        "vehicleName":"Pafsa",
-        "vehicleModel":"jkasd",
-        "vehicleNumberPlate":"123"
-    
+    "start_location": {
+      "address": "Prajal",
+      "coordinates": {
+        "latitude": 28.2096,
+        "longitude": 83.9850
+      }
+    },
+    "destination": {
+      "address": "Suyan",
+      "coordinates": {
+        "latitude": 27.7104,
+        "longitude": 85.2850
+      }
+    }
   }
+  
 }
 
 body:multipart-form {

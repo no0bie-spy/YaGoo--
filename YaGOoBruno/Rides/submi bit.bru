@@ -1,0 +1,38 @@
+meta {
+  name: submi bit
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:8002/rides/bid
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODEwODVlMDZlZDg3MjZjODgwOTZhMTUiLCJyb2xlIjoiY3VzdG9tZXIiLCJpYXQiOjE3NDU5MTMzNzgsImV4cCI6MTc0NjUxODE3OH0.znWKl8K6zUEOTOGizbI4UJC-8-xkJA3hP5ZAHZsdUFE
+}
+
+body:json {
+  {
+    "rideId": "6810b594996ff9af6f5b0f64",
+    "amount":7898
+  }
+  
+}
+
+body:multipart-form {
+  licensePhoto: @file(C:\Users\user\Pictures\bshal.jpg)
+  citizenshipPhoto: @file(C:\Users\user\Pictures\bshal.jpg)
+  vehiclePhoto: @file(C:\Users\user\Pictures\bshal.jpg)
+  vehicleNumberPlatePhoto: @file(C:\Users\user\Pictures\bshal.jpg)
+  vehicleBlueBookPhoto: @file(C:\Users\user\Pictures\bshal.jpg)
+  licenseNumber: 123123121
+  citizenshipNumber: 123124124
+  vehicleType: bike
+  vehicleName: askj
+  vehicleModel: aksdhkan
+  vehicleNumberPlate: 1231243
+  email: bighitnepal@gmail.com
+}

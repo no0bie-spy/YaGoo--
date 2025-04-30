@@ -1,0 +1,37 @@
+meta {
+  name: Reject Rider
+  type: http
+  seq: 8
+}
+
+delete {
+  url: http://localhost:8002/rides/reject-rider
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODExZGMzMjdiNTU2MmM0NTU5MWZlMDgiLCJyb2xlIjoicmlkZXIiLCJpYXQiOjE3NDYwMDExMDIsImV4cCI6MTc0NjYwNTkwMn0.pDXF87z93iGfIS87uUzmUfmO-Y747dROGoKO1oPGdHo
+}
+
+body:json {
+  {
+    "rideListId": "6811df8663d6ffb8fb6a1b28"
+  }
+  
+}
+
+body:multipart-form {
+  licensePhoto: @file(C:\Users\user\Pictures\bshal.jpg)
+  citizenshipPhoto: @file(C:\Users\user\Pictures\bshal.jpg)
+  vehiclePhoto: @file(C:\Users\user\Pictures\bshal.jpg)
+  vehicleNumberPlatePhoto: @file(C:\Users\user\Pictures\bshal.jpg)
+  vehicleBlueBookPhoto: @file(C:\Users\user\Pictures\bshal.jpg)
+  licenseNumber: 123123121
+  citizenshipNumber: 123124124
+  vehicleType: bike
+  vehicleName: askj
+  vehicleModel: aksdhkan
+  vehicleNumberPlate: 1231243
+  email: bighitnepal@gmail.com
+}
