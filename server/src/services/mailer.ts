@@ -36,3 +36,22 @@ export async function sendRecoveryEmail(userEmail: string): Promise<{ token: str
   console.log("Message sent: %s", info.messageId);
   return { token, info };
 }
+
+export async function sendRiderRegistrationEmail(userEmail: string): Promise<{ token: string; info: any }> {
+  const token = (100000 + Math.floor(Math.random() * 900000)).toString();
+
+  const info = await transporter.sendMail({
+    from: '"YaGOo" <node-class@padxu.com>',
+    to: userEmail,
+    subject: "Rider Registration - Verify Your Email",
+    text: `Hello, use the following token to verify your email: ${token}`,
+    html: `<p>Dear Rider,</p>
+           <p>Thank you for registering with YaGOo.</p>
+           <p>Please use the following verification token to complete your registration:</p>
+           <p><b style="font-size: 20px;">${token}</b></p>
+           <p>For your security, do not share this token with anyone.</p>
+           <p>Welcome aboard!<br />The YaGOo Team</p>`,
+  });
+
+  return { token, info };
+}

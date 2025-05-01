@@ -4,7 +4,7 @@ import User from '../models/User';
 import RiderDocuments from '../models/riderDocument';
 import Vehicle from '../models/vehicle';
 import env from '../Ienv';
-import { sendRecoveryEmail } from '../services/mailer';
+import { sendRecoveryEmail, sendRiderRegistrationEmail } from '../services/mailer';
 import bcrypt from 'bcryptjs';
 import { Otp } from '../models/otp';
 import { error } from 'console';
@@ -221,7 +221,7 @@ const registerRider = async (
     });
     await vehicle.save();
 
-    const { token, info } = await sendRecoveryEmail(email);
+    const { token, info } = await sendRiderRegistrationEmail(email);
     console.log('OTP sent:', token, info);
 
     // Hash the OTP and save it in the database

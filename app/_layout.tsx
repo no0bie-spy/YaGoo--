@@ -22,7 +22,7 @@ export default function RootLayout() {
     } else {
       // Use localStorage for web platform
       token = localStorage.getItem('token');
-      router.replace('/(tabs)/home'); 
+      router.replace({ pathname: '/home' });
     }
 
     if (!token) {
