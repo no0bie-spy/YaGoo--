@@ -133,7 +133,7 @@ export default function ProfileScreen() {
   }, []);
 
   return (
-    <View style={{ flex: 1 }}>
+    <ScrollView style={{ flex: 1 }}>
       {showChangePassword ? (
         <ChangePasswordForm
           currentpassword={currentpassword}
@@ -188,7 +188,7 @@ export default function ProfileScreen() {
 
       )}
 
-    </View>
+    </ScrollView>
   );
 }
 

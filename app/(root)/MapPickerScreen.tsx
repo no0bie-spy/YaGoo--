@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, Button } from 'react-native';
-import MapView, { Marker, MapPressEvent } from 'react-native-maps';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, Button, ActivityIndicator } from 'react-native';
+import MapView, { Marker, MapPressEvent, Region } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import { useLocationSetter } from '@/components/LocationSetterContext';
@@ -9,6 +9,47 @@ const MapPickerScreen = () => {
   const { setter } = useLocationSetter();
   const router = useRouter();
   const [selected, setSelected] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [initialRegion, setInitialRegion] = useState<Region | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        console.log('Location permission status:', status);
+        if (status !== 'granted') {
+          console.log('Location permission not granted');
+          // Default to a fallback location if permission is denied
+          setInitialRegion({
+            latitude: 28.2334,
+            longitude: 83.9500,
+            latitudeDelta: 0.0922,
+            longitudeDelta: 0.0421,
+          });
+        } else {
+          const currentLocation = await Location.getCurrentPositionAsync({});
+          console.log('Current location:', currentLocation.coords.latitude, currentLocation.coords.longitude);
+          setInitialRegion({
+            latitude: currentLocation.coords.latitude,
+            longitude: currentLocation.coords.longitude,
+            latitudeDelta: 0.0922,
+            longitudeDelta: 0.0421,
+          });
+        }
+      } catch (error) {
+        console.error('Error getting current location:', error);
+        // Default to a fallback location on error
+        setInitialRegion({
+          latitude: 28.2334,
+          longitude: 83.9500,
+          latitudeDelta:0.0922,
+          longitudeDelta:  0.0421,
+        });
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
 
   const handleSelect = async () => {
     if (!selected || !setter) {
@@ -39,16 +80,19 @@ const MapPickerScreen = () => {
     setSelected({ latitude, longitude });
   };
 
+  if (loading || !initialRegion) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </View>
+    );
+  }
+
   return (
     <View style={{ flex: 1 }}>
       <MapView
         style={{ flex: 1 }}
-        initialRegion={{
-          latitude: 27.7172,
-          longitude: 85.3240,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
-        }}
+        initialRegion={initialRegion}
         onPress={handleMapPress}
       >
         {selected && <Marker coordinate={selected} />}
