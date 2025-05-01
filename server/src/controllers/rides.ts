@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 import Ride from '../models/rides';
 import IRequest from '../middleware/IRequest';
 import Bid from '../models/bid';
@@ -10,6 +10,8 @@ import Review from '../models/review';
 import Vehicle from '../models/vehicle';
 import { defaultMaxListeners } from 'events';
 import Rider from '../models/rider';
+import { sendRecoveryEmail } from '../services/mailer';
+import bcrypt from 'bcrypt';
 const BASE_RATE = 15; // Rs. 15 per km
 
 
@@ -299,31 +301,31 @@ const getAllRequestedRides = async (req: Request, res: Response) => {
 const getAvailableRiders = async (req: IRequest, res: Response) => {
   try {
     const { rideId } = req.query;
-
+    console.log('Ride ID:', rideId);
     if (!rideId) {
       return res.status(400).json({ message: 'rideId is required in the query parameters' });
     }
 
     // Find riders who have accepted the specific rideId
-    const riders = await RiderList.find({ acceptedRides: rideId }).lean();
-
-    if (!riders || riders.length === 0) {
-      return res.status(200).json({ message: 'No riders have accepted this ride yet', data: [] });
-    }
+    const riders = await RiderList.find({ rideId: rideId }).lean();
+    console.log('Riders found:', riders);
 
     const riderIds = riders.map((r) => r.riderId);
+    console.log('Rider IDs:', riderIds);
 
     // Find user details for these riders
     const users = await User.find({ _id: { $in: riderIds } }).lean();
-    const riderUserIds = users.map((u) => u._id);
+    console.log('Users found:', users);
 
     // Find additional rider information
     const ridersData = await Rider.find({
-      userId: { $in: riderUserIds },
+      userId: { $in: riderIds },
     }).lean();
+    console.log('Riders data:', ridersData);
 
     // Find vehicle details for these riders
     const vehicles = await Vehicle.find({ riderId: { $in: riderIds } }).lean();
+    console.log('Vehicles found:', vehicles);
 
     const data = riders.map((rider) => {
       const user = users.find(
@@ -358,7 +360,6 @@ const getAvailableRiders = async (req: IRequest, res: Response) => {
   }
 };
 
-
 const verifyRideOtp = async (req: IRequest, res: Response) => {
   try {
     const { email, rideId, riderOtp } = req.body;
@@ -368,14 +369,15 @@ const verifyRideOtp = async (req: IRequest, res: Response) => {
     if (!otpRecord) {
       return res.status(404).json({
         status: false,
-        details: [{ message: 'Otp not found' }],
+        details: [{ message: 'OTP not found' }],
       });
     }
 
-    if (otpRecord.OTP !== riderOtp) {
+    const isOtpValid = await bcrypt.compare(riderOtp, otpRecord.OTP);
+    if (!isOtpValid) {
       return res.status(400).json({
         status: false,
-        details: [{ message: 'Incorrect Otp' }],
+        details: [{ message: 'Incorrect OTP' }],
       });
     }
 
@@ -387,16 +389,20 @@ const verifyRideOtp = async (req: IRequest, res: Response) => {
         message: 'Ride not found',
       });
     }
+
     ride.status = 'in-progress';
     ride.startTimer = new Date();
     await ride.save();
+
+    // Delete the OTP after successful verification
     await Otp.deleteOne({ email });
+
     return res.status(200).json({
       status: true,
-      message: 'Otp verified',
+      message: 'OTP verified. Ride started.',
     });
   } catch (e: unknown) {
-    console.error('Verify Error', e);
+    console.error('Verify OTP error:', e);
     if (e instanceof Error) {
       return res.status(500).json({ message: e.message });
     } else {
@@ -404,7 +410,7 @@ const verifyRideOtp = async (req: IRequest, res: Response) => {
     }
   }
 };
-const acceptRideRequestByCustomer = async (req: IRequest, res: Response, next: NextFunction) => {
+const acceptRideRequestByCustomer = async (req: IRequest, res: Response) => {
   try {
     const { rideListId } = req.body;
     const customerId = req.userId;
@@ -424,7 +430,7 @@ const acceptRideRequestByCustomer = async (req: IRequest, res: Response, next: N
     }
 
     // Find the ride request
-    const rideRequest = await RiderList.findById(rideListId);
+    const rideRequest = await RiderList.findOne({ _id: rideListId });
 
     if (!rideRequest || rideRequest.status !== 'not-accepted') {
       return res.status(404).json({
@@ -449,6 +455,7 @@ const acceptRideRequestByCustomer = async (req: IRequest, res: Response, next: N
       }
     }
 
+
     // Find and update the ride
     const ride = await Ride.findById(rideRequest.rideId);
 
@@ -458,7 +465,7 @@ const acceptRideRequestByCustomer = async (req: IRequest, res: Response, next: N
         message: 'Ride not found',
       });
     }
-
+    const rideId = ride._id;
     ride.status = 'matched';
     ride.riderId = rideRequest.riderId; // Use riderId from the RideList
     await ride.save();
@@ -554,6 +561,7 @@ const completedRide = async (req: IRequest, res: Response) => {
       status: true,
       message: 'Ride completed',
       totalTime: durationInMinutes,
+      riderId
     });
   } catch (e: unknown) {
     console.error('Complete ride error', e);

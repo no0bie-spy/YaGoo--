@@ -9,6 +9,7 @@
     "dev": "npm run build && npm run start"
   },
   "dependencies": {
+    "@types/bcrypt": "^5.0.2",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "body-parser": "^2.2.0",

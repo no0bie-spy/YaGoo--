@@ -19,6 +19,7 @@ import { useLocationSetter } from '@/components/LocationSetterContext';
 import { getSession, getUserRole } from '@/usableFunction/Session';
 import MapPickerScreen from '@/components/Home/MapPickerScreen';
 import FindRideForm from '@/components/Home/FindRideForm';
+import RiderList from '@/server/src/models/riderList';
 // Import MapPickerScreen as a component
 
 const screenHeight = Dimensions.get('window').height;
@@ -121,9 +122,8 @@ export default function HomeScreen() {
       const { ride, minimumPrice } = response.data;
 
       console.log('Ride created:', ride);
-      setRideId(ride._id);
+      setRideId(ride._id); // Ensure rideId is set
       setMinimumPrice(minimumPrice);
-
     } catch (error: any) {
       console.error('Create Ride Error:', error);
       handleError(error);
@@ -181,20 +181,73 @@ export default function HomeScreen() {
     }
   };
 
+  const handleAcceptRider = async (riderId: string) => {
+    try {
+      const token = await getSession('accessToken');
+      if (!token || !rideId) return;
+
+      const response = await axios.post(
+        `http://${IP_Address}:8002/rides/accept`,
+        { rideListId: riderId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      Alert.alert(response.data.message || 'Rider accepted successfully');
+      const data=await response.data;
+     const email=data.email;
+     
+      router.push({
+        pathname: '/(root)/(rides)/VerifyOtpScreen',
+        params: { email: email, rideId },
+      });
+    } catch (error: any) {
+      console.error('Accept Rider Error:', error);
+      handleError(error);
+    }
+  };
+
+  const handleRejectRider = async (riderId: string) => {
+    try {
+      const token = await getSession('accessToken');
+      if (!token || !rideId) return;
+
+      const response = await axios.post(
+        `http://${IP_Address}:8002/rides/reject-rider`,
+        {
+          riderListId: riderId,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      Alert.alert(response.data.message || 'Rider rejected successfully');
+      fetchAvailableRiders(); // Refresh the list of available riders
+    } catch (error: any) {
+      console.error('Reject Rider Error:', error);
+      handleError(error);
+    }
+  };
+
   // Fetch available riders (polling every 5 seconds)
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
     if (rideId) {
-      fetchAvailableRiders(); // immediate
-      interval = setInterval(fetchAvailableRiders, 5000);
+      console.log('Starting polling for available riders...');
+      fetchAvailableRiders(); // Immediate fetch
+      interval = setInterval(fetchAvailableRiders, 5000); // Poll every 5 seconds
     }
 
-    return () => clearInterval(interval);
+    return () => {
+      console.log('Stopping polling for available riders...');
+      clearInterval(interval);
+    };
   }, [rideId]);
 
   const fetchAvailableRiders = async () => {
     try {
+      console.log('Fetching available riders...');
       const token = await getSession('accessToken');
       const res = await axios.get(
         `http://${IP_Address}:8002/rides/available-riders?rideId=${rideId}`, // Include rideId as a query parameter
@@ -262,6 +315,8 @@ export default function HomeScreen() {
           <AvailableRidersList
             riders={availableRiders}
             disabled={isCanceling}
+            onAccept={handleAcceptRider}
+            onReject={handleRejectRider}
           />
         ) : (
           <BidForm
