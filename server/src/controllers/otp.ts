@@ -5,7 +5,6 @@ import { Otp } from '../models/otp';
 import User from '../models/User';
 
 
-// Send OTP to reset password
 const sendRegisterOtp = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email } = req.body;
