@@ -40,7 +40,7 @@ export default function Login() {
       await storeSession('accessToken', token);
       console.log('Token stored successfully:', token); // Debugging log
 
-      router.replace('/(tabs)/home'); // Navigate to the home screen
+      router.replace('/(root)/(tabs)/home'); // Navigate to the home screen
     } catch (error: any) {
       console.log('Full error:', error);
 

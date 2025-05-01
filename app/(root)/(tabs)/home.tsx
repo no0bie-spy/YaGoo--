@@ -11,24 +11,29 @@ import axios from 'axios';
 import { useRouter } from 'expo-router';
 
 import MapComponent from '@/components/Home/MapComponent';
-import FindRideForm from '@/components/Home/FindRideForm';
+
 import BidForm from '@/components/Home/BidForm';
 import RiderDashboard from '@/components/Rider/RiderDahsboard';
 import AvailableRidersList from '@/components/Rides/AvailableRidersList';
 import { useLocationSetter } from '@/components/LocationSetterContext';
 import { getSession, getUserRole } from '@/usableFunction/Session';
+import MapPickerScreen from '@/components/Home/MapPickerScreen';
+import FindRideForm from '@/components/Home/FindRideForm';
+// Import MapPickerScreen as a component
 
 const screenHeight = Dimensions.get('window').height;
-const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
+const IP_Address = process.env.EXPO_PUBLIC_ADDRESS || 'YOUR_IP_ADDRESS'; // Replace with your IP
 
 export default function HomeScreen() {
   const router = useRouter();
   const { setSetter } = useLocationSetter();
-  
+
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [pickup, setPickup] = useState({ address: '', coordinates: null });
   const [destination, setDestination] = useState({ address: '', coordinates: null });
-  
+  const [isPickupMapVisible, setIsPickupMapVisible] = useState(false);
+  const [isDestinationMapVisible, setIsDestinationMapVisible] = useState(false);
+
   const [rideId, setRideId] = useState<string | null>(null);
   const [price, setPrice] = useState('');
   const [availableRiders, setAvailableRiders] = useState<any[]>([]);
@@ -59,10 +64,30 @@ export default function HomeScreen() {
     })();
   }, []);
 
-  // Context Map Picker Setup
-  const openMap = (setterFn: typeof setPickup) => {
-    setSetter(() => setterFn);
-    router.push('/MapPickerScreen');
+  const handlePickupLocationSelect = (location: { address: string; coordinates: any }) => {
+    setPickup(location);
+    setIsPickupMapVisible(false);
+  };
+
+  const handleDestinationLocationSelect = (location: { address: string; coordinates: any }) => {
+    setDestination(location);
+    setIsDestinationMapVisible(false);
+  };
+
+  const openPickupMapPicker = () => {
+    setIsPickupMapVisible(true);
+  };
+
+  const closePickupMapPicker = () => {
+    setIsPickupMapVisible(false);
+  };
+
+  const openDestinationMapPicker = () => {
+    setIsDestinationMapVisible(true);
+  };
+
+  const closeDestinationMapPicker = () => {
+    setIsDestinationMapVisible(false);
   };
 
   // Create ride
@@ -96,7 +121,7 @@ export default function HomeScreen() {
       const { ride, minimumPrice } = response.data;
 
       console.log('Ride created:', ride);
-      setRideId(ride._id);           // ✅ Use the ride ID
+      setRideId(ride._id);
       setMinimumPrice(minimumPrice);
 
     } catch (error: any) {
@@ -171,10 +196,12 @@ export default function HomeScreen() {
   const fetchAvailableRiders = async () => {
     try {
       const token = await getSession('accessToken');
-      const res = await axios.get(`http://${IP_Address}:8002/rides/available-riders`, {
-        params: { rideId },
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(
+        `http://${IP_Address}:8002/rides/available-riders?rideId=${rideId}`, // Include rideId as a query parameter
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       const data = await res.data;
       console.log('Available riders:', data.data);
@@ -227,10 +254,11 @@ export default function HomeScreen() {
             destination={destination}
             setPickup={setPickup}
             setDestination={setDestination}
-            onOpenMap={openMap}
+            onOpenPickupMap={openPickupMapPicker}
+            onOpenDestinationMap={openDestinationMapPicker}
             onSubmit={handleRideCreation}
           />
-        ) :  hasPlacedBid ? (
+        ) : hasPlacedBid ? (
           <AvailableRidersList
             riders={availableRiders}
             disabled={isCanceling}
@@ -247,6 +275,26 @@ export default function HomeScreen() {
           />
         )}
       </View>
+
+      {isPickupMapVisible && (
+        <View style={styles.modalOverlay}>
+          <MapPickerScreen
+            onLocationSelect={handlePickupLocationSelect}
+            onClose={closePickupMapPicker}
+            initialCoordinate={pickup.coordinates !== null ? pickup.coordinates : undefined}
+          />
+        </View>
+      )}
+
+      {isDestinationMapVisible && (
+        <View style={styles.modalOverlay}>
+          <MapPickerScreen
+            onLocationSelect={handleDestinationLocationSelect}
+            onClose={closeDestinationMapPicker}
+            initialCoordinate={destination.coordinates !== null ? destination.coordinates : undefined}
+          />
+        </View>
+      )}
     </View>
   );
 }
@@ -268,5 +316,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'white',
+    zIndex: 10, // Ensure it's on top
   },
 });

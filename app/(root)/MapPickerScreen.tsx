@@ -11,7 +11,12 @@ const MapPickerScreen = () => {
   const [selected, setSelected] = useState<{ latitude: number; longitude: number } | null>(null);
 
   const handleSelect = async () => {
-    if (!selected || !setter) return;
+    if (!selected || !setter) {
+      console.log('Selected is:', selected);
+      console.log('Setter is:', setter);
+      console.log('Selected or setter is null. Cannot go back.');
+      return;
+    }
 
     const [place] = await Location.reverseGeocodeAsync(selected);
     const address = `${place.name || ''}, ${place.city || ''}, ${place.region || ''}`;
@@ -24,11 +29,9 @@ const MapPickerScreen = () => {
       },
     });
 
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/home'); // fallback
-    }
+    console.log('Attempting to go back.');
+    router.back();
+    console.log('Went back (or attempted to).');
   };
 
   const handleMapPress = (e: MapPressEvent) => {
