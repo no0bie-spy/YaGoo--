@@ -538,10 +538,17 @@ const completedRide = async (req: IRequest, res: Response) => {
     const timeDifferenceMs =
       existingRide.endTimer.getTime() - existingRide.startTimer.getTime();
     const durationInMinutes = Math.ceil(timeDifferenceMs / (1000 * 60));
-
     (existingRide as any).totalTime = durationInMinutes;
 
     await existingRide.save();
+
+    // ✅ Get riderId from the ride and increment totalRides in Rider model
+    const riderId = existingRide.riderId; // assuming this is an ObjectId
+    if (riderId) {
+      await Rider.findByIdAndUpdate(riderId, {
+        $inc: { totalRides: 1 },
+      });
+    }
 
     return res.status(200).json({
       status: true,

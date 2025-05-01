@@ -5,6 +5,7 @@ interface IRider extends Document {
   vehicleId: Types.ObjectId;
   documentId: Types.ObjectId;
   averageRating: number;
+  totalRides:number;
 }
 
 const riderSchema = new Schema<IRider>(
@@ -28,6 +29,9 @@ const riderSchema = new Schema<IRider>(
       type: Number,
       default: 0,
     },
+    totalRides:{
+      type:Number
+    }
   },
   {
     timestamps: true,
