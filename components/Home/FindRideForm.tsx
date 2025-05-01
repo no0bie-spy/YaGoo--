@@ -1,54 +1,69 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import Input from '@/components/Input';
-import AppButton from '@/components/Button';
-import { Search, Navigation } from 'lucide-react-native';
-import LocationPicker from './LocationPicker';
+import { View, StyleSheet, Text } from 'react-native';
+import AppButton from '../Button';
+import Input from '../Input';
 
-type Props = {
-  pickup: any;
-  destination: any;
-  setPickup: (loc: any) => void;
-  setDestination: (loc: any) => void;
-  onOpenMap: (setter: any) => void;
+interface FindRideFormProps {
+  pickup: { address: string; coordinates: any };
+  destination: { address: string; coordinates: any };
+  setPickup: (location: { address: string; coordinates: any }) => void;
+  setDestination: (location: { address: string; coordinates: any }) => void;
+  onOpenPickupMap: () => void;
+  onOpenDestinationMap: () => void;
   onSubmit: () => void;
-};
+}
 
-const FindRideForm = ({
+const FindRideForm: React.FC<FindRideFormProps> = ({
   pickup,
   destination,
   setPickup,
   setDestination,
-  onOpenMap,
+  onOpenPickupMap,
+  onOpenDestinationMap,
   onSubmit,
-}: Props) => {
+}) => {
   return (
-    <View>
-      <Text style={styles.title}>Find a Ride</Text>
-      <LocationPicker
-        label="Pickup Location"
-        location={pickup}
-        setLocation={setPickup}
-        onOpenMap={() => onOpenMap(setPickup)}
+    <View style={styles.container}>
+      <Text style={styles.label}>Pickup Location:</Text>
+      <Input
+        placeholder="Enter pickup address"
+        value={pickup.address}
+        setValue={(text) => setPickup({ ...pickup, address: text })}
       />
-      <LocationPicker
-        label="Destination"
-        location={destination}
-        setLocation={setDestination}
-        onOpenMap={() => onOpenMap(setDestination)}
+      <AppButton title="Select on Map" onPress={onOpenPickupMap}  />
+
+      <View style={styles.separator} />
+
+      <Text style={styles.label}>Destination:</Text>
+      <Input
+        placeholder="Enter destination address"
+        value={destination.address}
+        setValue={(text) => setDestination({ ...destination, address: text })}
       />
-      <AppButton title="Search Ride" onPress={onSubmit} />
+      <AppButton title="Select on Map" onPress={onOpenDestinationMap}  />
+
+      <AppButton title="Find Riders" onPress={onSubmit} style={styles.findButton} />
     </View>
   );
 };
 
-
 const styles = StyleSheet.create({
-  title: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 15,
-    textAlign: 'center',
+  container: {
+    padding: 20,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: '#333',
+  },
+  separator: {
+    height: 15,
+  },
+ 
+  findButton: {
+    marginTop: 25,
+    backgroundColor: '#27ae60', // A nice green color for primary action
   },
 });
 

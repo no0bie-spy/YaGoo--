@@ -1,11 +1,11 @@
 meta {
-  name: submi bit
+  name: create ride
   type: http
-  seq: 11
+  seq: 1
 }
 
 post {
-  url: http://localhost:8002/find-ride
+  url: http://localhost:8002/rides/create
   body: json
   auth: none
 }
@@ -17,17 +17,17 @@ headers {
 body:json {
   {
     "start_location": {
-      "address": "America",
+      "address": "Prajal",
       "coordinates": {
         "latitude": 28.2096,
-        "longitude": 83.9856
+        "longitude": 83.9850
       }
     },
     "destination": {
-      "address": "Canada",
+      "address": "Suyan",
       "coordinates": {
-        "latitude": 27.7156,
-        "longitude": 85.3123
+        "latitude": 27.7104,
+        "longitude": 85.2850
       }
     }
   }

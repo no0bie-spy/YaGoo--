@@ -3,7 +3,7 @@ import Ride from '../models/rides';
 import IRequest from '../middleware/IRequest';
 import Bid from '../models/bid';
 import { calculateRoadDistance } from '../services/distance';
-import RiderList from '../models/riderLIst';
+import RiderList from '../models/riderList';
 import User from '../models/User';
 import { Otp } from '../models/otp';
 import Review from '../models/review';
@@ -171,7 +171,7 @@ const cancelRide = async (req: IRequest, res: Response) => {
         message: 'Ride ID is required',
       });
     }
-
+    console.log("cancel"+rideId)
     const deletedRide = await Ride.findByIdAndDelete(rideId);
 
     if (!deletedRide) {
@@ -221,6 +221,15 @@ const requestRideAsRider = async (req: IRequest, res: Response) => {
       });
     }
 
+    //to check it already exists or not
+    const existingRequest = await RiderList.findOne({
+      riderId,
+      rideId,
+    });
+    
+    if (existingRequest) {
+      return res.status(400).json({ message: 'Ride request already exists.' });
+    }
     // Ensure rideId is treated as a valid ObjectId
     const rideRequest = await RiderList.create({
       riderId,
@@ -288,15 +297,31 @@ const getAllRequestedRides = async (req: Request, res: Response) => {
 
 const getAvailableRiders = async (req: IRequest, res: Response) => {
   try {
-    const riders = await RiderList.find({}).lean();
-    const riderListIds = riders.map((rl) => rl._id);
+    const { rideId } = req.query;
+
+    if (!rideId) {
+      return res.status(400).json({ message: 'rideId is required in the query parameters' });
+    }
+
+    // Find riders who have accepted the specific rideId
+    const riders = await RiderList.find({ acceptedRides: rideId }).lean();
+
+    if (!riders || riders.length === 0) {
+      return res.status(200).json({ message: 'No riders have accepted this ride yet', data: [] });
+    }
+
     const riderIds = riders.map((r) => r.riderId);
 
+    // Find user details for these riders
     const users = await User.find({ _id: { $in: riderIds } }).lean();
     const riderUserIds = users.map((u) => u._id);
+
+    // Find additional rider information
     const ridersData = await Rider.find({
       userId: { $in: riderUserIds },
     }).lean();
+
+    // Find vehicle details for these riders
     const vehicles = await Vehicle.find({ riderId: { $in: riderIds } }).lean();
 
     const data = riders.map((rider) => {
@@ -321,17 +346,17 @@ const getAvailableRiders = async (req: IRequest, res: Response) => {
     });
 
     return res.status(200).json({
-      message: 'Successfully retrieved rider details',
+      message: 'Successfully retrieved rider details for the accepted ride',
       data,
     });
   } catch (e: unknown) {
     console.error('Find rider error:', e);
-
     return res.status(500).json({
       message: e instanceof Error ? e.message : 'An unknown error occurred',
     });
   }
 };
+
 
 const verifyRideOtp = async (req: IRequest, res: Response) => {
   try {

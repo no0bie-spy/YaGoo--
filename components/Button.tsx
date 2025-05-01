@@ -18,6 +18,7 @@ interface AppButtonProps {
   Icon?: React.ComponentType<any>;
   iconColor?: string;
   iconSize?: number;
+  disabled?: boolean;
 }
 
 const AppButton: React.FC<AppButtonProps> = ({
@@ -26,11 +27,13 @@ const AppButton: React.FC<AppButtonProps> = ({
   style,
   textStyle,
   Icon,
-  iconColor = '#fff', 
-  iconSize = 24,     
+  iconColor = '#fff',
+  iconSize = 24,
+  disabled,
 }) => {
   return (
-    <TouchableOpacity style={[styles.button, style]} onPress={onPress}>
+    <TouchableOpacity style={[styles.button, style]} onPress={onPress}
+      disabled={disabled}>
       <View style={styles.content}>
         {Icon && <Icon size={iconSize} color={iconColor} style={styles.icon} />}
         <Text style={[styles.buttonText, textStyle]}>{title}</Text>
@@ -62,6 +65,9 @@ const styles = StyleSheet.create({
     color: '#007AFF',
     textAlign: 'center',
     marginTop: 15,
+  },
+  disabledButton: {
+    backgroundColor: '#A9A9A9', // Gray color for disabled state
   },
 });
 

@@ -9,6 +9,7 @@ import bcrypt from 'bcryptjs';
 import { Otp } from '../models/otp';
 import { error } from 'console';
 import multer from 'multer';
+import Rider from '../models/rider';
 
 //normal registration
 const register = async (req: Request, res: Response, next: NextFunction) => {
@@ -56,7 +57,6 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
     //   user,info
     // });
 
-    
     return res.status(201).json({
       details: [
         {
@@ -238,6 +238,13 @@ const registerRider = async (
       },
       { upsert: true } // insert new if not exists
     );
+
+    const rider = new Rider({
+      userId: user._id,
+      vehicleId: vehicle._id,
+      documentId: riderDocs._id,
+    });
+    await rider.save();
 
     return res.status(201).json({
       message: 'Rider documents and vehicle registered successfully.',

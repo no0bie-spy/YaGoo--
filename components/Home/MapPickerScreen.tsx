@@ -2,29 +2,36 @@ import React, { useState } from 'react';
 import { View, StyleSheet, Button } from 'react-native';
 import MapView, { Marker, MapPressEvent } from 'react-native-maps';
 import * as Location from 'expo-location';
-import { useNavigation } from 'expo-router';
-import { useLocationSetter } from '@/components/LocationSetterContext';
 
-const MapPickerScreen = () => {
-  const navigation = useNavigation();
-  const { setter } = useLocationSetter();
-
-  const [selected, setSelected] = useState<{ latitude: number; longitude: number } | null>(null);
+interface MapPickerScreenProps {
+    onLocationSelect: (location: { address: string; coordinates: { latitude: number; longitude: number } }) => void;
+    onClose?: () => void;
+    initialCoordinate?: { latitude: number; longitude: number };
+  }
+  
+  const MapPickerScreen: React.FC<MapPickerScreenProps> = ({ onLocationSelect, onClose, initialCoordinate }) => {
+    const [selected, setSelected] = useState<{ latitude: number; longitude: number } | null>(initialCoordinate || null);
 
   const handleSelect = async () => {
-    if (!selected || !setter) return;
+    if (!selected) {
+      console.log('No location selected.');
+      return;
+    }
 
     const [place] = await Location.reverseGeocodeAsync(selected);
     const address = `${place.name || ''}, ${place.city || ''}, ${place.region || ''}`;
 
-    setter({
+    onLocationSelect({
       address,
       coordinates: {
         latitude: selected.latitude,
         longitude: selected.longitude,
       },
     });
-    navigation.goBack();
+
+    if (onClose) {
+      onClose(); // Call the onClose prop if provided
+    }
   };
 
   const handleMapPress = (e: MapPressEvent) => {
@@ -37,8 +44,8 @@ const MapPickerScreen = () => {
       <MapView
         style={{ flex: 1 }}
         initialRegion={{
-          latitude: 27.7172,
-          longitude: 85.3240,
+          latitude: initialCoordinate?.latitude || 27.7172,
+          longitude: initialCoordinate?.longitude || 85.3240,
           latitudeDelta: 0.0922,
           longitudeDelta: 0.0421,
         }}
@@ -48,6 +55,7 @@ const MapPickerScreen = () => {
       </MapView>
       <View style={styles.footer}>
         <Button title="Confirm Location" onPress={handleSelect} disabled={!selected} />
+        {onClose && <Button title="Cancel" onPress={onClose} />}
       </View>
     </View>
   );
@@ -63,6 +71,8 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     elevation: 4,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
   },
 });
 

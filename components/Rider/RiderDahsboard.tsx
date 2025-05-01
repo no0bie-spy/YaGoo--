@@ -1,19 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ScrollView } from 'react-native';
-import AppButton from '../Button';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import axios from 'axios';
 import { getSession } from '@/usableFunction/Session';
+
+const screenHeight = Dimensions.get('window').height;
 
 const RiderDashboard = () => {
   const [rideRequests, setRideRequests] = useState<any[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
 
   const fetchRideRequests = async () => {
     try {
+      setIsLoading(true); // Start loading
       const token = await getSession('accessToken');
       if (!token) {
         setErrors(['You are not logged in. Please log in to continue.']);
+        setIsLoading(false);
         return;
       }
 
@@ -21,7 +25,44 @@ const RiderDashboard = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      setRideRequests(response.data || []);
+      console.log("Fetched ride requests:", response.data.rides);
+
+      setRideRequests(Array.isArray(response.data.rides) ? response.data.rides : []);
+      setErrors([]);
+    } catch (error: any) {
+      console.error('Fetch ride requests error:', error);
+      if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
+        setErrors(error.response.data.details.map((err: any) => err.message));
+      } else if (error.response?.data?.message) {
+        setErrors([error.response.data.message]);
+      } else {
+        setErrors(['Something went wrong.']);
+      }
+    } finally {
+      setIsLoading(false); // End loading
+    }
+  };
+
+  const handleAccept = async (rideId: string) => {
+    try {
+      const token = await getSession('accessToken');
+      if (!token) {
+        setErrors(['You are not logged in. Please log in to continue.']);
+        return;
+      }
+
+      const response = await axios.post(`http://${IP_Address}:8002/rides/rider-request`, {
+        rideId,
+      }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.status === 201) {
+        // Remove the accepted ride from the list
+        setRideRequests(prevRequests => prevRequests.filter(ride => ride.rideId !== rideId));
+        alert(`You have accepted ride: ${rideId}`);
+      }
+
       setErrors([]);
     } catch (error: any) {
       console.error('Full error:', error);
@@ -35,70 +76,154 @@ const RiderDashboard = () => {
     }
   };
 
-  // Refresh ride requests every 5 seconds
-  useEffect(() => {
-    fetchRideRequests(); // initial fetch
-    const interval = setInterval(fetchRideRequests, 5000); // refresh every 5s
-    return () => clearInterval(interval); // cleanup on unmount
-  }, []);
+  const handleReject = (rideId: string) => {
+    setRideRequests(prevRequests => prevRequests.filter(ride => ride.rideId !== rideId));
+    alert(`Rejected ride: ${rideId}`);
+  };
 
-  const renderRide = ({ item }: { item: any }) => (
-    <View style={styles.rideCard}>
-      <Text style={styles.title}>Customer: {item.customerName}</Text>
-      <Text>Pickup: {item.startDestination}</Text>
-      <Text>Drop-off: {item.endDestination}</Text>
-      <Text>Email: {item.customerEmail}</Text>
-    </View>
-  );
+  useEffect(() => {
+    fetchRideRequests(); // Fetch data initially
+    const interval = setInterval(() => {
+      fetchRideRequests(); // Fetch data every 5 seconds
+    }, 5000);
+    return () => clearInterval(interval); // Cleanup interval on unmount
+  }, []);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Available Rides</Text>
+      <Text style={styles.header}>Available Ride Requests</Text>
 
-      {errors.map((err, idx) => (
-        <Text key={idx} style={styles.error}>{err}</Text>
-      ))}
+      {isLoading ? (
+        <Text style={styles.loading}>Loading...</Text>
+      ) : (
+        <>
+          {errors.map((err, idx) => (
+            <Text key={idx} style={styles.error}>{err}</Text>
+          ))}
 
-<ScrollView contentContainerStyle={styles.scrollContainer}>
-  {rideRequests.map((item, idx) => (
-    <View key={item._id || idx} style={styles.rideCard}>
-      <Text style={styles.title}>Customer: {item.customerName}</Text>
-      <Text>Pickup: {item.startDestination}</Text>
-      <Text>Drop-off: {item.endDestination}</Text>
-      <Text>Email: {item.customerEmail}</Text>
-    </View>
-  ))}
-</ScrollView>
+          <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContainer}>
+            {rideRequests.length > 0 ? (
+              rideRequests.map((item, idx) => (
+                <View key={item.rideId || idx} style={styles.card}>
+                  <View style={styles.cardContent}>
+                    <Text style={styles.name}>{item.customerName}</Text>
+                    <Text style={styles.label}>📍 Pickup: <Text style={styles.value}>{item.startDestination}</Text></Text>
+                    <Text style={styles.label}>🏁 Drop-off: <Text style={styles.value}>{item.endDestination}</Text></Text>
+                    <Text style={styles.label}>✉️ Email: <Text style={styles.value}>{item.customerEmail}</Text></Text>
+                    <Text style={styles.label}>💰 Bid: <Text style={styles.value}>Rs. {item.bid}</Text></Text>
+                  </View>
+
+                  <View style={styles.buttonGroup}>
+                    <TouchableOpacity
+                      style={[styles.button, styles.acceptButton]}
+                      onPress={() => handleAccept(item.rideId)}
+                    >
+                      <Text style={styles.buttonText}>Accept</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.button, styles.rejectButton]}
+                      onPress={() => handleReject(item.rideId)}
+                    >
+                      <Text style={styles.buttonText}>Reject</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.noData}>No ride requests available.</Text>
+            )}
+          </ScrollView>
+        </>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    maxHeight: screenHeight * 0.7,
     flex: 1,
-    padding: 20,
   },
   header: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 10,
-  },
-  rideCard: {
-    padding: 15,
-    marginVertical: 8,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 10,
-  },
-  title: {
+    fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 5,
+    marginBottom: 12,
+    textAlign: 'center',
+    color: '#333',
   },
   error: {
     color: 'red',
-    marginBottom: 5,
+    marginBottom: 6,
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  scrollArea: {
+    flexGrow: 1,
   },
   scrollContainer: {
     paddingBottom: 20,
+  },
+  card: {
+    backgroundColor: '#f8f9fa',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 2,
+  },
+  cardContent: {
+    marginBottom: 10,
+  },
+  name: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 6,
+    color: '#1e1e1e',
+  },
+  label: {
+    fontSize: 14,
+    marginBottom: 3,
+    color: '#444',
+  },
+  value: {
+    fontWeight: '600',
+    color: '#000',
+  },
+  buttonGroup: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  button: {
+    flex: 1,
+    paddingVertical: 10,
+    marginHorizontal: 5,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  acceptButton: {
+    backgroundColor: '#4CAF50',
+  },
+  rejectButton: {
+    backgroundColor: '#F44336',
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: '600',
+  },
+  noData: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#666',
+    marginTop: 20,
+  },
+  loading: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#666',
+    marginTop: 20,
   },
 });
 
