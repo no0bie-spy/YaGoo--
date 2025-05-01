@@ -51,7 +51,6 @@ export async function sendRiderRegistrationEmail(userEmail: string): Promise<{ t
            <p><b style="font-size: 20px;">${token}</b></p>
            <p>For your security, do not share this token with anyone.</p>
            <p>Welcome aboard!<br />The YaGOo Team</p>`,
-  });
-
+  })
   return { token, info };
 }
