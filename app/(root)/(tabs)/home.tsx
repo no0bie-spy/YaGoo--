@@ -19,7 +19,7 @@ import { useLocationSetter } from '@/components/LocationSetterContext';
 import { getSession, getUserRole } from '@/usableFunction/Session';
 import MapPickerScreen from '@/components/Home/MapPickerScreen';
 import FindRideForm from '@/components/Home/FindRideForm';
-import RiderList from '@/server/src/models/riderList';
+
 // Import MapPickerScreen as a component
 
 const screenHeight = Dimensions.get('window').height;

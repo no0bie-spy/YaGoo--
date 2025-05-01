@@ -1,9 +1,9 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import Ride from '../models/rides';
 import IRequest from '../middleware/IRequest';
 import Bid from '../models/bid';
 import { calculateRoadDistance } from '../services/distance';
-import RiderList from '../models/riderLIst';
+import RiderList from '../models/riderList';
 import User from '../models/User';
 import { Otp } from '../models/otp';
 import Review from '../models/review';
@@ -410,7 +410,7 @@ const verifyRideOtp = async (req: IRequest, res: Response) => {
     }
   }
 };
-const acceptRideRequestByCustomer = async (req: IRequest, res: Response) => {
+const acceptRideRequestByCustomer = async (req: IRequest, res: Response, next: NextFunction) => {
   try {
     const { rideListId } = req.body;
     const customerId = req.userId;
@@ -469,10 +469,37 @@ const acceptRideRequestByCustomer = async (req: IRequest, res: Response) => {
     ride.status = 'matched';
     ride.riderId = rideRequest.riderId; // Use riderId from the RideList
     await ride.save();
+    const riderDetails=await User.findOne({_id:ride.riderId})
+    // Generate OTP
+    const email=riderDetails?.email;
+    
+    const  {token,info}=await sendRecoveryEmail(email!);
+    console.log("token",token,info)
 
-    // Proceed to the next function to send OTP to the rider (otpController.sendOtpToRideRider)
-    req.ride = ride; // Pass the ride object to the next function (otpController.sendOtpToRideRider)
-    next(); // Call the next middleware function (sendOtpToRideRider)
+     //hash the otp to save into the database
+     const hashedToken = await bcrypt.hash(token, 10);
+
+     const expiryOTP = new Date(Date.now() + 10 * 60 * 1000); // valid for 10 minutes
+ 
+     await Otp.updateOne(
+       { email }, // find by email
+       {
+         $set: {
+           OTP: hashedToken,
+           otpExpiresAt: expiryOTP,
+         },
+       },
+       { upsert: true } // insert new if not exists
+     );
+
+   
+    return res.status(200).json({
+      success: true,
+      message: 'Ride accepted and OTP sent to the rider',
+      rideRequest,
+      rideId,
+      email
+    });
   } catch (e: unknown) {
     console.error('Customer accept ride error:', e);
     if (e instanceof Error) {
@@ -550,12 +577,7 @@ const completedRide = async (req: IRequest, res: Response) => {
     await existingRide.save();
 
     // ✅ Get riderId from the ride and increment totalRides in Rider model
-    const riderId = existingRide.riderId; // assuming this is an ObjectId
-    if (riderId) {
-      await Rider.findByIdAndUpdate(riderId, {
-        $inc: { totalRides: 1 },
-      });
-    }
+    const riderId = existingRide.riderId;
 
     return res.status(200).json({
       status: true,
