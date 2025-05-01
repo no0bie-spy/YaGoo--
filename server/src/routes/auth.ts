@@ -3,6 +3,7 @@ import authController from '../controllers/auth';
 import validate from '../middleware/validation';
 import userValidation from '../validations/auth';
 import upload from '../middleware/multerConfig';
+import otpController from '../controllers/otp';
 
 
 const authRouter = express.Router();
@@ -19,12 +20,12 @@ const riderUpload = upload.fields([
 authRouter.post('/register',validate(userValidation.register),authController.register);
 authRouter.post('/login',validate(userValidation.login),authController.login);
 authRouter.post('/verifyOTP',validate(userValidation.otp),authController.verifyEmail);
-authRouter.post('/sendOTP',validate(userValidation.forgotPassword),authController.sendOTP);
+authRouter.post('/sendOTP',validate(userValidation.forgotPassword),otpController.sendRegisterOtp);
 
 authRouter.post('/registerRider',riderUpload,authController.registerRider);
 authRouter.post('/forgotPassword',validate(userValidation.forgotPassword),authController.forgotPassword);
-  authRouter.post('/changePassword',validate(userValidation.changePassword),authController.changePassword);
-  authRouter.post('/logout',authController.logout);
+authRouter.post('/changePassword',validate(userValidation.changePassword),authController.changePassword);
+authRouter.post('/logout',authController.logout);
 
 
 

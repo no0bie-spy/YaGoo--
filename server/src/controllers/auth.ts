@@ -377,7 +377,6 @@ const forgotPassword = async (
   }
 };
 
-const sendOTP = forgotPassword;
 //change user password by validating otp sent in respective email
 const changePassword = async (
   req: Request,
@@ -475,7 +474,6 @@ const authController = {
   registerRider,
   forgotPassword,
   changePassword,
-  sendOTP,
   logout,
 };
 
