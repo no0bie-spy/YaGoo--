@@ -374,7 +374,7 @@ const verifyRideOtp = async (req: IRequest, res: Response) => {
     if (e instanceof Error) {
       return res.status(500).json({ message: e.message });
     } else {
-      return res.status(500).json({ message: 'An unknown error occured' });
+      return res.status(500).json({ message: 'An unknown error occurred' });
     }
   }
 };
