@@ -2,13 +2,12 @@ import React, { useState } from 'react';
 import { View, StyleSheet, Button } from 'react-native';
 import MapView, { Marker, MapPressEvent } from 'react-native-maps';
 import * as Location from 'expo-location';
-import { useNavigation } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useLocationSetter } from '@/components/LocationSetterContext';
 
 const MapPickerScreen = () => {
-  const navigation = useNavigation();
   const { setter } = useLocationSetter();
-
+  const router = useRouter();
   const [selected, setSelected] = useState<{ latitude: number; longitude: number } | null>(null);
 
   const handleSelect = async () => {
@@ -24,7 +23,12 @@ const MapPickerScreen = () => {
         longitude: selected.longitude,
       },
     });
-    navigation.goBack();
+
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/home'); // fallback
+    }
   };
 
   const handleMapPress = (e: MapPressEvent) => {
