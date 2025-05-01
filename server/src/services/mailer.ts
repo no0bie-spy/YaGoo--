@@ -73,3 +73,23 @@ export async function sendNormalRegistrationEmail(userEmail: string): Promise<{ 
   console.log("Message sent: %s", info.messageId);
   return { token, info };
 }
+
+// Function to send OTP for ride
+export async function sendRideOtp(userEmail: string): Promise<{ token: string; info: any }> {
+  const token = (100000 + Math.floor(Math.random() * 900000)).toString();
+
+  const info = await transporter.sendMail({
+    from: '"YaGOo" <node-class@padxu.com>',
+    to: userEmail,
+    subject: "Ride OTP - Verify Your Ride",
+    text: `Hello, use the following OTP to verify your ride: ${token}`,
+    html: `<p>Dear Rider,</p>
+           <p>You are about to embark on your ride with YaGOo. Please use the following OTP to confirm your ride:</p>
+           <p><b style="font-size: 20px;">${token}</b></p>
+           <p>For your security, do not share this OTP with anyone.</p>
+           <p>Thank you for choosing YaGOo!<br />The YaGOo Team</p>`,
+  });
+
+  console.log("Message sent: %s", info.messageId);
+  return { token, info };
+}

@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import Ride from '../models/rides';
 import IRequest from '../middleware/IRequest';
 import Bid from '../models/bid';
@@ -11,6 +11,7 @@ import Vehicle from '../models/vehicle';
 import { defaultMaxListeners } from 'events';
 import Rider from '../models/rider';
 const BASE_RATE = 15; // Rs. 15 per km
+
 
 const createRideRequest = async (req: IRequest, res: Response) => {
   try {
@@ -403,7 +404,7 @@ const verifyRideOtp = async (req: IRequest, res: Response) => {
     }
   }
 };
-const acceptRideRequestByCustomer = async (req: IRequest, res: Response) => {
+const acceptRideRequestByCustomer = async (req: IRequest, res: Response, next: NextFunction) => {
   try {
     const { rideListId } = req.body;
     const customerId = req.userId;
@@ -459,15 +460,12 @@ const acceptRideRequestByCustomer = async (req: IRequest, res: Response) => {
     }
 
     ride.status = 'matched';
-    ride.riderId = rideRequest.riderId;  // Use riderId from the RideList
+    ride.riderId = rideRequest.riderId; // Use riderId from the RideList
     await ride.save();
 
-    return res.status(200).json({
-      success: true,
-      message: 'Ride accepted and matched successfully',
-      rideRequest,
-      ride,
-    });
+    // Proceed to the next function to send OTP to the rider (otpController.sendOtpToRideRider)
+    req.ride = ride; // Pass the ride object to the next function (otpController.sendOtpToRideRider)
+    next(); // Call the next middleware function (sendOtpToRideRider)
   } catch (e: unknown) {
     console.error('Customer accept ride error:', e);
     if (e instanceof Error) {
