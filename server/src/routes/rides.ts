@@ -52,7 +52,7 @@ rideRouter.get('/available-riders', rideController.getAvailableRiders); // custo
 /**
  * Customer accepts a specific rider and sends OTP to the rider.
  */
-rideRouter.post('/accept', rideController.acceptRideRequestByCustomer, otpController.sendOtpToRideRider); // customer accepts one rider and sends OTP
+rideRouter.post('/accept', rideController.acceptRideRequestByCustomer); // customer accepts one rider and sends OTP
 
 /**
  * Customer rejects a rider.

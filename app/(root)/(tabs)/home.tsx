@@ -185,12 +185,13 @@ export default function HomeScreen() {
     try {
       const token = await getSession('accessToken');
       if (!token || !rideId) return;
-
+      console.log('Accepting riderList:', riderId);
       const response = await axios.post(
         `http://${IP_Address}:8002/rides/accept`,
         { rideListId: riderId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      console.log('Accept Rider Response:', response.data);
 
       Alert.alert(response.data.message || 'Rider accepted successfully');
       const data=await response.data;
