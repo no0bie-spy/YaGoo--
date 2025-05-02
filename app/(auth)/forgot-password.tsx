@@ -17,7 +17,7 @@ export default function ForgotPassword() {
 
             const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
             console.log("IP Address:", IP_Address); // Debugging log
-            const response = await axios.post(`http://${IP_Address}:8002/forgotPassword`, userData)
+            const response = await axios.post(`http://${IP_Address}:8002/auth/forgotPassword`, userData)
             const data = response.data;
             console.log(data)
             router.replace({

@@ -5,9 +5,8 @@ import RiderDocuments from '../models/riderDocument';
 import Vehicle from '../models/vehicle';
 import env from '../Ienv';
 import { sendRecoveryEmail, sendRiderRegistrationEmail } from '../services/mailer';
-import bcrypt from 'bcryptjs';
+import bcrypt from 'bcrypt';
 import { Otp } from '../models/otp';
-import { error } from 'console';
 import multer from 'multer';
 import Rider from '../models/rider';
 
@@ -341,7 +340,7 @@ const verifyEmail = async (req: Request, res: Response, next: NextFunction) => {
 const forgotPassword = async (
   req: Request,
   res: Response,
-  next: NextFunction
+ 
 ) => {
   try {
     const { email } = req.body;
@@ -354,7 +353,7 @@ const forgotPassword = async (
 
     // Call the function to send the recovery email
     const { token, info } = await sendRecoveryEmail(email);
-    console.log(token, info);
+    console.log("token"+token, info);
 
     //hash the otp to save into the database
     const hashedToken = await bcrypt.hash(token, 10);
