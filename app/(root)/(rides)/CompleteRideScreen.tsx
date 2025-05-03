@@ -4,7 +4,7 @@ import axios from 'axios';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { getSession } from '@/usableFunction/Session';
 
-const IP_Address = process.env.EXPO_PUBLIC_ADDRESS || 'YOUR_IP_ADDRESS';
+const IP_Address = process.env.EXPO_PUBLIC_ADDRESS ;
 
 const CompleteRideScreen = () => {
   const { rideId } = useLocalSearchParams();
