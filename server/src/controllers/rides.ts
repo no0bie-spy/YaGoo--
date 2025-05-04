@@ -3,7 +3,6 @@ import Ride from '../models/rides';
 import IRequest from '../middleware/IRequest';
 import Bid from '../models/bid';
 import { calculateRoadDistance } from '../services/distance';
-
 import User from '../models/User';
 import { Otp } from '../models/otp';
 import Review from '../models/review';
@@ -579,6 +578,15 @@ const completedRide = async (req: IRequest, res: Response) => {
 
     await existingRide.save();
 
+
+    //increase total rides number after completing ride
+    const rider:any = await Rider.findOne({riderid: existingRide.riderId})
+    const newTotalRides = rider.totalRides++;
+    Rider.updateOne({
+      totalRides: newTotalRides
+    })
+
+
     // ✅ Get riderId from the ride and increment totalRides in Rider model
     const riderId = existingRide.riderId;
 
@@ -611,6 +619,11 @@ const submitRideReview = async (req: IRequest, res: Response) => {
         ],
       });
     }
+    
+    const rider:any = await Rider.findOne({ riderId })
+
+
+
     if (!riderId) {
       return res.status(400).json({
         status: false,
@@ -621,11 +634,14 @@ const submitRideReview = async (req: IRequest, res: Response) => {
         ],
       });
     }
+    
+    const newRating = Math.ceil(((rider.averageRating*rider.totalRides)+rating)/(rider.totalRides+1))
+
     const review = await Review.create({
       rideId,
       riderId,
       comment,
-      rating,
+      rating:newRating,
     });
 
     return res.json({
