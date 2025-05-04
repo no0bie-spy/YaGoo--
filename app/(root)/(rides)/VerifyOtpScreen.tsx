@@ -3,13 +3,14 @@ import { View, Text, StyleSheet, Alert } from 'react-native';
 import { OtpInput } from 'react-native-otp-entry';
 import AppButton from '@/components/Button';
 import axios from 'axios';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { getSession } from '@/usableFunction/Session';
 
 const IP_Address = process.env.EXPO_PUBLIC_ADDRESS; 
 
 const VerifyOtpScreen = ({ route }: any) => {
-  const { email, rideId } = route.params;
+ 
+  const {  email, rideId  } = useLocalSearchParams();
   const [otp, setOtp] = useState('');
   const router = useRouter();
 
@@ -19,20 +20,26 @@ const VerifyOtpScreen = ({ route }: any) => {
     }
 
     try {
+      console.log('Ride ID:', rideId);
+      console.log('Rider Email:', email);
+      console.log('OTP:', otp);
       const token = await getSession('accessToken');
+      console.log('Sending payload:', { email, rideId, riderOtp: otp });
+      console.log('Token:', token);
       const response = await axios.post(
-        `http://${IP_Address}:8002/rides/verify-otp`,
+        `http://${IP_Address}:8002/rides/verify-ride-otp`,
         { email, rideId, riderOtp: otp },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
+      console.log('OTP verification response:', response.data);
       Alert.alert(response.data.message || 'OTP verified successfully');
       router.push({
         pathname: '/(root)/(rides)/CompleteRideScreen',
         params: { rideId },
       });
     } catch (error: any) {
-      console.error('Verify OTP Error:', JSON.stringify(error, null, 2));
+      console.error('Verify OTP Error:', JSON.stringify(error.response?.data, null, 2));
       Alert.alert(
         error.response?.data?.message || 'Failed to verify OTP. Please try again.'
       );

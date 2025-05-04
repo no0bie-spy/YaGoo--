@@ -39,7 +39,7 @@ export default function RiderRegistration() {
     }
     try {
       const formData = new FormData();
-
+console.log("Form Data:", formData);
       formData.append('email', email);
       formData.append('licenseNumber', licenseNumber);
       formData.append('vehicleType', vehicleType);
@@ -82,7 +82,7 @@ export default function RiderRegistration() {
       console.log("IP Address:", IP_Address); // Debugging log
       
       const response = await axios.post(
-        `http://${IP_Address}:8002/auth/registerRider`,
+        `http://${IP_Address}:8002/auth/register-rider`,
         formData,
         {
           headers: {

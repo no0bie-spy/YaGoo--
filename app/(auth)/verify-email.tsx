@@ -30,7 +30,7 @@ export default function VerifyEmail() {
       await storeSession('accessToken', String(data.token));
 
       router.replace({
-        pathname: '/(tabs)/home',
+        pathname: '/(root)/(tabs)/home',
         params: { message: 'Registration successful!' }
       });
     } catch (error: any) {
