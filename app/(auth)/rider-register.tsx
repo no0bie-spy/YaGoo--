@@ -82,7 +82,7 @@ export default function RiderRegistration() {
       console.log("IP Address:", IP_Address); // Debugging log
       
       const response = await axios.post(
-        `http://${IP_Address}:8002/auth/registerRider`,
+        `http://${IP_Address}:8002/auth/register-rider`,
         formData,
         {
           headers: {

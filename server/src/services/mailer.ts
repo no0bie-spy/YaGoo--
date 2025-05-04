@@ -5,7 +5,7 @@ import env from "../Ienv"; // Make sure file name matches
 const transporter = nodemailer.createTransport({
   host: (env as any).SMTP_HOST,
   port: (env as any).SMTP_PORT,
- // secure: true, // true for port 465, false for other ports
+//secure: false, // true for port 465, false for other ports
   auth: {
     user: env.SMTP_USERNAME,
     pass: env.SMTP_PASSWORD,
