@@ -35,7 +35,7 @@ const ReviewScreen = () => {
     try {
       const token = await getSession('accessToken');
       const response = await axios.post(
-        `http://${IP_Address}:8002/rides/review`,
+        `http://${IP_Address}:8002/rides/submit-ride-review`,
         { rideId, riderId, comment, rating: numericRating },
         { headers: { Authorization: `Bearer ${token}` } }
       );
