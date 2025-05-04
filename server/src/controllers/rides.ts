@@ -3,7 +3,7 @@ import Ride from '../models/rides';
 import IRequest from '../middleware/IRequest';
 import Bid from '../models/bid';
 import { calculateRoadDistance } from '../services/distance';
-import RiderList from '../models/riderList';
+
 import User from '../models/User';
 import { Otp } from '../models/otp';
 import Review from '../models/review';
@@ -12,6 +12,7 @@ import { defaultMaxListeners } from 'events';
 import Rider from '../models/rider';
 import { sendRecoveryEmail } from '../services/mailer';
 import bcrypt from 'bcrypt';
+import RiderList from '../models/riderLIst';
 const BASE_RATE = 15; // Rs. 15 per km
 
 
