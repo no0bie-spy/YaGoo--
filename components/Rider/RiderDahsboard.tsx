@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import axios from 'axios';
 import { getSession } from '@/usableFunction/Session';
+import { router } from 'expo-router';
 
 const screenHeight = Dimensions.get('window').height;
 
@@ -63,6 +64,19 @@ const RiderDashboard = () => {
         alert(`You have accepted ride: ${rideId}`);
       }
 
+      setErrors([]);
+
+      const otpResponse = await axios.post(`http://${IP_Address}:8002/rides/view-otp`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (otpResponse.status === 200) {
+        alert('OTP recieved successfully. Please check your email.');
+        console.log('OTP:', otpResponse.data.otp);
+        router.push({
+          pathname: '/(root)/(rides)/ViewOtpScreen',
+          params: { otp: otpResponse.data.otp },
+        });
+      }
       setErrors([]);
     } catch (error: any) {
       console.error('Full error:', error);
