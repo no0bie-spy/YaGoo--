@@ -2,7 +2,8 @@ import express from 'express';
 import validate from '../middleware/validation';
 import rideValidation from '../validations/rides';
 import rideController from '../controllers/rides';
-import otpController from '../controllers/otp';
+
+
 
 const rideRouter = express.Router();
 
@@ -73,5 +74,7 @@ rideRouter.post('/complete-ride', rideController.completedRide); // ride complet
  * Customer submits a review after ride completion.
  */
 rideRouter.post('/submit-ride-review', rideController.submitRideReview); // customer sends ride review
+
+
 
 export default rideRouter;
