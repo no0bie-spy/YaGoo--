@@ -4,23 +4,31 @@ import { Otp } from "../models/otp";
 import User from "../models/User";
 
 
-const viewRiderOtp = async function (req : IRequest, res: Response) {
+const viewEmail = async function (req : IRequest, res: Response) {
     
     try{
         const userId = req.userId;
-
+       
         if (!userId) {
           return res.status(400).json({
             details: [{ message: 'User ID is missing' }],
           });
         }
 
-        const user:any = await User.findById(userId);
+        const userDoc = await User.findById(userId);
 
-        const otpRecord = await Otp.findOne({email : user.email});
+        if (!userDoc) {
+                return res.status(400).json({
+                    details: [{ message: 'User Document  is missing' }],
+                  });
+            }
 
+           
+        const otpRecord = await Otp.findOne({ email: userDoc.email })
+        
         const validOtp = otpRecord?.OTP;
 
+       
         const validEmail = otpRecord?.email;
 
         return res.json({
@@ -42,7 +50,7 @@ const viewRiderOtp = async function (req : IRequest, res: Response) {
     };
     
     const suyanController = {
-        viewRiderOtp
+        viewEmail
     }
 
     export default suyanController
