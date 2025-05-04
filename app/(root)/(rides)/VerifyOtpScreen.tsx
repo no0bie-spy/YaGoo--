@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Alert } from 'react-native';
+import { OtpInput } from 'react-native-otp-entry';
+import AppButton from '@/components/Button';
 import axios from 'axios';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { getSession } from '@/usableFunction/Session';
 
-const IP_Address = process.env.EXPO_PUBLIC_ADDRESS || 'YOUR_IP_ADDRESS';
+const IP_Address = process.env.EXPO_PUBLIC_ADDRESS; 
 
 const VerifyOtpScreen = ({ route }: any) => {
-  const { email, rideId } = route.params;
+ 
+  const {  email, rideId  } = useLocalSearchParams();
   const [otp, setOtp] = useState('');
   const router = useRouter();
 
@@ -15,24 +18,28 @@ const VerifyOtpScreen = ({ route }: any) => {
     if (!otp) {
       return Alert.alert('Please enter the OTP');
     }
-    const {email}=useLocalSearchParams();
-    const {rideId}=useLocalSearchParams();
 
     try {
+      console.log('Ride ID:', rideId);
+      console.log('Rider Email:', email);
+      console.log('OTP:', otp);
       const token = await getSession('accessToken');
+      console.log('Sending payload:', { email, rideId, riderOtp: otp });
+      console.log('Token:', token);
       const response = await axios.post(
-        `http://${IP_Address}:8002/rides/verify-otp`,
-        { email:email, rideId:rideId, riderOtp: otp },
+        `http://${IP_Address}:8002/rides/verify-ride-otp`,
+        { email, rideId, riderOtp: otp },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
+      console.log('OTP verification response:', response.data);
       Alert.alert(response.data.message || 'OTP verified successfully');
       router.push({
         pathname: '/(root)/(rides)/CompleteRideScreen',
-        params: {  rideId },
+        params: { rideId },
       });
     } catch (error: any) {
-      console.error('Verify OTP Error:', error);
+      console.error('Verify OTP Error:', JSON.stringify(error.response?.data, null, 2));
       Alert.alert(
         error.response?.data?.message || 'Failed to verify OTP. Please try again.'
       );
@@ -40,47 +47,103 @@ const VerifyOtpScreen = ({ route }: any) => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.screenContainer}>
       <Text style={styles.title}>Verify OTP</Text>
-      <Text style={styles.subtitle}>
-        Enter the OTP sent to the rider's email to start the ride.
-      </Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter OTP"
-        keyboardType="numeric"
-        value={otp}
-        onChangeText={setOtp}
+      <Text style={styles.subtitle}>Enter the OTP sent to the rider's email to start the ride.</Text>
+
+      <OtpInput
+        numberOfDigits={6}
+        focusColor="green"
+        autoFocus={false}
+        hideStick={true}
+        placeholder="******"
+        blurOnFilled={true}
+        disabled={false}
+        type="numeric"
+        secureTextEntry={false}
+        focusStickBlinkingDuration={500}
+        onFocus={() => console.log("Focused")}
+        onBlur={() => console.log("Blurred")}
+        onTextChange={(text) => setOtp(text)}
+        onFilled={(text) => {
+          console.log(`OTP is ${text}`);
+          setOtp(text);
+        }}
+        textInputProps={{
+          accessibilityLabel: "One-Time Password",
+        }}
+        textProps={{
+          accessibilityRole: "text",
+          accessibilityLabel: "OTP digit",
+          allowFontScaling: false,
+        }}
+        theme={{
+          containerStyle: styles.container,
+          pinCodeContainerStyle: styles.pinCodeContainer,
+          pinCodeTextStyle: styles.pinCodeText,
+          focusStickStyle: styles.focusStick,
+          focusedPinCodeContainerStyle: styles.activePinCodeContainer,
+          placeholderTextStyle: styles.placeholderText,
+          filledPinCodeContainerStyle: styles.filledPinCodeContainer,
+          disabledPinCodeContainerStyle: styles.disabledPinCodeContainer,
+        }}
       />
-      <Button title="Verify OTP" onPress={handleVerifyOtp} />
+
+      <AppButton title="Verify OTP" onPress={handleVerifyOtp} />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  screenContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     padding: 20,
+    justifyContent: 'center',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 10,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
-    textAlign: 'center',
     marginBottom: 20,
+    textAlign: 'center',
   },
-  input: {
-    width: '100%',
-    padding: 10,
+  container: {
+    alignSelf: 'center',
+    marginBottom: 30,
+  },
+  pinCodeContainer: {
     borderWidth: 1,
     borderColor: '#ccc',
-    borderRadius: 8,
-    marginBottom: 20,
+    borderRadius: 10,
+    width: 40,
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pinCodeText: {
+    fontSize: 18,
+    color: '#000',
+  },
+  focusStick: {
+    height: 2,
+    width: '100%',
+    backgroundColor: 'green',
+  },
+  activePinCodeContainer: {
+    borderColor: 'green',
+  },
+  placeholderText: {
+    color: '#aaa',
+  },
+  filledPinCodeContainer: {
+    backgroundColor: '#e6ffe6',
+  },
+  disabledPinCodeContainer: {
+    backgroundColor: '#f0f0f0',
   },
 });
 

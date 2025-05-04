@@ -39,7 +39,7 @@ export default function RiderRegistration() {
     }
     try {
       const formData = new FormData();
-
+console.log("Form Data:", formData);
       formData.append('email', email);
       formData.append('licenseNumber', licenseNumber);
       formData.append('vehicleType', vehicleType);

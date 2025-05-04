@@ -62,7 +62,7 @@ rideRouter.delete('/reject-rider', rideController.rejectRider); // customer reje
 /**
  * Customer verifies the ride by providing OTP.
  */
-rideRouter.get('/verify-ride-otp', rideController.verifyRideOtp); // customer verifies rider by OTP
+rideRouter.post('/verify-ride-otp', rideController.verifyRideOtp); // customer verifies rider by OTP
 
 /**
  * Mark the ride as completed.
