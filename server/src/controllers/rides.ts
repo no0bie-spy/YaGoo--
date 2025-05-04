@@ -3,7 +3,7 @@ import Ride from '../models/rides';
 import IRequest from '../middleware/IRequest';
 import Bid from '../models/bid';
 import { calculateRoadDistance } from '../services/distance';
-import RiderList from '../models/riderLIst';
+
 import User from '../models/User';
 import { Otp } from '../models/otp';
 import Review from '../models/review';
