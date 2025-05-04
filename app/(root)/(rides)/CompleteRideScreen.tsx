@@ -17,7 +17,7 @@ const CompleteRideScreen = () => {
     try {
       const token = await getSession('accessToken');
       const response = await axios.post(
-        `http://${IP_Address}:8002/rides/complete`,
+        `http://${IP_Address}:8002/rides/complete-ride`,
         { rideId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
