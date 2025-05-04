@@ -12,7 +12,7 @@ import { defaultMaxListeners } from 'events';
 import Rider from '../models/rider';
 import { sendRecoveryEmail } from '../services/mailer';
 import bcrypt from 'bcrypt';
-import RiderList from '../models/riderLIst';
+import RiderList from '../models/riderList';
 const BASE_RATE = 15; // Rs. 15 per km
 
 
