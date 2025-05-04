@@ -3,7 +3,6 @@ import Ride from '../models/rides';
 import IRequest from '../middleware/IRequest';
 import Bid from '../models/bid';
 import { calculateRoadDistance } from '../services/distance';
-import RiderList from '../models/riderLIst';
 import User from '../models/User';
 import { Otp } from '../models/otp';
 import Review from '../models/review';
@@ -609,6 +608,11 @@ const submitRideReview = async (req: IRequest, res: Response) => {
         ],
       });
     }
+    
+    const rider:any = await Rider.findOne({ riderId })
+
+
+
     if (!riderId) {
       return res.status(400).json({
         status: false,
@@ -619,11 +623,14 @@ const submitRideReview = async (req: IRequest, res: Response) => {
         ],
       });
     }
+    
+    const newRating = ((rider.averageRating*rider.totalRides)+rating)/(rider.totalRides+1)
+
     const review = await Review.create({
       rideId,
       riderId,
       comment,
-      rating,
+      rating:newRating,
     });
 
     return res.json({
