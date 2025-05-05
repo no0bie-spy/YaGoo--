@@ -545,6 +545,44 @@ const rejectRider = async (req: IRequest, res: Response) => {
   }
 };
 
+const viewRiderOtp = async function (req : IRequest, res: Response) {
+    
+  try{
+      const userId = req.userId;
+
+      if (!userId) {
+        return res.status(400).json({
+          details: [{ message: 'User ID is missing' }],
+        });
+      }
+
+      const user:any = await User.findById(userId);
+
+      const otpRecord = await Otp.findOne({email : user.email});
+
+      const validOtp = otpRecord?.OTP;
+
+      const validEmail = otpRecord?.email;
+
+      return res.json({
+          message : " otp shown",
+          otp: validOtp,
+          email : validEmail
+      })
+
+  
+  }
+  catch (e: unknown) {
+      console.error('Register error:', e);
+      if (e instanceof Error) {
+        return res.status(500).json({ message: e.message });
+      } else {
+        return res.status(500).json({ message: 'An unknown error occurred' });
+      }
+    }
+  };
+  
+
 
 const completedRide = async (req: IRequest, res: Response) => {
   try {
@@ -663,6 +701,7 @@ const rideController = {
   getAvailableRiders, //customer gets all the requests from riders
   acceptRideRequestByCustomer, //customer accepts one rider and send otp to rider
   rejectRider, //customer rejects rider
+  viewRiderOtp, //to show rider otp on rider's screen
   verifyRideOtp, //customer verifies rider by otp
   completedRide, //ride completes
   submitRideReview  //customer sends ride review
