@@ -389,6 +389,65 @@ const forgotPassword = async (
   }
 };
 
+const setNewPassword = async(
+  req:Request,
+  res:Response,
+  next:NextFunction
+)=>{
+  try{
+    const {newPassword, email, otp} = req.body;
+
+    const existingUser:any = await User.findOne({ email });
+
+
+    // check user exists or not
+    if (!existingUser) {
+      return res.status(400).json({ details: [{ message: 'User not exist' }] });
+    }
+
+    const existingOtp:any = await Otp.findOne({ email })
+    if(!existingOtp){
+      return res.status(400).json({details:[{message:'Otp not found'}]})
+    }
+
+
+    if(existingOtp.otp !== otp){
+      return res.status(400).json({details:[{message:'Otp does not match'}]})
+    }
+
+    //deleting otp after verification
+    await Otp.deleteOne({ email });
+
+    
+    // hashing  new password
+    const newHashedPassword = await bcrypt.hash(newPassword, 10);
+
+   //update the new password
+   await User.findOneAndUpdate(
+    { email },
+    {
+      password: newHashedPassword,
+    }
+  );
+  return res.status(200).json({
+    details: [
+      {
+        message: 'Password changed Successfully',
+        email: existingUser.email,
+      },
+    ],
+  });
+} catch (e: unknown) {
+  console.error('Password setting error:', e);
+  if (e instanceof Error) {
+    return res.status(500).json({ message: e.message });
+  } else {
+    return res.status(500).json({ message: 'An unknown error occurred' });
+  }
+}
+};
+
+
 //change user password by validating otp sent in respective email
 const changePassword = async (
   req: Request,
@@ -485,6 +544,7 @@ const authController = {
   verifyEmail,
   registerRider,
   forgotPassword,
+  setNewPassword,
   changePassword,
   logout,
 };

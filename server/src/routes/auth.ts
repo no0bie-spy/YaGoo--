@@ -24,6 +24,7 @@ authRouter.post('/sendOTP',validate(userValidation.forgotPassword),otpController
 
 authRouter.post('/register-rider',riderUpload,authController.registerRider);
 authRouter.post('/forgotPassword',validate(userValidation.forgotPassword),authController.forgotPassword);
+authRouter.post('/set-new-password',authController.setNewPassword)
 authRouter.post('/changePassword',validate(userValidation.changePassword),authController.changePassword);
 authRouter.post('/logout',authController.logout);
 
