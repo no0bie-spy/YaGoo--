@@ -10,4 +10,5 @@ const userSettingRouter = Router();
 userSettingRouter.get('/userdetails',  homepageController.userDetails )
 userSettingRouter.put('/editProfileDetails', validate(userValidation.editProfileDetails), homepageController.editProfileDetails )
 
+
 export default userSettingRouter

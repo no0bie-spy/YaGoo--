@@ -60,6 +60,9 @@ rideRouter.post('/accept', rideController.acceptRideRequestByCustomer); // custo
  */
 rideRouter.delete('/reject-rider', rideController.rejectRider); // customer rejects rider
 
+rideRouter.get('/view-otp', rideController.viewRiderOtp);//view otp for the rider
+
+
 /**
  * Customer verifies the ride by providing OTP.
  */
