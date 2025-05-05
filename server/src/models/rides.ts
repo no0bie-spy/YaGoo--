@@ -25,6 +25,11 @@ interface IRide extends Document {
     | 'completed'
     | 'cancelled';
   distance: number;
+  paymentStatus :
+   | 'completed'
+    | 'not received'
+  | 'pending';
+
   minimumPrice: number;
   bidId: Types.ObjectId;
   startTimer?:Date;
@@ -84,10 +89,22 @@ const rideSchema = new Schema<IRide>(
       ],
       default: 'requested',
     },
+
+    paymentStatus: {
+      type: String,
+      enum: [
+      'not received',
+        'pending',
+        'completed'
+      ],
+      default: 'not received',
+    },
+
     distance: {
       type: Number,
       required: true,
     },
+    
     minimumPrice: {
       type: Number,
       required: true,

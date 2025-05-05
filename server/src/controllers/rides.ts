@@ -200,7 +200,6 @@ const cancelRide = async (req: IRequest, res: Response) => {
   }
 };
 
-
 const requestRideAsRider = async (req: IRequest, res: Response) => {
   try {
     const { rideId } = req.body;
@@ -694,6 +693,45 @@ const submitRideReview = async (req: IRequest, res: Response) => {
     });
   }
 };
+
+const payment = async (req: IRequest, res: Response) => {
+  try {
+    const {  rideId } = req.body;
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(400).json({
+        details: [{ message: 'User ID is missing' }],
+      });
+    }
+
+    const ride = await Ride.findById(rideId);
+
+    if (!ride) {
+      return res.status(404).json({
+        details: [{ message: 'Ride not found' }],
+      });
+    }
+
+    ride.paymentStatus = 'completed';
+    await ride.save();
+
+    
+ 
+    return res.status(200).json({
+      success: true,
+      message: 'Payment received successfully'
+    
+    });
+  } catch (e: unknown) {
+    console.error('Register error:', e);
+    if (e instanceof Error) {
+      return res.status(500).json({ message: e.message });
+    } else {
+      return res.status(500).json({ message: 'An unknown error occurred' });
+    }
+  }
+};
 const rideController = {
   createRideRequest,//successfully create ride by customer
   submitBid, //customer place bids and send
@@ -706,7 +744,8 @@ const rideController = {
   viewRiderOtp, //to show rider otp on rider's screen
   verifyRideOtp, //customer verifies rider by otp
   completedRide, //ride completes
-  submitRideReview  //customer sends ride review
+  submitRideReview , //customer sends ride review
+  payment
 };
 
 

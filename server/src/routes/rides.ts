@@ -77,4 +77,8 @@ rideRouter.post('/submit-ride-review', rideController.submitRideReview); // cust
 
 
 
+/**
+ * Rider accepts payment.
+ */
+rideRouter.post('/payment', rideController.payment); // changes the paymentStatus to 'completed'
 export default rideRouter;
