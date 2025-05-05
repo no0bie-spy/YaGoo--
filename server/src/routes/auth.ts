@@ -20,6 +20,8 @@ const riderUpload = upload.fields([
 authRouter.post('/register',validate(userValidation.register),authController.register);
 authRouter.post('/login',validate(userValidation.login),authController.login);
 authRouter.post('/verifyOTP',validate(userValidation.otp),authController.verifyEmail);
+authRouter.post('/set-new-password',authController.setNewPassword);
+
 authRouter.post('/sendOTP',validate(userValidation.forgotPassword),otpController.sendRegisterOtp);
 
 authRouter.post('/register-rider',riderUpload,authController.registerRider);
