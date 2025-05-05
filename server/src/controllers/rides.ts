@@ -373,7 +373,7 @@ const verifyRideOtp = async (req: IRequest, res: Response) => {
         details: [{ message: 'OTP not found' }],
       });
     }
-
+    console.log("otp aayo", otpRecord.OTP)
     const isOtpValid = await bcrypt.compare(riderOtp, otpRecord.OTP);
     if (!isOtpValid) {
       return res.status(400).json({
@@ -393,6 +393,7 @@ const verifyRideOtp = async (req: IRequest, res: Response) => {
 
     ride.status = 'in-progress';
     ride.startTimer = new Date();
+    console.log("timer ")
     await ride.save();
 
     // Delete the OTP after successful verification
@@ -470,10 +471,18 @@ const acceptRideRequestByCustomer = async (req: IRequest, res: Response, next: N
     ride.status = 'matched';
     ride.riderId = rideRequest.riderId; // Use riderId from the RideList
     await ride.save();
-    const riderDetails=await User.findOne({_id:ride.riderId})
+ 
+    const riderDetails =await User.findOne({_id:ride.riderId})
     // Generate OTP
-    const email=riderDetails?.email;
-    
+
+
+    if (!riderDetails) {
+      return res.status(400).json({
+          details: [{ message: 'Rider Details Document  is missing' }],
+        });
+  }
+    const email= riderDetails.email;
+    console.log("email is",email);
     const  {token,info}=await sendRecoveryEmail(email!);
     console.log("token",token,info)
 
@@ -481,7 +490,7 @@ const acceptRideRequestByCustomer = async (req: IRequest, res: Response, next: N
      const hashedToken = await bcrypt.hash(token, 10);
 
      const expiryOTP = new Date(Date.now() + 10 * 60 * 1000); // valid for 10 minutes
- 
+   
      await Otp.updateOne(
        { email }, // find by email
        {
@@ -605,6 +614,12 @@ const completedRide = async (req: IRequest, res: Response) => {
       });
     }
 
+    if (existingRide.paymentStatus === "not received") {
+      return res.status(400).json({
+        status: false,
+        details: [{ message: 'Please make payment first' }],
+      });
+    }
     existingRide.status = 'completed';
     existingRide.endTimer = new Date();
 
