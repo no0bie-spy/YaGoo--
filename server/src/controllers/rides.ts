@@ -567,10 +567,27 @@ const customerNotArrived = async function (req:IRequest, res:Response){
     }
 
     const ride = await Ride.findById({_id: riderList.rideId})
-  }
-  catch{
+
+    if(!ride){
+      return res.status(404).json({ message : " Ride not found "});
+    }
+
+    ride.customerArrived = true;
+    ride.save();
+
+    return res.status(200).json({
+      message:"Customer didn't arrive,you can submit report!"
+    })
 
   }
+  catch (e: unknown) {
+      console.error('error:', e);
+      if (e instanceof Error) {
+        return res.status(500).json({ message: e.message });
+      } else {
+        return res.status(500).json({ message: 'An unknown error occurred' });
+      }
+    }
 }
 
 const viewRiderOtp = async function (req : IRequest, res: Response) {
