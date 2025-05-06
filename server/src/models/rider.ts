@@ -30,7 +30,8 @@ const riderSchema = new Schema<IRider>(
       default: 0,
     },
     totalRides:{
-      type:Number
+      type:Number,
+      default: 0
     }
   },
   {

@@ -668,7 +668,11 @@ const completedRide = async (req: IRequest, res: Response) => {
 
     //increase total rides number after completing ride
     const rider:any = await Rider.findOne({riderid: existingRide.riderId})
-    const newTotalRides = rider.totalRides++;
+    let newTotalRides;
+    if(rider.totalRides==null){
+     newTotalRides = 1
+    }
+    newTotalRides = rider.totalRides + 1;
     Rider.updateOne({
       totalRides: newTotalRides
     })
@@ -831,7 +835,6 @@ const rideController = {
   submitRideReview , //customer sends ride review
   payment, //confirm payment by rider
   topRidersByRides, // get top riders by rides number
-  
 };
 
 
