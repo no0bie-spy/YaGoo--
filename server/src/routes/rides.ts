@@ -3,19 +3,16 @@ import validate from '../middleware/validation';
 import rideValidation from '../validations/rides';
 import rideController from '../controllers/rides';
 
-
-
 const rideRouter = express.Router();
 
 /**
- * Create Ride — includes creating start and destination address,
- * calculating distance, and minimum price.
+ * Create a ride — includes start/destination address, distance, and base price.
  */
 rideRouter.post(
   '/create',
   validate(rideValidation.findRide),
   rideController.createRideRequest
-); // successfully create ride by customer
+);
 
 /**
  * Customer places a bid after creating a ride.
@@ -24,68 +21,75 @@ rideRouter.post(
   '/bid',
   validate(rideValidation.placeBid),
   rideController.submitBid
-); // customer places bid
+);
 
 /**
- * Cancel the ride before requesting a rider.
+ * Cancel a ride before it’s assigned to any rider.
  */
-rideRouter.delete('/cancel', rideController.cancelRide); // cancel ride by customer before requesting
+rideRouter.delete('/cancel', rideController.cancelRide);
 
 /**
- * Rider retrieves all ride requests made by customers.
+ * Rider gets all available ride requests from customers.
  */
-rideRouter.get('/requests', rideController.getAllRequestedRides); // rider gets all the ride requests from customers
+rideRouter.get('/requests', rideController.getAllRequestedRides);
 
 /**
- * Rider accepts a specific ride — this is how a rider requests to take the ride.
+ * Rider sends a request to take a ride.
  */
 rideRouter.post(
   '/rider-request',
   validate(rideValidation.requestRideByRider),
   rideController.requestRideAsRider
-); // rider requests the ride
+);
 
 /**
- * Customer retrieves all the riders willing to take the ride.
+ * Customer gets all rider requests for their ride.
  */
-rideRouter.get('/available-riders', rideController.getAvailableRiders); // customer gets all the requests from riders
+rideRouter.get('/available-riders', rideController.getAvailableRiders);
 
 /**
- * Customer accepts a specific rider and sends OTP to the rider.
+ * Customer accepts a specific rider and sends OTP.
  */
-rideRouter.post('/accept', rideController.acceptRideRequestByCustomer); // customer accepts one rider and sends OTP
+rideRouter.post('/accept', rideController.acceptRideRequestByCustomer);
 
 /**
- * Customer rejects a rider.
+ * Customer rejects a rider request.
  */
-rideRouter.delete('/reject-rider', rideController.rejectRider); // customer rejects rider
-
-rideRouter.post('customer-not-arrived',rideController.customerNotArrived)
-
-rideRouter.get('/view-otp', rideController.viewRiderOtp);//view otp for the rider
-
+rideRouter.delete('/reject-rider', rideController.rejectRider);
 
 /**
- * Customer verifies the ride by providing OTP.
+ * Customer marks that the rider has not arrived.
  */
-rideRouter.post('/verify-ride-otp', rideController.verifyRideOtp); // customer verifies rider by OTP
+rideRouter.post('/customer-not-arrived', rideController.customerNotArrived);
 
 /**
- * Mark the ride as completed.
+ * Rider views the OTP provided by customer.
  */
-rideRouter.post('/complete-ride', rideController.completedRide); // ride completes
+rideRouter.get('/view-otp', rideController.viewRiderOtp);
 
 /**
- * Customer submits a review after ride completion.
+ * Customer verifies ride using OTP.
  */
-rideRouter.post('/submit-ride-review', rideController.submitRideReview); // customer sends ride review
-
-
+rideRouter.post('/verify-ride-otp', rideController.verifyRideOtp);
 
 /**
- * Rider accepts payment.
+ * Rider or system marks the ride as completed.
  */
-rideRouter.post('/received-payment', rideController.payment); // changes the paymentStatus to 'completed'
+rideRouter.post('/complete-ride', rideController.completedRide);
+
+/**
+ * Customer submits a ride review.
+ */
+rideRouter.post('/submit-ride-review', rideController.submitRideReview);
+
+/**
+ * Rider confirms payment receipt.
+ */
+rideRouter.post('/received-payment', rideController.payment);
+
+/**
+ * Get riders sorted by number of completed rides.
+ */
+rideRouter.get('/top-riders-rides', rideController.topRidersByRides);
+
 export default rideRouter;
-
-rideRouter.get('/top-riders-rides',rideController.topRidersByRides)
