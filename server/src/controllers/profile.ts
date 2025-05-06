@@ -1,55 +1,71 @@
-import { NextFunction, Response } from "express"
-import IRequest from "../middleware/IRequest"
-import Ride from "../models/rides"
-import User from "../models/User";
-import Bid from "../models/bid";
+import { NextFunction, Response } from 'express';
+import IRequest from '../middleware/IRequest';
+import Ride from '../models/rides';
+import User from '../models/User';
+import Bid from '../models/bid';
 
-
-const viewHistory = async (req: IRequest, res: Response, next: NextFunction) => {
+const viewHistory = async (
+  req: IRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     if (!req.userId) {
-      return res.status(401).json({ message: "Unauthorized: userId missing." });
+      return res.status(401).json({ message: 'Unauthorized: userId missing.' });
     }
 
     const user = await User.findById(req.userId);
     if (!user) {
-      return res.status(400).json({ message: "User not found!" });
+      return res.status(400).json({ message: 'User not found!' });
     }
 
     let rides: any[] = [];
 
-    if (user.role === "rider") {
+    if (user.role === 'rider') {
       rides = await Ride.find({ riderId: req.userId });
-    } else if (user.role === "customer") {
+    } else if (user.role === 'customer') {
       rides = await Ride.find({ customerId: req.userId });
     }
 
+    // If no rides are found, return an empty array
     if (rides.length === 0) {
-      return res.status(404).json({ message: "No ride history found." });
+      return res.status(200).json({ rides: [] });
     }
 
     const history = await Promise.all(
       rides.map(async (ride) => {
         const bid = await Bid.findById(ride.bidId);
+
+        let formattedTime = 'N/A';
+        if (ride.totalTime !== undefined && ride.totalTime !== null) {
+          const totalSeconds = ride.totalTime;
+          const minutes = Math.floor(totalSeconds / 60);
+          const seconds = totalSeconds % 60;
+          formattedTime = `${minutes}m ${seconds}s`;
+        }
+
         return {
           customer: ride.customerId,
           start_location: ride.start_location,
           destination: ride.destination,
           distance: ride.distance,
-          amount: bid?.amount ?? "N/A"
+          amount: bid?.amount ?? 'N/A',
+          status: ride.status,
+          date: ride.createdAt,
+          totalTime: formattedTime,
         };
       })
     );
 
     return res.status(200).json({ rides: history });
   } catch (error) {
-    console.error("Error fetching ride history:", error);
-    return res.status(500).json({ message: "Something went wrong." });
+    console.error('Error fetching ride history:', error);
+    return res.status(500).json({ message: 'Something went wrong.' });
   }
 };
 
 const profileController = {
-    viewHistory
-}
+  viewHistory,
+};
 
 export default profileController;

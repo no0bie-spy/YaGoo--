@@ -13,9 +13,7 @@ import { sendRecoveryEmail } from '../services/mailer';
 import bcrypt from 'bcrypt';
 import RiderList from '../models/riderList';
 
-
 const BASE_RATE = 15; // Rs. 15 per km
-
 
 const createRideRequest = async (req: IRequest, res: Response) => {
   try {
@@ -129,7 +127,6 @@ const submitBid = async (req: IRequest, res: Response) => {
       });
     }
 
-    
     const bid = new Bid({
       rideId,
       userId,
@@ -137,14 +134,10 @@ const submitBid = async (req: IRequest, res: Response) => {
     });
 
     await bid.save();
-   
-    ride.status = "requested";
+
+    ride.status = 'requested';
     ride.bidId = bid._id;
     await ride.save();
-    
-
-    
-  
 
     return res.status(200).json({
       success: true,
@@ -176,7 +169,7 @@ const cancelRide = async (req: IRequest, res: Response) => {
         message: 'Ride ID is required',
       });
     }
-    console.log("cancel"+rideId)
+    console.log('cancel' + rideId);
     const deletedRide = await Ride.findByIdAndDelete(rideId);
 
     if (!deletedRide) {
@@ -230,7 +223,7 @@ const requestRideAsRider = async (req: IRequest, res: Response) => {
       riderId,
       rideId,
     });
-    
+
     if (existingRequest) {
       return res.status(400).json({ message: 'Ride request already exists.' });
     }
@@ -259,7 +252,7 @@ const requestRideAsRider = async (req: IRequest, res: Response) => {
 const getAllRequestedRides = async (req: Request, res: Response) => {
   try {
     // Fetch rides where status is "requested"
-    const rides = await Ride.find({ status: "requested" });
+    const rides = await Ride.find({ status: 'requested' });
 
     // Check if no rides were found
     if (rides.length === 0) {
@@ -273,10 +266,10 @@ const getAllRequestedRides = async (req: Request, res: Response) => {
       rides.map(async (ride) => {
         // Fetch customer by the customerId for each ride
         const customer = await User.findById(ride.customerId);
-         // fetch bid amount from bidModel 
-        const bid = await Bid.findOne({_id: ride.bidId});
+        // fetch bid amount from bidModel
+        const bid = await Bid.findOne({ _id: ride.bidId });
         return {
-          customerName: customer?.fullname, 
+          customerName: customer?.fullname,
           customerEmail: customer?.email,
           rideId: ride._id,
           startDestination: ride.start_location.address,
@@ -298,14 +291,14 @@ const getAllRequestedRides = async (req: Request, res: Response) => {
   }
 };
 
-
-
 const getAvailableRiders = async (req: IRequest, res: Response) => {
   try {
     const { rideId } = req.query;
     console.log('Ride ID:', rideId);
     if (!rideId) {
-      return res.status(400).json({ message: 'rideId is required in the query parameters' });
+      return res
+        .status(400)
+        .json({ message: 'rideId is required in the query parameters' });
     }
 
     // Find riders who have accepted the specific rideId
@@ -374,7 +367,7 @@ const verifyRideOtp = async (req: IRequest, res: Response) => {
         details: [{ message: 'OTP not found' }],
       });
     }
-    console.log("otp aayo", otpRecord.OTP)
+    console.log('otp aayo', otpRecord.OTP);
     const isOtpValid = await bcrypt.compare(riderOtp, otpRecord.OTP);
     if (!isOtpValid) {
       return res.status(400).json({
@@ -394,7 +387,7 @@ const verifyRideOtp = async (req: IRequest, res: Response) => {
 
     ride.status = 'in-progress';
     ride.startTimer = new Date();
-    console.log("timer ")
+    console.log('timer ');
     await ride.save();
 
     // Delete the OTP after successful verification
@@ -413,7 +406,11 @@ const verifyRideOtp = async (req: IRequest, res: Response) => {
     }
   }
 };
-const acceptRideRequestByCustomer = async (req: IRequest, res: Response, next: NextFunction) => {
+const acceptRideRequestByCustomer = async (
+  req: IRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { rideListId } = req.body;
     const customerId = req.userId;
@@ -458,7 +455,6 @@ const acceptRideRequestByCustomer = async (req: IRequest, res: Response, next: N
       }
     }
 
-
     // Find and update the ride
     const ride = await Ride.findById(rideRequest.rideId);
 
@@ -472,44 +468,42 @@ const acceptRideRequestByCustomer = async (req: IRequest, res: Response, next: N
     ride.status = 'matched';
     ride.riderId = rideRequest.riderId; // Use riderId from the RideList
     await ride.save();
- 
-    const riderDetails =await User.findOne({_id:ride.riderId})
-    // Generate OTP
 
+    const riderDetails = await User.findOne({ _id: ride.riderId });
+    // Generate OTP
 
     if (!riderDetails) {
       return res.status(400).json({
-          details: [{ message: 'Rider Details Document  is missing' }],
-        });
-  }
-    const email= riderDetails.email;
-    console.log("email is",email);
-    const  {token,info}=await sendRecoveryEmail(email!);
-    console.log("token",token,info)
+        details: [{ message: 'Rider Details Document  is missing' }],
+      });
+    }
+    const email = riderDetails.email;
+    console.log('email is', email);
+    const { token, info } = await sendRecoveryEmail(email!);
+    console.log('token', token, info);
 
-     //hash the otp to save into the database
-     const hashedToken = await bcrypt.hash(token, 10);
+    //hash the otp to save into the database
+    const hashedToken = await bcrypt.hash(token, 10);
 
-     const expiryOTP = new Date(Date.now() + 10 * 60 * 1000); // valid for 10 minutes
-   
-     await Otp.updateOne(
-       { email }, // find by email
-       {
-         $set: {
-           OTP: hashedToken,
-           otpExpiresAt: expiryOTP,
-         },
-       },
-       { upsert: true } // insert new if not exists
-     );
+    const expiryOTP = new Date(Date.now() + 10 * 60 * 1000); // valid for 10 minutes
 
-   
+    await Otp.updateOne(
+      { email }, // find by email
+      {
+        $set: {
+          OTP: hashedToken,
+          otpExpiresAt: expiryOTP,
+        },
+      },
+      { upsert: true } // insert new if not exists
+    );
+
     return res.status(200).json({
       success: true,
       message: 'Ride accepted and OTP sent to the rider',
       rideRequest,
       rideId,
-      email
+      email,
     });
   } catch (e: unknown) {
     console.error('Customer accept ride error:', e);
@@ -532,7 +526,6 @@ const rejectRider = async (req: IRequest, res: Response) => {
       });
     }
 
-    
     const deletedRideRequest = await RiderList.findByIdAndDelete(rideListId);
 
     if (!deletedRideRequest) {
@@ -556,85 +549,77 @@ const rejectRider = async (req: IRequest, res: Response) => {
   }
 };
 
-const customerNotArrived = async function (req:IRequest, res:Response){
-  try{
-    const {rideListId} = req.body;
+const customerNotArrived = async function (req: IRequest, res: Response) {
+  try {
+    const { rideListId } = req.body;
 
-    const riderList = await RiderList.findOne({_id : rideListId})
+    const riderList = await RiderList.findOne({ _id: rideListId });
 
-    if(!riderList){
-      return res.status(404).json({ message : " RiderList not found "});
+    if (!riderList) {
+      return res.status(404).json({ message: ' RiderList not found ' });
     }
 
-    const ride = await Ride.findById({_id: riderList.rideId})
+    const ride = await Ride.findById({ _id: riderList.rideId });
 
-    if(!ride){
-      return res.status(404).json({ message : " Ride not found "});
+    if (!ride) {
+      return res.status(404).json({ message: ' Ride not found ' });
     }
 
     ride.customerArrived = true;
     ride.save();
 
     return res.status(200).json({
-      message:"Customer didn't arrive,you can submit report!"
-    })
-
-  }
-  catch (e: unknown) {
-      console.error('error:', e);
-      if (e instanceof Error) {
-        return res.status(500).json({ message: e.message });
-      } else {
-        return res.status(500).json({ message: 'An unknown error occurred' });
-      }
+      message: "Customer didn't arrive,you can submit report!",
+    });
+  } catch (e: unknown) {
+    console.error('error:', e);
+    if (e instanceof Error) {
+      return res.status(500).json({ message: e.message });
+    } else {
+      return res.status(500).json({ message: 'An unknown error occurred' });
     }
-}
-
-const viewRiderOtp = async function (req : IRequest, res: Response) {
-    
-  try{
-      const userId = req.userId;
-
-      if (!userId) {
-        return res.status(400).json({
-          details: [{ message: 'User ID is missing' }],
-        });
-      }
-
-      const user:any = await User.findById(userId);
-
-      const otpRecord = await Otp.findOne({email : user.email});
-
-      const validOtp = otpRecord?.OTP;
-
-      const validEmail = otpRecord?.email;
-
-      return res.json({
-          message : `Otp has been received in your mail${validEmail}`,
-          otp: validOtp,
-          email : validEmail
-      })
-
-  
   }
-  catch (e: unknown) {
-      console.error('Register error:', e);
-      if (e instanceof Error) {
-        return res.status(500).json({ message: e.message });
-      } else {
-        return res.status(500).json({ message: 'An unknown error occurred' });
-      }
-    }
-  };
-  
+};
 
+const viewRiderOtp = async function (req: IRequest, res: Response) {
+  try {
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(400).json({
+        details: [{ message: 'User ID is missing' }],
+      });
+    }
+
+    const user: any = await User.findById(userId);
+
+    const otpRecord = await Otp.findOne({ email: user.email });
+
+    const validOtp = otpRecord?.OTP;
+
+    const validEmail = otpRecord?.email;
+
+    return res.json({
+      message: `Otp has been received in your mail${validEmail}`,
+      otp: validOtp,
+      email: validEmail,
+    });
+  } catch (e: unknown) {
+    console.error('Register error:', e);
+    if (e instanceof Error) {
+      return res.status(500).json({ message: e.message });
+    } else {
+      return res.status(500).json({ message: 'An unknown error occurred' });
+    }
+  }
+};
 
 const completedRide = async (req: IRequest, res: Response) => {
   try {
     const { rideId } = req.body;
 
     const existingRide = await Ride.findOne({ _id: rideId });
-    console.log("existingRide", existingRide)
+    console.log('existingRide', existingRide);
     if (!existingRide) {
       return res.status(404).json({
         status: false,
@@ -649,7 +634,7 @@ const completedRide = async (req: IRequest, res: Response) => {
       });
     }
 
-    if (existingRide.paymentStatus === "not received") {
+    if (existingRide.paymentStatus === 'not received') {
       return res.status(400).json({
         status: false,
         details: [{ message: 'Please make payment first' }],
@@ -660,32 +645,31 @@ const completedRide = async (req: IRequest, res: Response) => {
 
     const timeDifferenceMs =
       existingRide.endTimer.getTime() - existingRide.startTimer.getTime();
-    const durationInMinutes = Math.ceil(timeDifferenceMs / (1000 * 60));
-    (existingRide as any).totalTime = durationInMinutes;
+
+    const totalSeconds = Math.floor(timeDifferenceMs / 1000);
+    existingRide.totalTime = totalSeconds; // save as number in seconds
 
     await existingRide.save();
 
-
     //increase total rides number after completing ride
-    const rider:any = await Rider.findOne({userId: existingRide.riderId})
+    const rider: any = await Rider.findOne({ userId: existingRide.riderId });
     if (!rider) {
-      console.log("rider not found")
+      console.log('rider not found');
       return res.status(404).json({
         status: false,
         details: [{ message: 'Rider not found' }],
       });
     }
-    console.log("rider", rider)
-    
-    console.log("total rides", rider.totalRides)
-    
-   rider.totalRides =await rider.totalRides + 1;
-   await rider.save();
+    console.log('rider', rider);
+
+    console.log('total rides', rider.totalRides);
+
+    rider.totalRides = (await rider.totalRides) + 1;
+    await rider.save();
 
     // Rider.updateOne({
     //   totalRides: =  rider.totalRides + 1
     // })
-
 
     // ✅ Get riderId from the ride and increment totalRides in Rider model
     const riderId = existingRide.riderId;
@@ -693,8 +677,8 @@ const completedRide = async (req: IRequest, res: Response) => {
     return res.status(200).json({
       status: true,
       message: 'Ride completed',
-      totalTime: durationInMinutes,
-      riderId
+      totalTime: totalSeconds,
+      riderId,
     });
   } catch (e: unknown) {
     console.error('Complete ride error', e);
@@ -733,7 +717,8 @@ const submitRideReview = async (req: IRequest, res: Response) => {
 
     // Calculate the new average rating
     const newRating =
-      (rider.averageRating * rider.totalRides + rating) / (rider.totalRides + 1);
+      (rider.averageRating * rider.totalRides + rating) /
+      (rider.totalRides + 1);
 
     // Update the rider's rating and total rides
     rider.averageRating = parseFloat(newRating.toFixed(1)); // Round to 1 decimal place
@@ -763,7 +748,7 @@ const submitRideReview = async (req: IRequest, res: Response) => {
 
 const payment = async (req: IRequest, res: Response) => {
   try {
-    const {  rideId } = req.body;
+    const { rideId } = req.body;
     const userId = req.userId;
 
     if (!userId) {
@@ -783,12 +768,9 @@ const payment = async (req: IRequest, res: Response) => {
     ride.paymentStatus = 'completed';
     await ride.save();
 
-    
- 
     return res.status(200).json({
       success: true,
-      message: 'Payment received successfully'
-    
+      message: 'Payment received successfully',
     });
   } catch (e: unknown) {
     console.error('Register error:', e);
@@ -803,7 +785,7 @@ const payment = async (req: IRequest, res: Response) => {
 const topRidersByRides = async (req: IRequest, res: Response) => {
   try {
     // Get all riders
-    const riders = await User.find({ role: "rider" });
+    const riders = await User.find({ role: 'rider' });
 
     // Count rides for each rider
     const ridersWithRideCount = await Promise.all(
@@ -826,14 +808,13 @@ const topRidersByRides = async (req: IRequest, res: Response) => {
 
     return res.status(200).json({ topRiders });
   } catch (error) {
-    console.error("Error fetching top riders:", error);
-    return res.status(500).json({ message: "Something went wrong." });
+    console.error('Error fetching top riders:', error);
+    return res.status(500).json({ message: 'Something went wrong.' });
   }
 };
 
-
 const rideController = {
-  createRideRequest,//successfully create ride by customer
+  createRideRequest, //successfully create ride by customer
   submitBid, //customer place bids and send
   cancelRide, //cancel ride by customer before requesting
   getAllRequestedRides, //rider gets all the ride requests from customer
@@ -845,10 +826,9 @@ const rideController = {
   viewRiderOtp, //to show rider otp on rider's screen
   verifyRideOtp, //customer verifies rider by otp
   completedRide, //ride completes
-  submitRideReview , //customer sends ride review
+  submitRideReview, //customer sends ride review
   payment, //confirm payment by rider
   topRidersByRides, // get top riders by rides number
 };
-
 
 export default rideController;
