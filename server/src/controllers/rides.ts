@@ -272,11 +272,12 @@ const getAllRequestedRides = async (req: Request, res: Response) => {
     const rideDetails = await Promise.all(
       rides.map(async (ride) => {
         // Fetch customer by the customerId for each ride
-        const customer = await User.findById(ride.customerId); // Get customer details using customerId
-        const bid = await Bid.findOne({_id: ride.bidId}); // get bid amount from bidModel
+        const customer = await User.findById(ride.customerId);
+         // fetch bid amount from bidModel 
+        const bid = await Bid.findOne({_id: ride.bidId});
         return {
-          customerName: customer?.fullname, // Assuming customer has a fullname field
-          customerEmail: customer?.email, // Assuming customer has an email field
+          customerName: customer?.fullname, 
+          customerEmail: customer?.email,
           rideId: ride._id,
           startDestination: ride.start_location.address,
           endDestination: ride.destination.address,
@@ -732,6 +733,39 @@ const payment = async (req: IRequest, res: Response) => {
     }
   }
 };
+
+const topRidersByRides = async (req: IRequest, res: Response) => {
+  try {
+    // Get all riders
+    const riders = await User.find({ role: "rider" });
+
+    // Count rides for each rider
+    const ridersWithRideCount = await Promise.all(
+      riders.map(async (rider) => {
+        const totalRides = await Ride.countDocuments({ riderId: rider._id });
+        return {
+          riderId: rider._id,
+          fullname: rider.fullname,
+          phone: rider.phone,
+          email: rider.email,
+          totalRides,
+        };
+      })
+    );
+
+    // Sort and return top 10
+    const topRiders = ridersWithRideCount
+      .sort((a, b) => b.totalRides - a.totalRides)
+      .slice(0, 10);
+
+    return res.status(200).json({ topRiders });
+  } catch (error) {
+    console.error("Error fetching top riders:", error);
+    return res.status(500).json({ message: "Something went wrong." });
+  }
+};
+
+
 const rideController = {
   createRideRequest,//successfully create ride by customer
   submitBid, //customer place bids and send
@@ -745,7 +779,8 @@ const rideController = {
   verifyRideOtp, //customer verifies rider by otp
   completedRide, //ride completes
   submitRideReview , //customer sends ride review
-  payment
+  payment,
+  topRidersByRides,
 };
 
 

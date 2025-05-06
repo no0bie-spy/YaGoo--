@@ -85,3 +85,5 @@ rideRouter.post('/submit-ride-review', rideController.submitRideReview); // cust
  */
 rideRouter.post('/payment', rideController.payment); // changes the paymentStatus to 'completed'
 export default rideRouter;
+
+rideRouter.get('/top-riders-rides',rideController.topRidersByRides)
