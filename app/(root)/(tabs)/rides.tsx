@@ -75,7 +75,7 @@ export default function RidesScreen() {
         <Text
           style={[
             styles.status,
-            { color: item.status === 'Accepted' ? '#4CAF50' : '#FF9800' },
+            { color: item.status === 'completed' ? '#4CAF50' : '#FF9800' },
           ]}
         >
           {item.status}
@@ -97,7 +97,7 @@ export default function RidesScreen() {
         <Clock size={16} color="#666" />
         <Text style={styles.locationText}>Distance: {item.distance} km</Text>
         <Text style={styles.locationText}>Time: {item.time} min</Text>
-        <Text style={styles.bidAmount}>${item.bidAmount}</Text>
+        <Text style={styles.bidAmount}>Rs.{item.bidAmount}</Text>
       </View>
     </View>
   );
