@@ -634,7 +634,7 @@ const completedRide = async (req: IRequest, res: Response) => {
     const { rideId } = req.body;
 
     const existingRide = await Ride.findOne({ _id: rideId });
-
+    console.log("existingRide", existingRide)
     if (!existingRide) {
       return res.status(404).json({
         status: false,
@@ -667,15 +667,24 @@ const completedRide = async (req: IRequest, res: Response) => {
 
 
     //increase total rides number after completing ride
-    const rider:any = await Rider.findOne({riderid: existingRide.riderId})
-    let newTotalRides;
-    if(rider.totalRides==null){
-     newTotalRides = 1
+    const rider:any = await Rider.findOne({userId: existingRide.riderId})
+    if (!rider) {
+      console.log("rider not found")
+      return res.status(404).json({
+        status: false,
+        details: [{ message: 'Rider not found' }],
+      });
     }
-    newTotalRides = rider.totalRides + 1;
-    Rider.updateOne({
-      totalRides: newTotalRides
-    })
+    console.log("rider", rider)
+    
+    console.log("total rides", rider.totalRides)
+    
+   rider.totalRides =await rider.totalRides + 1;
+   await rider.save();
+
+    // Rider.updateOne({
+    //   totalRides: =  rider.totalRides + 1
+    // })
 
 
     // ✅ Get riderId from the ride and increment totalRides in Rider model
@@ -699,40 +708,44 @@ const completedRide = async (req: IRequest, res: Response) => {
 const submitRideReview = async (req: IRequest, res: Response) => {
   try {
     const { rideId, riderId, comment, rating } = req.body;
+
+    // Check if the ride exists
     const existingRide = await Ride.findOne({ _id: rideId });
     if (!existingRide) {
       return res.status(400).json({
         status: false,
-        details: [
-          {
-            message: 'Ride not found',
-          },
-        ],
+        details: [{ message: 'Ride not found' }],
       });
     }
-    
-    const rider:any = await Rider.findOne({ riderId })
 
-
-
-    if (!riderId) {
+    // Fetch the rider using the correct field (e.g., userId)
+    const rider: any = await Rider.findOne({ userId: riderId });
+    if (!rider) {
       return res.status(400).json({
         status: false,
-        details: [
-          {
-            message: 'Rider not found',
-          },
-        ],
+        details: [{ message: 'Rider not found' }],
       });
     }
-    
-    const newRating = Math.ceil(((rider.averageRating*rider.totalRides)+rating)/(rider.totalRides+1))
 
+    // Ensure `averageRating` and `totalRides` have default values
+    rider.averageRating = rider.averageRating || 0;
+    rider.totalRides = rider.totalRides || 0;
+
+    // Calculate the new average rating
+    const newRating =
+      (rider.averageRating * rider.totalRides + rating) / (rider.totalRides + 1);
+
+    // Update the rider's rating and total rides
+    rider.averageRating = parseFloat(newRating.toFixed(1)); // Round to 1 decimal place
+    rider.totalRides += 1;
+    await rider.save();
+
+    // Create the review
     const review = await Review.create({
       rideId,
       riderId,
       comment,
-      rating:newRating,
+      rating,
     });
 
     return res.json({
@@ -740,7 +753,7 @@ const submitRideReview = async (req: IRequest, res: Response) => {
       message: 'Reviewed Successfully',
     });
   } catch (e: unknown) {
-    console.error('Complete ride error', e);
+    console.error('Submit ride review error:', e);
     return res.status(500).json({
       status: false,
       message: e instanceof Error ? e.message : 'An unknown error occurred',

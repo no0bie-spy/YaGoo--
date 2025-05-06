@@ -3,6 +3,7 @@ import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
 import axios from 'axios';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { getSession } from '@/usableFunction/Session';
+import AppButton from '@/components/Button';
 
 const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
 
@@ -74,7 +75,7 @@ const ReviewScreen = () => {
         value={comment}
         onChangeText={setComment}
       />
-      <Button
+      <AppButton
         title={isSubmitting ? 'Submitting...' : 'Submit Review'}
         onPress={handleSubmitReview}
         disabled={isSubmitting}
