@@ -5,7 +5,6 @@ import userValidation from '../validations/auth';
 import upload from '../middleware/multerConfig';
 import otpController from '../controllers/otp';
 
-
 const authRouter = express.Router();
 
 const riderUpload = upload.fields([
@@ -16,20 +15,23 @@ const riderUpload = upload.fields([
   { name: 'vehicleBlueBookPhoto', maxCount: 1 },
 ]);
 
+// Authentication routes
+authRouter.post('/register', validate(userValidation.register), authController.register);
+authRouter.post('/login', validate(userValidation.login), authController.login);
+authRouter.post('/verifyOTP', validate(userValidation.otp), authController.verifyEmail);
+authRouter.post('/set-new-password', authController.setNewPassword); // Only once
 
-authRouter.post('/register',validate(userValidation.register),authController.register);
-authRouter.post('/login',validate(userValidation.login),authController.login);
-authRouter.post('/verifyOTP',validate(userValidation.otp),authController.verifyEmail);
-authRouter.post('/set-new-password',authController.setNewPassword);
+// OTP-related routes
+authRouter.post('/sendOTP', validate(userValidation.forgotPassword), otpController.sendRegisterOtp);
+authRouter.post('/forgotPassword', validate(userValidation.forgotPassword), authController.forgotPassword);
 
-authRouter.post('/sendOTP',validate(userValidation.forgotPassword),otpController.sendRegisterOtp);
+// Rider-specific routes
+authRouter.post('/register-rider', riderUpload, authController.registerRider);
 
-authRouter.post('/register-rider',riderUpload,authController.registerRider);
-authRouter.post('/forgotPassword',validate(userValidation.forgotPassword),authController.forgotPassword);
-authRouter.post('/set-new-password',authController.setNewPassword)
-authRouter.post('/changePassword',validate(userValidation.changePassword),authController.changePassword);
-authRouter.post('/logout',authController.logout);
+// Password-related routes
+authRouter.post('/changePassword', validate(userValidation.changePassword), authController.changePassword);
 
+// Logout route
+authRouter.post('/logout', authController.logout);
 
-
-export default authRouter
+export default authRouter;
