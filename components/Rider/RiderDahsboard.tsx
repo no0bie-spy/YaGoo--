@@ -74,7 +74,7 @@ const RiderDashboard = () => {
         console.log('OTP:', otpResponse.data.otp);
         router.push({
           pathname: '/(root)/(rides)/ViewOtpScreen',
-          params: { otp: otpResponse.data.otp },
+          params: { message: otpResponse.data.message, rideId },
         });
       }
       setErrors([]);
