@@ -1,43 +1,85 @@
-import { View, StyleSheet, Text, FlatList } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, StyleSheet, Text, FlatList, ActivityIndicator, Alert } from 'react-native';
 import { Clock, MapPin, Navigation } from 'lucide-react-native';
+import axios from 'axios';
+import { getSession } from '@/usableFunction/Session';
 
-const mockRides = [
-  {
-    id: '1',
-    source: '123 Main St',
-    destination: '456 Market St',
-    status: 'Pending',
-    bidAmount: 25,
-    date: '2024-02-20',
-  },
-  {
-    id: '2',
-    source: '789 Oak Ave',
-    destination: '321 Pine St',
-    status: 'Accepted',
-    bidAmount: 30,
-    date: '2024-02-19',
-  },
-];
+const IP_Address = process.env.EXPO_PUBLIC_ADDRESS || 'YOUR_IP_ADDRESS';
 
 interface Ride {
-    id: string;
-    source: string;
-    destination: string;
-    status: string;
-    bidAmount: number;
-    date: string;
-  }
-  
+  id: string;
+  source: string;
+  destination: string;
+  status: string;
+  bidAmount: number;
+  distance: number;
+  time: number;
+  date: string;
+}
+
 export default function RidesScreen() {
-    const renderRide = ({ item }: { item: Ride }) => (
+  const [rides, setRides] = useState<Ride[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch rides from the backend
+  const fetchRides = async () => {
+    try {
+      const token = await getSession('accessToken');
+      if (!token) {
+        Alert.alert('Authentication Error', 'You are not logged in. Please log in to continue.');
+        return;
+      }
+
+      const response = await axios.get(`http://${IP_Address}:8002/profile/view-rider-history`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const data =await response.data;
+      console.log("Fetched rides:", data);
+      // Validate the response structure
+      if (!data.rides || !Array.isArray(data.rides)) {
+        console.error('Invalid response format:', data);
+        Alert.alert('Error', 'Unexpected response format from the server.');
+        return;
+      }
+
+      // Map the response to match the Ride interface
+      const formattedRides = data.rides.map((ride: any) => ({
+        id: ride._id || Math.random().toString(), // Use `_id` or fallback to a random ID
+        source: ride.start_location?.address || 'Unknown Source',
+        destination: ride.destination?.address || 'Unknown Destination',
+        status: ride.status || 'Pending', // Default to 'Pending' if status is missing
+        bidAmount: ride.amount || 0, // Default to 0 if amount is missing
+        distance: ride.distance || 0, // Default to 0 if distance is missing
+        time: ride.time || 0, // Default to 0 if time is missing
+        date: ride.date.split("T")[0]
+      }));
+
+      setRides(formattedRides);
+    } catch (error) {
+      console.error('Error fetching rides:', error);
+      Alert.alert('Error', 'Failed to fetch rides. Please try again later.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRides();
+  }, []);
+
+  const renderRide = ({ item }: { item: Ride }) => (
     <View style={styles.rideCard}>
       <View style={styles.header}>
         <Text style={styles.date}>{item.date}</Text>
-        <Text style={[
-          styles.status,
-          { color: item.status === 'Accepted' ? '#4CAF50' : '#FF9800' }
-        ]}>{item.status}</Text>
+        <Text
+          style={[
+            styles.status,
+            { color: item.status === 'Accepted' ? '#4CAF50' : '#FF9800' },
+          ]}
+        >
+          {item.status}
+        </Text>
       </View>
 
       <View style={styles.locationContainer}>
@@ -53,18 +95,28 @@ export default function RidesScreen() {
 
       <View style={styles.footer}>
         <Clock size={16} color="#666" />
+        <Text style={styles.locationText}>Distance: {item.distance} km</Text>
+        <Text style={styles.locationText}>Time: {item.time} min</Text>
         <Text style={styles.bidAmount}>${item.bidAmount}</Text>
       </View>
     </View>
   );
 
+  if (isLoading) {
+    return (
+      <View style={styles.loader}>
+        <ActivityIndicator size="large" color="#0066FF" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>My Rides</Text>
       <FlatList
-        data={mockRides}
+        data={rides}
         renderItem={renderRide}
-        keyExtractor={item => item.id}
+        keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContainer}
       />
     </View>
@@ -137,5 +189,10 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#0066FF',
+  },
+  loader: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

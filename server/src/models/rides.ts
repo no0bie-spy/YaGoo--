@@ -36,7 +36,7 @@ interface IRide extends Document {
   riderArrived: Boolean;
   startTimer?:Date;
   endTimer?:Date;
-  toalTime?:Number;
+  totalTime?:Number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -130,7 +130,7 @@ const rideSchema = new Schema<IRide>(
     endTimer:{
       type:Date
     },
-    toalTime:{
+    totalTime:{
       type:Number
     }
   },
