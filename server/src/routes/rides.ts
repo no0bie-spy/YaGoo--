@@ -60,6 +60,8 @@ rideRouter.post('/accept', rideController.acceptRideRequestByCustomer); // custo
  */
 rideRouter.delete('/reject-rider', rideController.rejectRider); // customer rejects rider
 
+rideRouter.post('customer-not-arrived',rideController.customerNotArrived)
+
 rideRouter.get('/view-otp', rideController.viewRiderOtp);//view otp for the rider
 
 
@@ -83,7 +85,7 @@ rideRouter.post('/submit-ride-review', rideController.submitRideReview); // cust
 /**
  * Rider accepts payment.
  */
-rideRouter.post('/payment', rideController.payment); // changes the paymentStatus to 'completed'
+rideRouter.post('/received-payment', rideController.payment); // changes the paymentStatus to 'completed'
 export default rideRouter;
 
 rideRouter.get('/top-riders-rides',rideController.topRidersByRides)

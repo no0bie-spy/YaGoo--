@@ -32,6 +32,8 @@ interface IRide extends Document {
 
   minimumPrice: number;
   bidId: Types.ObjectId;
+  customerArrived: Boolean;
+  riderArrived: Boolean;
   startTimer?:Date;
   endTimer?:Date;
   toalTime?:Number;
@@ -89,7 +91,15 @@ const rideSchema = new Schema<IRide>(
       ],
       default: 'requested',
     },
-
+    customerArrived:{
+      type: Boolean,
+      default: false,
+    },
+    
+    riderArrived:{
+      type: Boolean,
+      default: false,
+    },
     paymentStatus: {
       type: String,
       enum: [

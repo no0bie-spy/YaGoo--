@@ -556,6 +556,23 @@ const rejectRider = async (req: IRequest, res: Response) => {
   }
 };
 
+const customerNotArrived = async function (req:IRequest, res:Response){
+  try{
+    const {rideListId} = req.body;
+
+    const riderList = await RiderList.findOne({_id : rideListId})
+
+    if(!riderList){
+      return res.status(404).json({ message : " RiderList not found "});
+    }
+
+    const ride = await Ride.findById({_id: riderList.rideId})
+  }
+  catch{
+
+  }
+}
+
 const viewRiderOtp = async function (req : IRequest, res: Response) {
     
   try{
@@ -576,7 +593,7 @@ const viewRiderOtp = async function (req : IRequest, res: Response) {
       const validEmail = otpRecord?.email;
 
       return res.json({
-          message : " otp shown",
+          message : `Otp has been received in your mail${validEmail}`,
           otp: validOtp,
           email : validEmail
       })
@@ -790,12 +807,14 @@ const rideController = {
   getAvailableRiders, //customer gets all the requests from riders
   acceptRideRequestByCustomer, //customer accepts one rider and send otp to rider
   rejectRider, //customer rejects rider
+  customerNotArrived, //when customer not arrived at pickup point
   viewRiderOtp, //to show rider otp on rider's screen
   verifyRideOtp, //customer verifies rider by otp
   completedRide, //ride completes
   submitRideReview , //customer sends ride review
-  payment,
-  topRidersByRides,
+  payment, //confirm payment by rider
+  topRidersByRides, // get top riders by rides number
+  
 };
 
 
