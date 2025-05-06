@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Alert } from 'react-native';
 import axios from 'axios';
 import { getSession } from '@/usableFunction/Session';
 import { router } from 'expo-router';
@@ -52,40 +52,55 @@ const RiderDashboard = () => {
         return;
       }
 
-      const response = await axios.post(`http://${IP_Address}:8002/rides/rider-request`, {
-        rideId,
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      console.log('Attempting to accept ride:', rideId);
+
+      // Send request to accept the ride
+      const response = await axios.post(
+        `http://${IP_Address}:8002/rides/rider-request`,
+        { rideId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
       if (response.status === 201) {
+        console.log('Ride accepted successfully:', rideId);
+
         // Remove the accepted ride from the list
-        setRideRequests(prevRequests => prevRequests.filter(ride => ride.rideId !== rideId));
-        alert(`You have accepted ride: ${rideId}`);
+        setRideRequests((prevRequests) =>
+          prevRequests.filter((ride) => ride.rideId !== rideId)
+        );
+
+        Alert.alert('Success', `You have accepted ride: ${rideId}`);
+      } else {
+        console.error('Unexpected response status:', response.status);
       }
 
-      setErrors([]);
+      // Fetch OTP for the accepted ride
+      const otpResponse = await axios.get(
+        `http://${IP_Address}:8002/rides/view-otp`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-      const otpResponse = await axios.post(`http://${IP_Address}:8002/rides/view-otp`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
       if (otpResponse.status === 200) {
-        alert('OTP recieved successfully. Please check your email.');
-        console.log('OTP:', otpResponse.data.otp);
+        console.log('OTP received successfully:', otpResponse.data.otp);
+
+        Alert.alert('OTP Received', 'Please check your email for the OTP.');
         router.push({
           pathname: '/(root)/(rides)/ViewOtpScreen',
-          params: { message: otpResponse.data.message, rideId },
+          params: { otp: otpResponse.data.otp, rideId },
         });
+      } else {
+        console.error('Unexpected OTP response status:', otpResponse.status);
       }
-      setErrors([]);
     } catch (error: any) {
-      console.error('Full error:', error);
+      console.error('Error accepting ride:', error);
+
+      // Handle errors
       if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
         setErrors(error.response.data.details.map((err: any) => err.message));
       } else if (error.response?.data?.message) {
         setErrors([error.response.data.message]);
       } else {
-        setErrors(['Something went wrong.']);
+        setErrors(['Something went wrong. Please try again.']);
       }
     }
   };

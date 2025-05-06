@@ -3,6 +3,7 @@ import { View, Text, Button, Alert, StyleSheet } from 'react-native';
 import axios from 'axios';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { getSession } from '@/usableFunction/Session';
+import AppButton from '@/components/Button';
 
 const IP_Address = process.env.EXPO_PUBLIC_ADDRESS ;
 
@@ -47,7 +48,7 @@ const CompleteRideScreen = () => {
       <Text style={styles.subtitle}>
         Are you sure you want to complete this ride?
       </Text>
-      <Button
+      <AppButton
         title={isCompleting ? 'Completing...' : 'Complete Ride'}
         onPress={handleCompleteRide}
         disabled={isCompleting}
