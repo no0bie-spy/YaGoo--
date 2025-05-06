@@ -6,33 +6,31 @@ import Bid from '../models/bid';
 import RiderDocuments from '../models/riderDocument';
 import Vehicle from '../models/vehicle';
 
-//fetch user details
+// Fetch user details (common for customer and rider)
 const userDetails = async (
   req: IRequest, 
   res: Response, 
   next: NextFunction
 ) => {
   try {
-    const user = req.userId;
+    const userId = req.userId;
 
-    if (!user) {
+    // Ensure the request is authenticated
+    if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    // Check if user exists
-    const existingUser = await User.findById(user);
+    // Find the user in the database
+    const existingUser = await User.findById(userId);
     if (!existingUser) {
       return res.status(404).json({
         details: [{ message: 'User does not exist' }],
       });
     }
 
-    const fullname = existingUser.fullname;
-    const role = existingUser.role;
-    const phone = existingUser.phone;
-    const isEmailVerified = existingUser.isEmailVerified;
-    const email = existingUser.email;
+    const { fullname, role, phone, isEmailVerified, email } = existingUser;
 
+    // Prepare the base response object
     const responseData: any = {
       fullname,
       role,
@@ -41,10 +39,10 @@ const userDetails = async (
       email,
     };
 
-    // If the user is a rider, fetch rider-specific details
+    // If the user is a rider, fetch and include rider-specific data
     if (role === 'rider') {
-      const riderDocs = await RiderDocuments.findOne({ riderId: user });
-      const vehicle = await Vehicle.findOne({ riderId: user });
+      const riderDocs = await RiderDocuments.findOne({ riderId: userId });
+      const vehicle = await Vehicle.findOne({ riderId: userId });
 
       if (riderDocs) {
         responseData.riderDocuments = {
@@ -76,68 +74,71 @@ const userDetails = async (
     console.error('Error fetching user details:', e);
     if (e instanceof Error) {
       return res.status(500).json({ message: e.message });
-    } else {
-      return res.status(500).json({ message: 'An unknown error occurred' });
     }
+    return res.status(500).json({ message: 'An unknown error occurred' });
   }
 };
 
-// edit profile details
+
+// Edit profile details (fullname and phone)
 const editProfileDetails = async (
   req: IRequest, 
   res: Response, 
   next: NextFunction
 ) => {
   try {
+    const userId = req.userId; // Get user ID from authentication middleware
 
-    const user = req.userId; // get user from the middleware token
-
-    if (!user) {
+    // Check if userId is available (i.e., user is authenticated)
+    if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    // Check if user exists
-    const existingUser = await User.findById(user);
+    // Verify user exists in the database
+    const existingUser = await User.findById(userId);
     if (!existingUser) {
       return res.status(404).json({
         details: [{ message: 'User does not exist' }],
       });
     }
 
-    // modify user data
-    const { fullname, phone} = req.body;
+    // Extract fields to be updated from request body
+    const { fullname, phone } = req.body;
 
-    const updatedData = await User.findByIdAndUpdate(user,  {  fullname, phone },
-      { new: true } // `new: true` returns the updated document
+    // Update user details and return the new document
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { fullname, phone },
+      { new: true } // Return the updated document
     );
 
-
     return res.status(200).json({
-      message: 'User Details Updated Successfully',
-       user: updatedData, // to shown if necessary
+      message: 'User details updated successfully',
+      user: updatedUser, // Return updated user data if needed
     });
+
   } catch (e: unknown) {
-    console.error('Error fetching user details:', e);
+    console.error('Error updating user details:', e);
     if (e instanceof Error) {
       return res.status(500).json({ message: e.message });
-    } else {
-      return res.status(500).json({ message: 'An unknown error occurred' });
     }
+    return res.status(500).json({ message: 'An unknown error occurred' });
   }
 };
 
-
-
+//View history for both riders and customer
 const viewHistory = async (
   req: IRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
+    // Check if the user is authenticated
     if (!req.userId) {
       return res.status(401).json({ message: 'Unauthorized: userId missing.' });
     }
 
+    // Find the user based on userId
     const user = await User.findById(req.userId);
     if (!user) {
       return res.status(400).json({ message: 'User not found!' });
@@ -145,21 +146,24 @@ const viewHistory = async (
 
     let rides: any[] = [];
 
+    // Retrieve rides based on user role
     if (user.role === 'rider') {
       rides = await Ride.find({ riderId: req.userId });
     } else if (user.role === 'customer') {
       rides = await Ride.find({ customerId: req.userId });
     }
 
-    // If no rides are found, return an empty array
+    // If no rides found, return empty array
     if (rides.length === 0) {
       return res.status(200).json({ rides: [] });
     }
 
+    // Format each ride with related bid and time info
     const history = await Promise.all(
       rides.map(async (ride) => {
         const bid = await Bid.findById(ride.bidId);
 
+        // Format total ride time in "Xm Ys" format
         let formattedTime = 'N/A';
         if (ride.totalTime !== undefined && ride.totalTime !== null) {
           const totalSeconds = ride.totalTime;
@@ -182,16 +186,17 @@ const viewHistory = async (
     );
 
     return res.status(200).json({ rides: history });
+
   } catch (error) {
     console.error('Error fetching ride history:', error);
     return res.status(500).json({ message: 'Something went wrong.' });
   }
 };
 
-const profileController = { 
-  userDetails,
-  editProfileDetails,
-  viewHistory,
+const profileController = {
+  userDetails,          // Get the logged-in user's profile details
+  editProfileDetails,   // Update the logged-in user's profile details
+  viewHistory,          // Retrieve the ride history of the logged-in user
 };
 
 export default profileController;
