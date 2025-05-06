@@ -9,7 +9,7 @@ import Review from '../models/review';
 import Vehicle from '../models/vehicle';
 import { defaultMaxListeners } from 'events';
 import Rider from '../models/rider';
-import { sendRecoveryEmail } from '../services/mailer';
+import { sendRideOtp } from '../services/mailer';
 import bcrypt from 'bcrypt';
 import RiderList from '../models/riderList';
 
@@ -479,7 +479,7 @@ const acceptRideRequestByCustomer = async (
     }
     const email = riderDetails.email;
     console.log('email is', email);
-    const { token, info } = await sendRecoveryEmail(email!);
+    const { token, info } = await sendRideOtp(email!);
     console.log('token', token, info);
 
     //hash the otp to save into the database
@@ -814,21 +814,22 @@ const topRidersByRides = async (req: IRequest, res: Response) => {
 };
 
 const rideController = {
-  createRideRequest, //successfully create ride by customer
-  submitBid, //customer place bids and send
-  cancelRide, //cancel ride by customer before requesting
-  getAllRequestedRides, //rider gets all the ride requests from customer
-  requestRideAsRider, //Rider requests the ride
-  getAvailableRiders, //customer gets all the requests from riders
-  acceptRideRequestByCustomer, //customer accepts one rider and send otp to rider
-  rejectRider, //customer rejects rider
-  customerNotArrived, //when customer not arrived at pickup point
-  viewRiderOtp, //to show rider otp on rider's screen
-  verifyRideOtp, //customer verifies rider by otp
-  completedRide, //ride completes
-  submitRideReview, //customer sends ride review
-  payment, //confirm payment by rider
-  topRidersByRides, // get top riders by rides number
+  createRideRequest,          // Customer creates a new ride request
+  submitBid,                  // Customer places a bid for a ride
+  cancelRide,                 // Customer cancels a ride before it’s accepted by a rider
+  getAllRequestedRides,       // Rider retrieves all ride requests from customers
+  requestRideAsRider,         // Rider sends a request to take a specific ride
+  getAvailableRiders,         // Customer retrieves all rider requests for their ride
+  acceptRideRequestByCustomer, // Customer accepts one rider and sends them an OTP
+  rejectRider,                // Customer rejects a rider’s request
+  customerNotArrived,         // Rider reports that the customer hasn’t arrived at the pickup point
+  viewRiderOtp,               // Rider views the OTP sent by the customer
+  verifyRideOtp,              // Customer verifies the rider using the provided OTP
+  completedRide,              // Marks the ride as completed
+  submitRideReview,           // Customer submits a review after the ride is completed
+  payment,                    // Rider confirms that payment has been received
+  topRidersByRides,           // Retrieve top riders based on the number of completed rides
+  
 };
 
 export default rideController;
