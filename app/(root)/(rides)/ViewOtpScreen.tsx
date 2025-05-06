@@ -24,18 +24,13 @@ const ViewOtpScreen = () => {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
-            const data=await response.data;
+            const data = await response.data;
             console.log("Received payment response:", data);
-            if (data.message) {     
-                
-                if (data.status === 'success') {
-                    Alert.alert('Payment received successfully.');
-                    router.push('/(root)/(tabs)/home');
-                } else {
-                    Alert.alert('Failed to receive payment.');
-                }
-            }
-           
+
+            Alert.alert('Payment received successfully.');
+            router.push('/(root)/(tabs)/home');
+
+
         }
         catch (error: any) {
             console.error('Fetch ride requests error:', error);
