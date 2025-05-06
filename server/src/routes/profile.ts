@@ -27,6 +27,13 @@ profileRouter.put(
   profileController.editProfileDetails
 );
 
+
+/**
+ * GET /profile/viewRiderProfile
+
+ */
+profileRouter.get('/riderProfile', profileController.viewRiderProfile);
+
 export default profileRouter;
 
 
