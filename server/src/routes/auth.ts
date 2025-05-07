@@ -16,6 +16,43 @@ const riderUpload = upload.fields([
 ]);
 
 // Authentication routes
+/**
+ * @swagger
+ * /auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - fullname
+ *               - password
+ *               - phone
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               fullname:
+ *                 type: string
+ *                 minLength: 3
+ *               password:
+ *                 type: string
+ *                 minLength: 6
+ *               phone:
+ *                 type: string
+ *                 pattern: "^[0-9]{10}$"
+ *     responses:
+ *       '201':
+ *         description: User registered successfully
+ *       '400':
+ *         description: Invalid input
+ */
+authRouter.post('/register', validate(userValidation.register), authController.register);
+
 authRouter.post('/register', validate(userValidation.register), authController.register);
 authRouter.post('/login', validate(userValidation.login), authController.login);
 authRouter.post('/verifyOTP', validate(userValidation.otp), authController.verifyEmail);
