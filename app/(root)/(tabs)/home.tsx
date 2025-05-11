@@ -9,6 +9,7 @@ import {
 import * as Location from 'expo-location';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
+import { io } from 'socket.io-client';
 
 import MapComponent from '@/components/Home/MapComponent';
 
@@ -24,6 +25,8 @@ import FindRideForm from '@/components/Home/FindRideForm';
 
 const screenHeight = Dimensions.get('window').height;
 const IP_Address = process.env.EXPO_PUBLIC_ADDRESS || 'YOUR_IP_ADDRESS'; // Replace with your IP
+
+const socket = io(`http://${IP_Address}:8002`); // Replace with your server's IP and port
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -50,7 +53,19 @@ export default function HomeScreen() {
     (async () => {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') return;
+        if (status !== 'granted') {
+          Alert.alert(
+            'Permission Denied',
+            'Location permission is required to use this feature. Using a fallback location.'
+          );
+          setLocation({
+            coords: {
+              latitude: 28.2334, // Fallback latitude
+              longitude: 83.9500, // Fallback longitude
+            },
+          } as Location.LocationObject);
+          return;
+        }
 
         const currentLocation = await Location.getCurrentPositionAsync({});
         setLocation(currentLocation);
@@ -59,10 +74,46 @@ export default function HomeScreen() {
         setRole(userRole);
       } catch (err) {
         console.error('Location Error:', err);
+        Alert.alert('Error', 'Failed to get current location. Using a fallback location.');
+        setLocation({
+          coords: {
+            latitude: 28.2334, // Fallback latitude
+            longitude: 83.9500, // Fallback longitude
+          },
+        } as Location.LocationObject);
       } finally {
         setIsLoading(false);
       }
     })();
+  }, []);
+
+  useEffect(() => {
+    // Connect to the socket server
+    socket.on('connect', () => {
+      console.log('Connected to socket server:', socket.id);
+
+      // Listen for ride-related events
+      socket.on('rideRequest', (data) => {
+        console.log('New ride request:', data);
+        Alert.alert('New Ride Request', `Ride ID: ${data.rideId}`);
+      });
+
+      socket.on('rideAccepted', (data) => {
+        console.log('Ride accepted:', data);
+        Alert.alert('Ride Accepted', `Ride ID: ${data.rideId}`);
+      });
+
+      socket.on('rideCompleted', (data) => {
+        console.log('Ride completed:', data);
+        Alert.alert('Ride Completed', `Ride ID: ${data.rideId}`);
+      });
+    });
+
+    // Cleanup on component unmount
+    return () => {
+      socket.disconnect();
+      console.log('Disconnected from socket server');
+    };
   }, []);
 
   const handlePickupLocationSelect = (location: { address: string; coordinates: any }) => {

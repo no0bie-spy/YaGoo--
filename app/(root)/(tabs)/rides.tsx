@@ -29,12 +29,13 @@ export default function RidesScreen() {
         Alert.alert('Authentication Error', 'You are not logged in. Please log in to continue.');
         return;
       }
-
-      const response = await axios.get(`http://${IP_Address}:8002/profile/view-rider-history`, {
+      console.log("Ip Address:", IP_Address); // Debugging log
+      const response = await axios.get(`http://${IP_Address}:8002/profile/history`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       const data =await response.data;
+      console.log("Response data:", data); // Debugging log
       console.log("Fetched rides:", data);
       // Validate the response structure
       if (!data.rides || !Array.isArray(data.rides)) {
@@ -59,6 +60,7 @@ export default function RidesScreen() {
     } catch (error) {
       console.error('Error fetching rides:', error);
       Alert.alert('Error', 'Failed to fetch rides. Please try again later.');
+      console.log(error);
     } finally {
       setIsLoading(false);
     }
