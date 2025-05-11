@@ -3,40 +3,44 @@ import express from 'express';
 import connectToDB from './connect';
 import cors from 'cors';
 import mainRoutes from './routes/mainRoutes';
-import env from './Ienv';
 import cookieParser from 'cookie-parser';
 import { swaggerSpec, swaggerUi } from './swagger';
+import Socket from './socket'; // Import the Socket module
 
-
-const server = express();
+// Load environment variables
 config();
-const port = env.PORT;
+
+// Initialize app and server from the Socket module
+const app = Socket.app;
+const server = Socket.server;
+
+// Define the port
+const port = process.env.PORT || 8000;
 
 // Middleware
-server.use(cookieParser()); // for cookies
-server.use(cors()); // Enable CORS
-server.use(express.json({ limit: '10mb' })); // Parse JSON payloads with a size limit
-server.use(express.urlencoded({ limit: '10mb', extended: true })); // Parse URL-encoded payloads
+app.use(cookieParser()); // Parse cookies
+app.use(cors()); // Enable CORS
+app.use(express.json({ limit: '10mb' })); // Parse JSON payloads with a size limit
+app.use(express.urlencoded({ limit: '10mb', extended: true })); // Parse URL-encoded payloads
 
-server.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec)); // swagger docs route
+// Swagger documentation route
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 // Connect to the database
 connectToDB()
   .then((connectMessage) => {
     console.log(connectMessage);
 
-
-      
-
-    // Routes
-    server.use(mainRoutes);
+    // Register routes
+    app.use(mainRoutes);
 
     // Start the server
     server.listen(port, () => {
-      console.log('Server Started on Port: ' + port);
+      console.log(`Server started on port: ${port}`);
     });
   })
-  .catch((e) => {
-    console.error('Database connection error:', e);
+  .catch((error) => {
+    console.error('Database connection error:', error);
   });
 
-export default server;
+export default app;

@@ -12,6 +12,7 @@ import Rider from '../models/rider';
 import { sendRideOtp } from '../services/mailer';
 import bcrypt from 'bcrypt';
 import RiderList from '../models/riderList';
+import { io } from '../socket'; // Import the io instance
 
 const BASE_RATE = 15; // Rs. 15 per km
 
@@ -218,17 +219,20 @@ const requestRideAsRider = async (req: IRequest, res: Response) => {
       });
     }
 
-    //to check it already exists or not
-    const existingRequest = await RiderList.findOne({
-      riderId,
-      rideId,
-    });
+    const existingRequest = await RiderList.findOne({ riderId, rideId });
 
     if (existingRequest) {
       return res.status(400).json({ message: 'Ride request already exists.' });
     }
-    // Ensure rideId is treated as a valid ObjectId
+
     const rideRequest = await RiderList.create({
+      riderId,
+      rideId,
+      status: 'not-accepted',
+    });
+
+    // Emit event to notify the customer about the new ride request
+    io.to(rideId).emit('rideRequest', {
       riderId,
       rideId,
       status: 'not-accepted',
@@ -241,11 +245,7 @@ const requestRideAsRider = async (req: IRequest, res: Response) => {
     });
   } catch (e: unknown) {
     console.error('Request ride by rider error:', e);
-    if (e instanceof Error) {
-      return res.status(500).json({ message: e.message });
-    } else {
-      return res.status(500).json({ message: 'An unknown error occurred' });
-    }
+    return res.status(500).json({ message: 'An unknown error occurred' });
   }
 };
 
@@ -264,9 +264,7 @@ const getAllRequestedRides = async (req: Request, res: Response) => {
     // Map over the rides to send a specific structure to the frontend
     const rideDetails = await Promise.all(
       rides.map(async (ride) => {
-        // Fetch customer by the customerId for each ride
         const customer = await User.findById(ride.customerId);
-        // fetch bid amount from bidModel
         const bid = await Bid.findOne({ _id: ride.bidId });
         return {
           customerName: customer?.fullname,
@@ -280,7 +278,9 @@ const getAllRequestedRides = async (req: Request, res: Response) => {
       })
     );
 
-    // Return the rides with customer details
+    // Emit an event to notify riders about new ride requests
+    io.emit('newRideRequests', rideDetails);
+
     return res.status(200).json({
       success: true,
       rides: rideDetails,
@@ -406,11 +406,8 @@ const verifyRideOtp = async (req: IRequest, res: Response) => {
     }
   }
 };
-const acceptRideRequestByCustomer = async (
-  req: IRequest,
-  res: Response,
-  next: NextFunction
-) => {
+
+const acceptRideRequestByCustomer = async (req: IRequest, res: Response) => {
   try {
     const { rideListId } = req.body;
     const customerId = req.userId;
@@ -470,19 +467,18 @@ const acceptRideRequestByCustomer = async (
     await ride.save();
 
     const riderDetails = await User.findOne({ _id: ride.riderId });
-    // Generate OTP
-
     if (!riderDetails) {
       return res.status(400).json({
-        details: [{ message: 'Rider Details Document  is missing' }],
+        details: [{ message: 'Rider Details Document is missing' }],
       });
     }
+
     const email = riderDetails.email;
     console.log('email is', email);
     const { token, info } = await sendRideOtp(email!);
     console.log('token', token, info);
 
-    //hash the otp to save into the database
+    // Hash the OTP to save into the database
     const hashedToken = await bcrypt.hash(token, 10);
 
     const expiryOTP = new Date(Date.now() + 10 * 60 * 1000); // valid for 10 minutes
@@ -497,6 +493,13 @@ const acceptRideRequestByCustomer = async (
       },
       { upsert: true } // insert new if not exists
     );
+
+    // Emit event to notify the rider about the acceptance
+    io.to(rideRequest.riderId.toString()).emit('rideAccepted', {
+      rideId: (ride._id as unknown as string).toString(),
+      customerId: customerId.toString(),
+      message: 'Your ride request has been accepted!',
+    });
 
     return res.status(200).json({
       success: true,
