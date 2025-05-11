@@ -34,7 +34,7 @@ async function sendEmail(to: string, subject: string, html: string, text: string
 
 // 📩 Specific email sending functions
 
-export const sendRecoveryEmail = (userEmail: string) => {
+export const sendRecoveryEmail = async (userEmail: string): Promise<string> => {
   const subject = "Password Recovery - Verify Your Email";
   const token = generateToken();
   const text = `Hello, use the token to verify your email: ${token}`;
@@ -43,7 +43,9 @@ export const sendRecoveryEmail = (userEmail: string) => {
     <p><b style="font-size: 20px;">${token}</b></p>
     <p>Do not share this token with anyone.</p>
     <p>Thank you,<br />The YaGOo Team</p>`;
-  return sendEmail(userEmail, subject, html, text);
+
+  await sendEmail(userEmail, subject, html, text);
+  return token; // Return the token for further use (e.g., saving to the database)
 };
 
 export const sendRiderRegistrationEmail = (userEmail: string) => {
@@ -72,14 +74,16 @@ export const sendNormalRegistrationEmail = (userEmail: string) => {
   return sendEmail(userEmail, subject, html, text);
 };
 
-export const sendRideOtp = (userEmail: string) => {
+export const sendRideOtp = async(userEmail: string) => {
   const subject = "Ride OTP - Verify Your Ride";
   const token = generateToken();
+  console.log("Generated OTP:", token);
   const text = `Hello, use the following OTP to verify your ride: ${token}`;
   const html = `<p>Dear Rider,</p>
     <p>You are about to embark on your ride. Please use the OTP below to confirm your ride:</p>
     <p><b style="font-size: 20px;">${token}</b></p>
     <p>Do not share this OTP with anyone.</p>
     <p>Thank you for choosing YaGOo!<br />The YaGOo Team</p>`;
-  return sendEmail(userEmail, subject, html, text);
+    await sendEmail(userEmail, subject, html, text);
+    return token; 
 };

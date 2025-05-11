@@ -33,8 +33,8 @@ const sendOtpToRideRider = async (req: IRequest, res: Response) => {
     }
 
     // Generate and send OTP to rider email
-    const { token, info } = await sendRideOtp(email);
-    console.log('OTP sent to rider:', token, info);
+    const token = await sendRideOtp(email);
+    console.log('OTP sent to rider:', token);
 
     // Hash the OTP and store it in the database
     const hashedToken = await bcrypt.hash(token, 10);

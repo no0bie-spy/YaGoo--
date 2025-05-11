@@ -39,7 +39,7 @@ export async function getUserRole(): Promise<string> {
     if (!token) throw new Error('Access token not found');
 
     const response = await axios.get(
-      `http://${IP_Address}:8002/profile/userdetails`,
+      `http://${IP_Address}:8002/profile/details`,
       {
         headers: {
           Authorization: `Bearer ${token}`, // Bearer token

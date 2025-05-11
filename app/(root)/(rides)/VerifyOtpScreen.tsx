@@ -13,7 +13,7 @@ const VerifyOtpScreen = ({ route }: any) => {
   const {  email, rideId  } = useLocalSearchParams();
   const [otp, setOtp] = useState('');
   const router = useRouter();
-
+const [errors, setErrors] = useState<string[]>([]);
   const handleVerifyOtp = async () => {
     if (!otp) {
       return Alert.alert('Please enter the OTP');
@@ -39,16 +39,31 @@ const VerifyOtpScreen = ({ route }: any) => {
         params: { rideId },
       });
     } catch (error: any) {
-      console.error('Verify OTP Error:', JSON.stringify(error.response?.data, null, 2));
-      Alert.alert(
-        error.response?.data?.message || 'Failed to verify OTP. Please try again.'
-      );
+      console.log('Full error:', error);
+
+      if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
+        const errorMessages = error.response.data.details.map((err: any) => err.message);
+        setErrors(errorMessages);
+      } else if (error.response?.data?.message) {
+        setErrors([error.response.data.message]);
+      } else {
+        setErrors(['Something went wrong.']);
+      }
     }
   };
 
   return (
     <View style={styles.screenContainer}>
       <Text style={styles.title}>Verify OTP</Text>
+      {errors.length > 0 && (
+        <View>
+          {errors.map((error, index) => (
+            <Text key={index} style={{ color: 'red', textAlign: 'center' }}>
+              {error}
+            </Text>
+          ))}
+        </View>
+      )}
       <Text style={styles.subtitle}>Enter the OTP sent to the rider's email to start the ride.</Text>
 
       <OtpInput

@@ -352,8 +352,8 @@ const forgotPassword = async (
     }
 
     // Call the function to send the recovery email
-    const { token, info } = await sendRecoveryEmail(email);
-    console.log("token"+token, info);
+    const token = await sendRecoveryEmail(email);
+    console.log("token"+token);
 
     //hash the otp to save into the database
     const hashedToken = await bcrypt.hash(token, 10);
@@ -452,7 +452,6 @@ const setNewPassword = async(
 const changePassword = async (
   req: Request,
   res: Response,
-  next: NextFunction
 ) => {
   try {
     const { email, OTP, newPassword, retypePassword } = req.body;

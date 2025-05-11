@@ -128,11 +128,7 @@ const editProfileDetails = async (
 };
 
 //View history for both riders and customer
-const viewHistory = async (
-  req: IRequest,
-  res: Response,
-  next: NextFunction
-) => {
+const viewHistory = async (req: IRequest, res: Response, next: NextFunction) => {
   try {
     // Check if the user is authenticated
     if (!req.userId) {
@@ -175,13 +171,18 @@ const viewHistory = async (
 
         return {
           customer: ride.customerId,
-          start_location: ride.start_location,
-          destination: ride.destination,
-          distance: ride.distance,
-          amount: bid?.amount ?? "N/A"
+          start_location: ride.start_location?.address || 'Unknown Start Location',
+          destination: ride.destination?.address || 'Unknown Destination',
+          distance: ride.distance || 0,
+          amount: bid?.amount ?? "N/A",
+          totalTime: formattedTime,
+          status: ride.status || 'Unknown',
+          date: ride.createdAt ? new Date(ride.createdAt).toISOString().split('T')[0] : 'Unknown Date',
         };
       })
     );
+
+    console.log("Ride history fetched successfully:", history);
 
     return res.status(200).json({ rides: history });
 
