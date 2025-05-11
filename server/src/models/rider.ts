@@ -1,6 +1,6 @@
 import { Document, model, Types, Schema } from 'mongoose';
 
-interface IRider extends Document {
+export interface IRider extends Document {
   userId: Types.ObjectId;
   vehicleId: Types.ObjectId;
   documentId: Types.ObjectId;

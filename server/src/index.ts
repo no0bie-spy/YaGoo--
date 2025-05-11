@@ -5,6 +5,7 @@ import cors from 'cors';
 import mainRoutes from './routes/mainRoutes';
 import env from './Ienv';
 import cookieParser from 'cookie-parser';
+import { swaggerSpec, swaggerUi } from './swagger';
 
 
 const server = express();
@@ -17,11 +18,14 @@ server.use(cors()); // Enable CORS
 server.use(express.json({ limit: '10mb' })); // Parse JSON payloads with a size limit
 server.use(express.urlencoded({ limit: '10mb', extended: true })); // Parse URL-encoded payloads
 
-
+server.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec)); // swagger docs route
 // Connect to the database
 connectToDB()
   .then((connectMessage) => {
     console.log(connectMessage);
+
+
+      
 
     // Routes
     server.use(mainRoutes);
