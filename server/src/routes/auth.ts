@@ -5,6 +5,7 @@ import userValidation from '../validations/auth';
 import upload from '../middleware/multerConfig';
 import otpController from '../controllers/otp';
 
+
 const authRouter = express.Router();
 
 const riderUpload = upload.fields([

@@ -7,7 +7,8 @@ const options = {
     info: {
       title: 'YaGoo API',
       version: '1.0.0',
-      description: 'API documentation for YaGoo project',
+      
+  description: 'API documentation for YaGoo project',
     },
   },
   apis: ['./src/routes/*.ts'], // Update path if needed
