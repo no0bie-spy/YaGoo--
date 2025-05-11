@@ -3,7 +3,7 @@ import { Schema, model, Types, Document } from 'mongoose';
 interface IBid extends Document {
   _id: Types.ObjectId;
   rideId: Types.ObjectId; 
-  userId: Types.ObjectId; // Renamed from "rider" to "userId"
+  userId: Types.ObjectId;
   amount: number; 
   createdAt: Date;
 }

@@ -19,7 +19,7 @@ const vehicleSchema = new Schema<VehicleInterface>(
     vehicleType: {
       type: String,
       required: true,
-      enum: ['bike', 'scooter', 'car', 'others'], // 👈 enforce enum in schema too
+      enum: ['bike', 'scooter', 'car', 'others'], 
     },
     vehicleName: {
       type: String,
