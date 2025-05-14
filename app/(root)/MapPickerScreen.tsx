@@ -16,12 +16,13 @@ const MapPickerScreen = () => {
     (async () => {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
+        console.log('Location permission status:', status);
+
         if (status !== 'granted') {
           Alert.alert(
             'Permission Denied',
             'Location permission is required to use this feature. Using a fallback location.'
           );
-          // Default to a fallback location if permission is denied
           setInitialRegion({
             latitude: 28.2334, // Fallback latitude
             longitude: 83.9500, // Fallback longitude
@@ -41,7 +42,6 @@ const MapPickerScreen = () => {
       } catch (error) {
         console.error('Error getting current location:', error);
         Alert.alert('Error', 'Failed to get current location. Using a fallback location.');
-        // Default to a fallback location on error
         setInitialRegion({
           latitude: 28.2334, // Fallback latitude
           longitude: 83.9500, // Fallback longitude

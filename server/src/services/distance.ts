@@ -30,3 +30,10 @@ export async function calculateRoadDistance(
     return null;
   }
 }
+
+// async function main() {
+//   const dist = await calculateRoadDistance(27.7172, 85.324, 27.6727, 85.4298);
+//   console.log('Distance in km:', dist);
+// }
+
+// main();

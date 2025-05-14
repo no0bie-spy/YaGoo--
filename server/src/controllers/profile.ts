@@ -168,12 +168,12 @@ const viewHistory = async (req: IRequest, res: Response, next: NextFunction) => 
           const seconds = totalSeconds % 60;
           formattedTime = `${minutes}m ${seconds}s`;
         }
-
+        const totaldistance=Number(ride.distance.toFixed(4));
         return {
           customer: ride.customerId,
           start_location: ride.start_location?.address || 'Unknown Start Location',
           destination: ride.destination?.address || 'Unknown Destination',
-          distance: ride.distance || 0,
+          distance: totaldistance || 0,
           amount: bid?.amount ?? "N/A",
           totalTime: formattedTime,
           status: ride.status || 'Unknown',

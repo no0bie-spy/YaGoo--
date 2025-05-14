@@ -34,7 +34,7 @@ export default function RidesScreen() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const data =await response.data;
+      const data = await response.data;
       console.log("Response data:", data); // Debugging log
       console.log("Fetched rides:", data);
       // Validate the response structure
@@ -47,8 +47,9 @@ export default function RidesScreen() {
       // Map the response to match the Ride interface
       const formattedRides = data.rides.map((ride: any) => ({
         id: ride._id || Math.random().toString(), // Use `_id` or fallback to a random ID
-        source: ride.start_location?.address || 'Unknown Source',
-        destination: ride.destination?.address || 'Unknown Destination',
+        source: ride.start_location || 'Unknown Source',
+        destination: ride.destination || 'Unknown Destination',
+
         status: ride.status || 'Pending', // Default to 'Pending' if status is missing
         bidAmount: ride.amount || 0, // Default to 0 if amount is missing
         distance: ride.distance || 0, // Default to 0 if distance is missing
@@ -67,7 +68,14 @@ export default function RidesScreen() {
   };
 
   useEffect(() => {
+    // Call fetchRides initially
     fetchRides();
+
+    // Set interval to refresh every 10 seconds
+    const intervalId = setInterval(fetchRides, 10000);
+
+    // Clear interval when component is unmounted
+    return () => clearInterval(intervalId);
   }, []);
 
   const renderRide = ({ item }: { item: Ride }) => (
@@ -98,7 +106,7 @@ export default function RidesScreen() {
       <View style={styles.footer}>
         <Clock size={16} color="#666" />
         <Text style={styles.locationText}>Distance: {item.distance} km</Text>
-        <Text style={styles.locationText}>Time: {item.time} min</Text>
+        <Text style={styles.locationText}>Time: {item.time}</Text>
         <Text style={styles.bidAmount}>Rs.{item.bidAmount}</Text>
       </View>
     </View>
