@@ -14,7 +14,7 @@ const RiderDashboard = () => {
 
   const fetchRideRequests = async () => {
     try {
-      setIsLoading(true); // Start loading
+      setIsLoading(true);
       const token = await getSession('accessToken');
       if (!token) {
         setErrors(['You are not logged in. Please log in to continue.']);
@@ -40,7 +40,7 @@ const RiderDashboard = () => {
         setErrors(['Something went wrong.']);
       }
     } finally {
-      setIsLoading(false); // End loading
+      setIsLoading(false);
     }
   };
 
@@ -52,9 +52,8 @@ const RiderDashboard = () => {
         return;
       }
 
-      console.log('Attempting to accept ride:', rideId);
+      setIsLoading(true);
 
-      // Send request to accept the ride
       const response = await axios.post(
         `http://${IP_Address}:8002/rides/rider-request`,
         { rideId },
@@ -62,46 +61,26 @@ const RiderDashboard = () => {
       );
 
       if (response.status === 201) {
-        console.log('Ride accepted successfully:', rideId);
-
-        // Remove the accepted ride from the list
-        setRideRequests((prevRequests) =>
-          prevRequests.filter((ride) => ride.rideId !== rideId)
-        );
-
+        setRideRequests((prev) => prev.filter((ride) => ride.rideId !== rideId));
         Alert.alert('Success', `You have accepted ride: ${rideId}`);
-      } else {
-        console.error('Unexpected response status:', response.status);
       }
 
-      // Fetch OTP for the accepted ride
       const otpResponse = await axios.get(
         `http://${IP_Address}:8002/rides/view-otp`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (otpResponse.status === 200) {
-        console.log('OTP received successfully:', otpResponse.data.otp);
-
-        Alert.alert('OTP Received', 'Please check your email for the OTP.');
         router.push({
           pathname: '/(root)/(rides)/ViewOtpScreen',
           params: { otp: otpResponse.data.otp, rideId },
         });
-      } else {
-        console.error('Unexpected OTP response status:', otpResponse.status);
       }
-    } catch (error: any) {
-      console.error('Error accepting ride:', error);
 
-      // Handle errors
-      if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
-        setErrors(error.response.data.details.map((err: any) => err.message));
-      } else if (error.response?.data?.message) {
-        setErrors([error.response.data.message]);
-      } else {
-        setErrors(['Something went wrong. Please try again.']);
-      }
+    } catch (error: any) {
+
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -111,11 +90,11 @@ const RiderDashboard = () => {
   };
 
   useEffect(() => {
-    fetchRideRequests(); // Fetch data initially
+    fetchRideRequests();
     const interval = setInterval(() => {
-      fetchRideRequests(); // Fetch data every 5 seconds
+      fetchRideRequests();
     }, 5000);
-    return () => clearInterval(interval); // Cleanup interval on unmount
+    return () => clearInterval(interval);
   }, []);
 
   return (

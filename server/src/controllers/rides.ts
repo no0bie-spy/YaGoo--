@@ -481,9 +481,8 @@ const acceptRideRequestByCustomer = async (req: IRequest, res: Response) => {
       });
     }
 
-    
     const email = riderDetails.email;
-    
+
     const token = await sendRideOtp(email!);
     console.log('token', token);
     // Hash the OTP to save into the database
@@ -606,7 +605,15 @@ const viewRiderOtp = async function (req: IRequest, res: Response) {
     const user: any = await User.findById(userId);
 
     const otpRecord = await Otp.findOne({ email: user.email });
-
+    const Remail=user.email
+    console.log("email",Remail)
+    if (!otpRecord) {
+      return res.status(404).json({
+        details: [{ message: 'OTP not found',
+          email:Remail,otpRecord
+        }],
+      });
+    }
     const validOtp = otpRecord?.OTP;
 
     const validEmail = otpRecord?.email;
