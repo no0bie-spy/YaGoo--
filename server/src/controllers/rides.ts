@@ -12,7 +12,7 @@ import Rider from '../models/rider';
 import { sendRideOtp } from '../services/mailer';
 import bcrypt from 'bcrypt';
 import RiderList from '../models/riderList';
-import { io } from '../socket'; // Import the io instance
+
 import { console } from 'inspector';
 
 const BASE_RATE = 15; // Rs. 15 per km
@@ -232,14 +232,7 @@ const requestRideAsRider = async (req: IRequest, res: Response) => {
       status: 'not-accepted',
     });
 
-    // Emit event to notify the customer about the new ride request
-    io.to(rideId).emit('rideRequest', {
-      riderId,
-      rideId,
-      status: 'not-accepted',
-    });
-
-    return res.status(201).json({
+      return res.status(201).json({
       success: true,
       rideRequest,
       message: 'Ride request created successfully',
@@ -279,8 +272,7 @@ const getAllRequestedRides = async (req: Request, res: Response) => {
       })
     );
 
-    // Emit an event to notify riders about new ride requests
-    io.emit('newRideRequests', rideDetails);
+  
 
     return res.status(200).json({
       success: true,
@@ -502,12 +494,7 @@ const acceptRideRequestByCustomer = async (req: IRequest, res: Response) => {
       { upsert: true } // insert new if not exists
     );
 
-    // Emit event to notify the rider about the acceptance
-    io.to(rideRequest.riderId.toString()).emit('rideAccepted', {
-      rideId: (ride._id as unknown as string).toString(),
-      customerId: customerId.toString(),
-      message: 'Your ride request has been accepted!',
-    });
+    
 
     return res.status(200).json({
       success: true,
@@ -618,7 +605,7 @@ const viewRiderOtp = async function (req: IRequest, res: Response) {
 
     const validEmail = otpRecord?.email;
 
-    return res.json({
+    return res.status(200).json({
       message: `Otp has been received in your mail${validEmail}`,
       otp: validOtp,
       email: validEmail,

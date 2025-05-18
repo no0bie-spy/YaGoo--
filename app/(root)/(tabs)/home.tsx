@@ -87,34 +87,7 @@ export default function HomeScreen() {
     })();
   }, []);
 
-  useEffect(() => {
-    // Connect to the socket server
-    socket.on('connect', () => {
-      console.log('Connected to socket server:', socket.id);
 
-      // Listen for ride-related events
-      socket.on('rideRequest', (data) => {
-        console.log('New ride request:', data);
-        Alert.alert('New Ride Request', `Ride ID: ${data.rideId}`);
-      });
-
-      socket.on('rideAccepted', (data) => {
-        console.log('Ride accepted:', data);
-        Alert.alert('Ride Accepted', `Ride ID: ${data.rideId}`);
-      });
-
-      socket.on('rideCompleted', (data) => {
-        console.log('Ride completed:', data);
-        Alert.alert('Ride Completed', `Ride ID: ${data.rideId}`);
-      });
-    });
-
-    // Cleanup on component unmount
-    return () => {
-      socket.disconnect();
-      console.log('Disconnected from socket server');
-    };
-  }, []);
 
   const handlePickupLocationSelect = (location: { address: string; coordinates: any }) => {
     setPickup(location);

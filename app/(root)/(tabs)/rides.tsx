@@ -44,20 +44,33 @@ export default function RidesScreen() {
         return;
       }
 
-      // Map the response to match the Ride interface
       const formattedRides = data.rides.map((ride: any) => ({
-        id: ride._id || Math.random().toString(), // Use `_id` or fallback to a random ID
+        id: ride._id || Math.random().toString(),
         source: ride.start_location || 'Unknown Source',
         destination: ride.destination || 'Unknown Destination',
-
-        status: ride.status || 'Pending', // Default to 'Pending' if status is missing
-        bidAmount: ride.amount || 0, // Default to 0 if amount is missing
-        distance: ride.distance || 0, // Default to 0 if distance is missing
-        time: ride.time || 0, // Default to 0 if time is missing
-        date: ride.date.split("T")[0]
+        status: ride.status || 'Pending',
+        bidAmount: ride.amount || 0,
+        distance: ride.distance || 0,
+        time: ride.totalTime || 0,
+        date: ride.date.split("T")[0],
       }));
 
+      // Sort by date in descending order (latest first)
+      interface FormattedRide {
+        id: string;
+        source: string;
+        destination: string;
+        status: string;
+        bidAmount: number;
+        distance: number;
+        time: number;
+        date: string;
+      }
+
+      formattedRides.sort((a: FormattedRide, b: FormattedRide) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
       setRides(formattedRides);
+
     } catch (error) {
       console.error('Error fetching rides:', error);
       Alert.alert('Error', 'Failed to fetch rides. Please try again later.');
