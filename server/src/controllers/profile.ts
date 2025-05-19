@@ -1,16 +1,18 @@
 import { NextFunction, Response } from 'express';
 import IRequest from '../middleware/IRequest';
 import Ride from '../models/rides';
-import User from '../models/User';
+import User, { IUser } from '../models/User';
 import Bid from '../models/bid';
 import RiderDocuments from '../models/riderDocument';
 import Vehicle from '../models/vehicle';
 import Rider from '../models/rider';
+import { riderUpload } from '../routes/auth';
+import authController from './auth';
 
 // Fetch user details (common for customer and rider)
 const userDetails = async (
-  req: IRequest, 
-  res: Response, 
+  req: IRequest,
+  res: Response,
   next: NextFunction
 ) => {
   try {
@@ -18,7 +20,7 @@ const userDetails = async (
 
     // Ensure the request is authenticated
     if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ message: 'Unauthorized' });
     }
 
     // Find the user in the database
@@ -80,11 +82,10 @@ const userDetails = async (
   }
 };
 
-
 // Edit profile details (fullname and phone)
 const editProfileDetails = async (
-  req: IRequest, 
-  res: Response, 
+  req: IRequest,
+  res: Response,
   next: NextFunction
 ) => {
   try {
@@ -92,7 +93,7 @@ const editProfileDetails = async (
 
     // Check if userId is available (i.e., user is authenticated)
     if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ message: 'Unauthorized' });
     }
 
     // Verify user exists in the database
@@ -117,7 +118,6 @@ const editProfileDetails = async (
       message: 'User details updated successfully',
       user: updatedUser, // Return updated user data if needed
     });
-
   } catch (e: unknown) {
     console.error('Error updating user details:', e);
     if (e instanceof Error) {
@@ -128,31 +128,35 @@ const editProfileDetails = async (
 };
 
 //View history for both riders and customer
-const viewHistory = async (req: IRequest, res: Response, next: NextFunction) => {
+const viewHistory = async (
+  req: IRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     // Check if the user is authenticated
     if (!req.userId) {
-      return res.status(401).json({ message: "Unauthorized: userId missing." });
+      return res.status(401).json({ message: 'Unauthorized: userId missing.' });
     }
 
     // Find the user based on userId
     const user = await User.findById(req.userId);
     if (!user) {
-      return res.status(400).json({ message: "User not found!" });
+      return res.status(400).json({ message: 'User not found!' });
     }
 
     let rides: any[] = [];
 
     // Retrieve rides based on user role
-    if (user.role === "rider") {
+    if (user.role === 'rider') {
       rides = await Ride.find({ riderId: req.userId });
-    } else if (user.role === "customer") {
+    } else if (user.role === 'customer') {
       rides = await Ride.find({ customerId: req.userId });
     }
 
     // If no rides found, return empty array
     if (rides.length === 0) {
-      return res.status(404).json({ message: "No ride history found." });
+      return res.status(404).json({ message: 'No ride history found.' });
     }
 
     // Format each ride with related bid and time info
@@ -168,103 +172,187 @@ const viewHistory = async (req: IRequest, res: Response, next: NextFunction) => 
           const seconds = totalSeconds % 60;
           formattedTime = `${minutes}m ${seconds}s`;
         }
-        const totaldistance=Number(ride.distance.toFixed(4));
+        const totaldistance = Number(ride.distance.toFixed(4));
         return {
           customer: ride.customerId,
-          start_location: ride.start_location?.address || 'Unknown Start Location',
+          start_location:
+            ride.start_location?.address || 'Unknown Start Location',
           destination: ride.destination?.address || 'Unknown Destination',
           distance: totaldistance || 0,
-          amount: bid?.amount ?? "N/A",
+          amount: bid?.amount ?? 'N/A',
           totalTime: formattedTime,
           status: ride.status || 'Unknown',
-          date: ride.createdAt ? new Date(ride.createdAt).toISOString().split('T')[0] : 'Unknown Date',
+          date: ride.createdAt
+            ? new Date(ride.createdAt).toISOString().split('T')[0]
+            : 'Unknown Date',
         };
       })
     );
 
-    console.log("Ride history fetched successfully:", history);
+    console.log('Ride history fetched successfully:', history);
 
     return res.status(200).json({ rides: history });
-
   } catch (error) {
-    console.error("Error fetching ride history:", error);
-    return res.status(500).json({ message: "Something went wrong." });
+    console.error('Error fetching ride history:', error);
+    return res.status(500).json({ message: 'Something went wrong.' });
   }
 };
 
-const viewRiderProfile = async ( req: IRequest, res:Response, next: NextFunction) =>{
-try{
+const viewRiderProfile = async (
+  req: IRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { riderId } = req.body;
+    const userId = req.userId;
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized: userId missing.' });
+    }
 
-  const { riderId } = req.body;
-  const userId = req.userId;
-  if (!userId) {
-    return res.status(401).json({ message: "Unauthorized: userId missing." });
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(400).json({ message: 'User not found!' });
+    }
+
+    const riderDetails = await Rider.findById(riderId); // check rider details in db
+
+    if (!riderDetails) {
+      return res.status(400).json({
+        message: false,
+        details: [{ message: `Rider  Riding Details not found` }],
+      });
+    }
+
+    const riderProfile = await User.findById(riderDetails.userId);
+
+    if (!riderProfile) {
+      return res.status(400).json({
+        message: false,
+        details: [{ message: `Rider Normal Details not found` }],
+      });
+    }
+
+    //Basic Rider Details
+    const email = riderProfile.email;
+    const phone = riderProfile.phone;
+    const fullname = riderProfile.fullname;
+
+    //Rider Riding Details
+    const totalRides = riderDetails.totalRides;
+    const averageRating = riderDetails.averageRating;
+
+    return res.status(200).json({
+      message: true,
+      details: [
+        {
+          message: `Rider Profile successfully shown`,
+          email: email,
+          phone: phone,
+          fullname: fullname,
+
+          totalRides: totalRides,
+          averageRating: averageRating,
+        },
+      ],
+    });
+  } catch (e: unknown) {
+    console.error('Complete ride error', e);
+    return res.status(500).json({
+      status: false,
+      message: e instanceof Error ? e.message : 'An unknown error occurred',
+    });
   }
+};
 
-  const user = await User.findById(userId);
-  if (!user) {
-    return res.status(400).json({ message: "User not found!" });
-  }
-  
-  const riderDetails = await Rider.findById(riderId);// check rider details in db
+const switchRole = async (req: IRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      res.status(401).json({
+        details: [{ message: "Unauthorized: User ID not found" }]
+      });
+      return;
+    }
 
-  if(!riderDetails){
-    return res.status(400).json({
-      message: false,
-      details : [{ message: `Rider  Riding Details not found`}]
-    })
-  }
-  
-  const riderProfile = await User.findById(riderDetails.userId);
+    const existingUser = await User.findById(userId);
+    if (!existingUser) {
+      res.status(404).json({
+        details: [{ message: "User not found" }]
+      });
+      return;
+    }
 
-  if(!riderProfile){
-    return res.status(400).json({
-      message: false,
-      details : [{ message: `Rider Normal Details not found`}]
-    })
-  }
-
-  //Basic Rider Details
-  const email = riderProfile.email;
-  const phone = riderProfile.phone;
-  const fullname = riderProfile.fullname;
-  
-//Rider Riding Details
-const totalRides = riderDetails.totalRides;
-const averageRating = riderDetails.averageRating
-  
-  return res.status(200).json({
-    message: true,
-    details: [
-      {
-        message: `Rider Profile successfully shown`,
-       email: email,
-       phone: phone,
-       fullname: fullname,
+   
+    if (existingUser.role === "customer") {
+      
+      const existingRider = await Rider.findOne({ userId });
+      
+      if (!existingRider) {
        
-       totalRides : totalRides,
-       averageRating:averageRating
+        res.status(403).json({
+          details: [{ 
+            message: "Rider registration required",
+            requiresRegistration: true 
+          }]
+        });
+        return;
       }
-    ]
-  })
 
+    
+      existingUser.role = "rider";
+      await existingUser.save();
+      
+      res.status(200).json({
+        details: [{ 
+          message: "Role switched from customer to rider",
+          currentRole: "rider",
+          requiresRegistration: false
+        }]
+      });
+      return;
+    }
 
+    // If current role is rider
+    if (existingUser.role === "rider") {
+      // Change role to customer
+      existingUser.role = "customer";
+      await existingUser.save();
 
-}
-catch (e: unknown) {
-  console.error('Complete ride error', e);
-  return res.status(500).json({
-    status: false,
-    message: e instanceof Error ? e.message : 'An unknown error occurred',
-  });
-}
+      res.status(200).json({
+        details: [{ 
+          message: "Role switched from rider to customer",
+          currentRole: "customer",
+          requiresRegistration: false
+        }]
+      });
+      return;
+    }
 
-}
+    // Invalid role
+    res.status(400).json({
+      details: [{ message: "Invalid current role" }]
+    });
+
+  } catch (error) {
+    console.error('Switch role error:', error);
+    res.status(500).json({
+      details: [{
+        message: error instanceof Error 
+          ? error.message 
+          : 'An unexpected error occurred while switching roles'
+      }]
+    });
+  }
+};
+
+// Add switchRole to the controller export
 const profileController = {
-    userDetails,          // Get the logged-in user's profile details
-  editProfileDetails,   // Update the logged-in user's profile details
-  viewHistory,          // Retrieve the ride history of the logged-in user
-    viewRiderProfile
-}
+  userDetails,
+  editProfileDetails, 
+  viewHistory,
+  viewRiderProfile,
+  switchRole // Add this line
+};
 
 export default profileController;

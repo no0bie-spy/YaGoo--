@@ -12,14 +12,13 @@ interface Location {
   coordinates: Coordinates;
 }
 
-interface IUser extends Document {
+export interface IUser extends Document {
   email: string;
   fullname: string;
   password: string;
   role: UserRole;
   phone: string;
   isEmailVerified: boolean;
- 
   currentLocation?: Location;
 }
 

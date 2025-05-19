@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, Switch, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { clearSession, getSession } from '@/usableFunction/Session';
 import axios from 'axios';
-import { Edit2Icon, EditIcon, Lock, LogOut } from 'lucide-react-native';
+import { Edit2Icon, EditIcon, LogOut } from 'lucide-react-native';
 import AppButton from '@/components/Button';
 import Input from '@/components/Input';
 import ChangePasswordForm from '@/components/Profile/ChangePasswordForm';
 import EditProfileForm from '@/components/Profile/EditProfileForm';
 import ProfileInfoSection from '@/components/Profile/ProfileInfoSection';
 import ProfileHeader from '@/components/Profile/ProfileHeader';
+import SwitchRoleForm from '@/components/Profile/SwitchRoleForm';
 
 export default function ProfileScreen() {
   const [role, setRole] = useState<string | null>(null);
@@ -22,16 +23,19 @@ export default function ProfileScreen() {
   const [showEditProfile, setShowEditProfile] = useState(false); // State to toggle Edit Profile view
   const [currentpassword, setcurrentPassword] = useState('');
   const [newpassword, setnewPassword] = useState('');
+  const [showswitchRole, setSwitchRole] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
+  const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
+
   const handleLogout = async () => {
     try {
-     
+
 
       const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
       console.log('IP Address:', IP_Address); // Debugging log
       const response = await axios.post(
         `http://${IP_Address}:8002/auth/logout`,
-        
+
       );
 
       const message = response.data.message;
@@ -80,6 +84,78 @@ export default function ProfileScreen() {
       console.error('Error fetching user details:', error);
     }
   };
+
+const handleRoleSwitch = async () => {
+  try {
+    const token = await getSession('accessToken');
+
+    const response = await axios.post(
+      `http://${IP_Address}:8002/profile/switch-role`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const details = response.data.details?.[0];
+
+    if (details?.requiresRegistration) {
+      Alert.alert(
+        'Registration Required',
+        'You must register as a rider first. Proceed to register?',
+        [
+          {
+            text: 'Yes',
+            onPress: () => router.push({
+              pathname: '/(auth)/rider-register',
+              params: { email },
+            }),
+          },
+          { text: 'Cancel', style: 'cancel' },
+        ]
+      );
+      return;
+    }
+
+    Alert.alert('Success', details?.message || 'Role switched');
+    setRole(details?.currentRole);
+    fetchUserDetails();
+  } catch (error: any) {
+    const status = error?.response?.status;
+    const details = error?.response?.data?.details?.[0];
+
+    const message = details?.message;
+    const requiresRegistration = details?.requiresRegistration;
+
+    if (requiresRegistration) {
+      Alert.alert(
+        'Registration Required',
+        'You must register as a rider first. Proceed to register?',
+        [
+          {
+            text: 'Yes',
+            onPress: () => router.push({
+              pathname: '/(auth)/rider-register',
+              params: { email },
+            }),
+          },
+          { text: 'Cancel', style: 'cancel' },
+        ]
+      );
+      return;
+    }
+
+    if (status === 401) {
+      Alert.alert('Unauthorized', 'Please log in again.');
+      router.replace('/(auth)/login');
+    } else {
+      Alert.alert('Error', message || 'Failed to switch role.');
+    }
+  }
+};
+
 
   const handleSaveProfile = async () => {
     try {
@@ -143,50 +219,66 @@ export default function ProfileScreen() {
           onChange={handleChangePassword}
           onCancel={() => setShowChangePassword(false)}
         />
-      ) : showEditProfile ? (
-        <EditProfileForm
-          fullname={fullname}
-          setFullname={setFullname}
-          phone={phone}
-          setPhone={setPhone}
-          onSave={handleSaveProfile}
-          onCancel={() => setShowEditProfile(false)}
+      ) : showswitchRole ? (
+        <SwitchRoleForm
+          currentRole={role || 'customer'}
+          onSwitch={handleRoleSwitch}
+          onCancel={() => setSwitchRole(false)}
         />
-      ) : (
-        <ScrollView contentContainerStyle={styles.container}>
-          <ProfileHeader fullname={fullname} email={email} />
-          <ProfileInfoSection role={role as string} phone={phone} riderDocuments={riderDocuments} vehicle={vehicle} />
+      )
+        : showEditProfile ? (
+          <EditProfileForm
+            fullname={fullname}
+            setFullname={setFullname}
+            phone={phone}
+            setPhone={setPhone}
+            onSave={handleSaveProfile}
+            onCancel={() => setShowEditProfile(false)}
+          />
+        ) : (
+          <ScrollView contentContainerStyle={styles.container}>
+            <ProfileHeader fullname={fullname} email={email} />
+            <ProfileInfoSection role={role as string} phone={phone} riderDocuments={riderDocuments} vehicle={vehicle} />
 
-          <AppButton
-            title="Edit Profile"
-            onPress={() => setShowEditProfile(true)}
-            Icon={Edit2Icon}
-            iconColor="#FFF"
-            iconSize={28}
-            style={{ backgroundColor: '#007AFF' }}
-            textStyle={{ color: '#FFF' }}
-          />
-          <AppButton
-            title="Change Password"
-            onPress={() => setShowChangePassword(true)}
-            Icon={EditIcon}
-            iconColor="#FFF"
-            iconSize={28}
-            style={{ backgroundColor: '#007AFF' }}
-            textStyle={{ color: '#FFF' }}
-          />
-          <AppButton
-            title="Logout"
-            onPress={handleLogout}
-            Icon={LogOut}
-            iconColor="#FF3B30"
-            iconSize={28}
-            style={{ backgroundColor: '#fff' }}
-            textStyle={{ color: '#FF3B30' }}
-          />
-        </ScrollView>
+            <AppButton
+              title="Edit Profile"
+              onPress={() => setShowEditProfile(true)}
+              Icon={Edit2Icon}
+              iconColor="#FFF"
+              iconSize={28}
+              style={{ backgroundColor: '#007AFF' }}
+              textStyle={{ color: '#FFF' }}
+            />
+            <AppButton
+              title="Change Password"
+              onPress={() => setShowChangePassword(true)}
+              Icon={EditIcon}
+              iconColor="#FFF"
+              iconSize={28}
+              style={{ backgroundColor: '#007AFF' }}
+              textStyle={{ color: '#FFF' }}
+            />
+            <AppButton
+              title={`Switch to ${role === 'customer' ? 'Rider' : 'Customer'}`}
+              onPress={() => setSwitchRole(true)}
+              iconColor="#FFF"
+              iconSize={28}
+              style={{ backgroundColor: '#007AFF' }}
+              textStyle={{ color: '#FFF' }}
+            />
 
-      )}
+            <AppButton
+              title="Logout"
+              onPress={handleLogout}
+              Icon={LogOut}
+              iconColor="#FF3B30"
+              iconSize={28}
+              style={{ backgroundColor: '#fff' }}
+              textStyle={{ color: '#FF3B30' }}
+            />
+          </ScrollView>
+
+        )}
 
     </ScrollView>
   );
@@ -289,3 +381,7 @@ const styles = StyleSheet.create({
     elevation: 4, // For Android
   },
 });
+
+
+
+

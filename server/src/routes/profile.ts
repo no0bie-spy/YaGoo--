@@ -15,7 +15,7 @@ profileRouter.put(
   profileController.editProfileDetails
 );
 
-
+profileRouter.post('/switch-role',profileController.switchRole)
 profileRouter.get('/riderProfile', profileController.viewRiderProfile);
 
-export default profileRouter;  // Export the profileRouter to be used in other files
+export default profileRouter;  
