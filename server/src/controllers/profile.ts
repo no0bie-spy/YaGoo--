@@ -270,7 +270,7 @@ const switchRole = async (req: IRequest, res: Response): Promise<void> => {
     const userId = req.userId;
     if (!userId) {
       res.status(401).json({
-        details: [{ message: "Unauthorized: User ID not found" }]
+        details: [{ message: 'Unauthorized: User ID not found' }],
       });
       return;
     }
@@ -278,128 +278,135 @@ const switchRole = async (req: IRequest, res: Response): Promise<void> => {
     const existingUser = await User.findById(userId);
     if (!existingUser) {
       res.status(404).json({
-        details: [{ message: "User not found" }]
+        details: [{ message: 'User not found' }],
       });
       return;
     }
 
-   
-    if (existingUser.role === "customer") {
-      
+    if (existingUser.role === 'customer') {
       const existingRider = await Rider.findOne({ userId });
-      
+
       if (!existingRider) {
-       
         res.status(403).json({
-          details: [{ 
-            message: "Rider registration required",
-            requiresRegistration: true 
-          }]
+          details: [
+            {
+              message: 'Rider registration required',
+              requiresRegistration: true,
+            },
+          ],
         });
         return;
       }
 
-    
-      existingUser.role = "rider";
+      existingUser.role = 'rider';
       await existingUser.save();
-      
+
       res.status(200).json({
-        details: [{ 
-          message: "Role switched from customer to rider",
-          currentRole: "rider",
-          requiresRegistration: false
-        }]
+        details: [
+          {
+            message: 'Role switched from customer to rider',
+            currentRole: 'rider',
+            requiresRegistration: false,
+          },
+        ],
       });
       return;
     }
 
     // If current role is rider
-    if (existingUser.role === "rider") {
+    if (existingUser.role === 'rider') {
       // Change role to customer
-      existingUser.role = "customer";
+      existingUser.role = 'customer';
       await existingUser.save();
 
       res.status(200).json({
-        details: [{ 
-          message: "Role switched from rider to customer",
-          currentRole: "customer",
-          requiresRegistration: false
-        }]
+        details: [
+          {
+            message: 'Role switched from rider to customer',
+            currentRole: 'customer',
+            requiresRegistration: false,
+          },
+        ],
       });
       return;
     }
 
     // Invalid role
     res.status(400).json({
-      details: [{ message: "Invalid current role" }]
+      details: [{ message: 'Invalid current role' }],
     });
-
   } catch (error) {
     console.error('Switch role error:', error);
     res.status(500).json({
-      details: [{
-        message: error instanceof Error 
-          ? error.message 
-          : 'An unexpected error occurred while switching roles'
-      }]
+      details: [
+        {
+          message:
+            error instanceof Error
+              ? error.message
+              : 'An unexpected error occurred while switching roles',
+        },
+      ],
     });
   }
 };
 
 //delete user profile
-const deleteUser = async (
-  req: IRequest,
-  res: Response,
-  next: NextFunction
-) => {
+const deleteUser = async (req: IRequest, res: Response):Promise<void> => {
   try {
-    const userId = req.userId; // assuming this is set via middleware
+    const userId = req.userId; 
 
     // Check if user is authenticated
     if (!userId) {
-      return res.status(401).json({ message: 'Unauthorized' });
+       res.status(401).json({
+        details: [
+          {
+            message: 'Unauthorized',
+          },
+        ],
+      });
+      return
     }
 
     // Check if user exists
-    const existingUser = await User.findById(userId);
+    const existingUser = await User.findOne({_id:userId});
     if (!existingUser) {
-      return res.status(404).json({
+      res.status(404).json({
         details: [{ message: 'User does not exist' }],
       });
+      return 
     }
 
     // Optionally delete related documents for riders
     if (existingUser.role === 'rider') {
       await RiderDocuments.deleteOne({ riderId: userId });
       await Vehicle.deleteOne({ riderId: userId });
+      await Rider.deleteOne({userId:userId})
     }
 
     // Delete the user
     await User.findByIdAndDelete(userId);
 
-    return res.status(200).json({
+    res.status(200).json({
       message: 'User deleted successfully',
     });
-  } catch (e: unknown) {
+    return
+  } catch (e: any) {
     console.error('Error deleting user:', e);
     if (e instanceof Error) {
-      return res.status(500).json({ message: e.message });
+      res.status(500).json({ message: e.message });
     }
-    return res.status(500).json({ message: 'An unknown error occurred' });
+     res.status(500).json({ message: 'An unknown error occurred' });
   }
 };
-
-
 
 // Add switchRole to the controller export
 const profileController = {
   userDetails,
-  editProfileDetails, 
+  editProfileDetails,
   viewHistory,
   viewRiderProfile,
   switchRole, // Add this line
-  deleteUser
-
+  deleteUser,
 };
 
 export default profileController;
