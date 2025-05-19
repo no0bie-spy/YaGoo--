@@ -346,13 +346,60 @@ const switchRole = async (req: IRequest, res: Response): Promise<void> => {
   }
 };
 
+//delete user profile
+const deleteUser = async (
+  req: IRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = req.userId; // assuming this is set via middleware
+
+    // Check if user is authenticated
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    // Check if user exists
+    const existingUser = await User.findById(userId);
+    if (!existingUser) {
+      return res.status(404).json({
+        details: [{ message: 'User does not exist' }],
+      });
+    }
+
+    // Optionally delete related documents for riders
+    if (existingUser.role === 'rider') {
+      await RiderDocuments.deleteOne({ riderId: userId });
+      await Vehicle.deleteOne({ riderId: userId });
+    }
+
+    // Delete the user
+    await User.findByIdAndDelete(userId);
+
+    return res.status(200).json({
+      message: 'User deleted successfully',
+    });
+  } catch (e: unknown) {
+    console.error('Error deleting user:', e);
+    if (e instanceof Error) {
+      return res.status(500).json({ message: e.message });
+    }
+    return res.status(500).json({ message: 'An unknown error occurred' });
+  }
+};
+
+
+
 // Add switchRole to the controller export
 const profileController = {
   userDetails,
   editProfileDetails, 
   viewHistory,
   viewRiderProfile,
-  switchRole // Add this line
+  switchRole, // Add this line
+  deleteUser
+
 };
 
 export default profileController;

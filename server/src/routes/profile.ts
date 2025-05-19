@@ -18,4 +18,8 @@ profileRouter.put(
 profileRouter.post('/switch-role',profileController.switchRole)
 profileRouter.get('/riderProfile', profileController.viewRiderProfile);
 
+profileRouter.delete('/deleteProfile', profileController.deleteUser);
+
+
+
 export default profileRouter;  
