@@ -8,6 +8,7 @@ import Vehicle from '../models/vehicle';
 import Rider from '../models/rider';
 import { riderUpload } from '../routes/auth';
 import authController from './auth';
+import bcrypt from 'bcrypt';
 
 // Fetch user details (common for customer and rider)
 const userDetails = async (
@@ -400,6 +401,63 @@ const deleteUser = async (req: IRequest, res: Response):Promise<void> => {
   }
 };
 
+
+//change password
+const changePassword = async (req: IRequest, res: Response):Promise<void> => {
+  try {
+    const userId = req.userId; 
+    const {oldPassword,newPassword} = req.body;
+
+    // Check if user is authenticated
+    if (!userId) {
+       res.status(401).json({
+        details: [
+          {
+            message: 'Unauthorized',
+          },
+        ],
+      });
+      return
+    }
+
+    // Check if user exists
+    const existingUser = await User.findOne({_id:userId});
+    if (!existingUser) {
+      res.status(404).json({
+        details: [{ message: 'User does not exist' }],
+      });
+      return 
+    }
+
+    const matched = await bcrypt.compare(oldPassword,existingUser.password);
+
+    if(!matched){
+      res.status(404).json({
+        details: [{
+          message: 'Old password is wrong'
+        }]
+      })
+      return
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    
+    existingUser.password= hashedPassword;
+    await existingUser.save();
+       
+    res.status(200).json({
+      message: 'Password changed successfully',
+    });
+    return
+  } catch (e: any) {
+    console.error('Error deleting user:', e);
+    if (e instanceof Error) {
+      res.status(500).json({ message: e.message });
+    }
+     res.status(500).json({ message: 'An unknown error occurred' });
+  }
+};
+
 // Add switchRole to the controller export
 const profileController = {
   userDetails,
@@ -408,6 +466,7 @@ const profileController = {
   viewRiderProfile,
   switchRole, // Add this line
   deleteUser,
+  changePassword
 };
 
 export default profileController;
