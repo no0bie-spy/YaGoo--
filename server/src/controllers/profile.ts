@@ -304,7 +304,8 @@ const switchRole = async (req: IRequest, res: Response): Promise<void> => {
       res.status(200).json({
         details: [
           {
-            message: 'Role switched from customer to rider',
+            existingUser,
+          message: 'Role switched from customer to rider',
             currentRole: 'rider',
             requiresRegistration: false,
           },

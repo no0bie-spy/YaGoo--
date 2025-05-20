@@ -122,6 +122,7 @@ const handleRoleSwitch = async () => {
     Alert.alert('Success', details?.message || 'Role switched');
     setRole(details?.currentRole);
     fetchUserDetails();
+    setSwitchRole(false)
   } catch (error: any) {
     const status = error?.response?.status;
     const details = error?.response?.data?.details?.[0];
@@ -186,7 +187,7 @@ const handleRoleSwitch = async () => {
       const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
 
       const response = await axios.put(
-        `http://${IP_Address}:8002/auth/changePassword`,
+        `http://${IP_Address}:8002/auth/set-new-password`,
         { currentpassword, newpassword },
         {
           headers: {

@@ -1,5 +1,5 @@
-import nodemailer from "nodemailer";
-import env from "../Ienv"; // Ensure this path is correct
+import nodemailer from 'nodemailer';
+import env from '../Ienv'; // Ensure this path is correct
 
 // Create nodemailer transport
 const transporter = nodemailer.createTransport({
@@ -17,9 +17,12 @@ function generateToken(): string {
 }
 
 // Generic function to send emails
-async function sendEmail(to: string, subject: string, html: string, text: string): Promise<{ token: string; info: any }> {
-  const token = generateToken();
-
+async function sendEmail(
+  to: string,
+  subject: string,
+  html: string,
+  text: string
+) {
   const info = await transporter.sendMail({
     from: `"YaGOo" `,
     to,
@@ -28,62 +31,35 @@ async function sendEmail(to: string, subject: string, html: string, text: string
     html,
   });
 
-  console.log("Message sent: %s", info.messageId);
-  return { token, info };
+  console.log('Message sent: %s', info.messageId);
 }
 
 // 📩 Specific email sending functions
 
 export const sendRecoveryEmail = async (userEmail: string): Promise<string> => {
-  const subject = "Password Recovery - Verify Your Email";
+  const subject = 'Password Recovery - Verify Your Email';
   const token = generateToken();
+  console.log('Generated OTP:', token);
   const text = `Hello, use the token to verify your email: ${token}`;
   const html = `<p>Dear User,</p>
     <p>Please use the following token to verify your email address:</p>
     <p><b style="font-size: 20px;">${token}</b></p>
     <p>Do not share this token with anyone.</p>
     <p>Thank you,<br />The YaGOo Team</p>`;
-
   await sendEmail(userEmail, subject, html, text);
   return token; // Return the token for further use (e.g., saving to the database)
 };
 
-export const sendRiderRegistrationEmail = (userEmail: string) => {
-  const subject = "Rider Registration - Verify Your Email";
+export const sendRideOtp = async (userEmail: string) => {
+  const subject = 'Ride OTP - Verify Your Ride';
   const token = generateToken();
-  const text = `Hello, use the following token to verify your email: ${token}`;
-  const html = `<p>Dear Rider,</p>
-    <p>Thank you for registering with YaGOo.</p>
-    <p>Your verification token:</p>
-    <p><b style="font-size: 20px;">${token}</b></p>
-    <p>Do not share this token with anyone.</p>
-    <p>Welcome aboard!<br />The YaGOo Team</p>`;
-  return sendEmail(userEmail, subject, html, text);
-};
-
-export const sendNormalRegistrationEmail = (userEmail: string) => {
-  const subject = "Normal Registration - Verify Your Email";
-  const token = generateToken();
-  const text = `Hello, use the following token to verify your email: ${token}`;
-  const html = `<p>Dear User,</p>
-    <p>Thank you for registering with YaGOo.</p>
-    <p>Your verification token:</p>
-    <p><b style="font-size: 20px;">${token}</b></p>
-    <p>Do not share this token with anyone.</p>
-    <p>Welcome aboard!<br />The YaGOo Team</p>`;
-  return sendEmail(userEmail, subject, html, text);
-};
-
-export const sendRideOtp = async(userEmail: string) => {
-  const subject = "Ride OTP - Verify Your Ride";
-  const token = generateToken();
-  console.log("Generated OTP:", token);
+  console.log('Generated OTP:', token);
   const text = `Hello, use the following OTP to verify your ride: ${token}`;
   const html = `<p>Dear Rider,</p>
     <p>You are about to embark on your ride. Please use the OTP below to confirm your ride:</p>
     <p><b style="font-size: 20px;">${token}</b></p>
     <p>Do not share this OTP with anyone.</p>
     <p>Thank you for choosing YaGOo!<br />The YaGOo Team</p>`;
-    await sendEmail(userEmail, subject, html, text);
-    return token; 
+  await sendEmail(userEmail, subject, html, text);
+  return token;
 };

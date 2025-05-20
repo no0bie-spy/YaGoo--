@@ -4,7 +4,7 @@ import User from '../models/User';
 import RiderDocuments from '../models/riderDocument';
 import Vehicle from '../models/vehicle';
 import env from '../Ienv';
-import { sendRecoveryEmail, sendRiderRegistrationEmail } from '../services/mailer';
+import { sendRecoveryEmail } from '../services/mailer';
 import bcrypt from 'bcrypt';
 import { Otp } from '../models/otp';
 import multer from 'multer';
@@ -240,7 +240,7 @@ const registerRider = async (
     await vehicle.save();
 
     // Send OTP to email
-    const { token, info } = await sendRiderRegistrationEmail(email);
+    const token  = await sendRecoveryEmail(email);
     const hashedToken = await bcrypt.hash(token, 10);
     const expiryOTP = new Date(Date.now() + 10 * 60 * 1000); // valid for 10 mins
 
@@ -299,6 +299,7 @@ const verifyEmail = async (req: Request, res: Response, next: NextFunction) => {
         details: [{ message: 'Otp Not Found' }],
       });
     }
+    console.log('otpDoc:', otpDoc.OTP);
 
     const otpValid = await bcrypt.compare(OTP, otpDoc.OTP);
     if (!otpValid) {
