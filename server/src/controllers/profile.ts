@@ -388,9 +388,9 @@ const deleteUser = async (req: IRequest, res: Response):Promise<void> => {
       });
       return 
     }
-
+    const exsitingRider=await Rider.findOne({userId:existingUser._id})
     // Optionally delete related documents for riders
-    if (existingUser.role === 'rider') {
+    if (existingUser.role === 'rider' || exsitingRider) {
       await RiderDocuments.deleteOne({ riderId: userId });
       await Vehicle.deleteOne({ riderId: userId });
       await Rider.deleteOne({userId:userId})
