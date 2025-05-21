@@ -129,11 +129,7 @@ const editProfileDetails = async (
 };
 
 //View history for both riders and customer
-const viewHistory = async (
-  req: IRequest,
-  res: Response,
- 
-) => {
+const viewHistory = async (req: IRequest, res: Response) => {
   try {
     // Check if the user is authenticated
     if (!req.userId) {
@@ -197,16 +193,19 @@ const viewHistory = async (
     // return res.status(200).json({ rides: history });
     return res.status(200).json({
       rides: history || [],
-      message: history.length === 0 ? "No ride history found." : "Ride history fetched successfully.",
+      message:
+        history.length === 0
+          ? 'No ride history found.'
+          : 'Ride history fetched successfully.',
     });
   } catch (error) {
-    if(error instanceof Error){
+    if (error instanceof Error) {
       res.status(511).json({
-        message:error.message
-      })
+        message: error.message,
+      });
     }
     console.error('Error fetching ride history:', error);
-     res.status(500).json({ message: 'Something went wrong.' });
+    res.status(500).json({ message: 'Something went wrong.' });
   }
 };
 
@@ -317,7 +316,7 @@ const switchRole = async (req: IRequest, res: Response): Promise<void> => {
         details: [
           {
             existingUser,
-          message: 'Role switched from customer to rider',
+            message: 'Role switched from customer to rider',
             currentRole: 'rider',
             requiresRegistration: false,
           },
@@ -364,108 +363,109 @@ const switchRole = async (req: IRequest, res: Response): Promise<void> => {
 };
 
 //delete user profile
-const deleteUser = async (req: IRequest, res: Response):Promise<void> => {
+const deleteUser = async (req: IRequest, res: Response): Promise<void> => {
   try {
-    const userId = req.userId; 
+    const userId = req.userId;
 
     // Check if user is authenticated
     if (!userId) {
-       res.status(401).json({
-        details: [
-          {
-            message: 'Unauthorized',
-          },
-        ],
+      res.status(401).json({
+        details: [{ message: 'Unauthorized' }],
       });
-      return
+      return;
     }
 
     // Check if user exists
-    const existingUser = await User.findOne({_id:userId});
+    const existingUser = await User.findById(userId);
     if (!existingUser) {
       res.status(404).json({
         details: [{ message: 'User does not exist' }],
       });
-      return 
-    }
-    const exsitingRider=await Rider.findOne({userId:existingUser._id})
-    // Optionally delete related documents for riders
-    if (existingUser.role === 'rider' || exsitingRider) {
-      await RiderDocuments.deleteOne({ riderId: userId });
-      await Vehicle.deleteOne({ riderId: userId });
-      await Rider.deleteOne({userId:userId})
+      return;
     }
 
-    // Delete the user
+    const existingRider = await Rider.findOne({ userId: existingUser._id });
+
+    // Delete related rider data if applicable
+    if (existingUser.role === 'rider' || existingRider) {
+      await Promise.all([
+        RiderDocuments.deleteOne({ riderId: userId }),
+        Vehicle.deleteOne({ riderId: userId }),
+        Rider.deleteOne({ userId: userId }),
+      ]);
+    }
+
+    // Delete user
     await User.findByIdAndDelete(userId);
 
     res.status(200).json({
       message: 'User deleted successfully',
     });
-    return
   } catch (e: any) {
     console.error('Error deleting user:', e);
-    if (e instanceof Error) {
-      res.status(500).json({ message: e.message });
-    }
-     res.status(500).json({ message: 'An unknown error occurred' });
+
+    // Only respond once
+    const errorMessage =
+      e instanceof Error ? e.message : 'An unknown error occurred';
+    res.status(500).json({ message: errorMessage });
   }
 };
 
-
 //change password
-const changePassword = async (req: IRequest, res: Response):Promise<void> => {
+const changePassword = async (req: IRequest, res: Response): Promise<void> => {
   try {
-    const userId = req.userId; 
-    const {oldPassword,newPassword} = req.body;
+    const userId = req.userId;
+    const { oldPassword, newPassword } = req.body;
 
     // Check if user is authenticated
     if (!userId) {
-       res.status(401).json({
+      res.status(401).json({
         details: [
           {
             message: 'Unauthorized',
           },
         ],
       });
-      return
+      return;
     }
 
     // Check if user exists
-    const existingUser = await User.findOne({_id:userId});
+    const existingUser = await User.findOne({ _id: userId });
     if (!existingUser) {
       res.status(404).json({
         details: [{ message: 'User does not exist' }],
       });
-      return 
+      return;
     }
 
-    const matched = await bcrypt.compare(oldPassword,existingUser.password);
+    const matched = await bcrypt.compare(oldPassword, existingUser.password);
 
-    if(!matched){
+    if (!matched) {
       res.status(404).json({
-        details: [{
-          message: 'Old password is wrong'
-        }]
-      })
-      return
+        details: [
+          {
+            message: 'Old password is wrong',
+          },
+        ],
+      });
+      return;
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    
-    existingUser.password= hashedPassword;
+
+    existingUser.password = hashedPassword;
     await existingUser.save();
-       
+
     res.status(200).json({
       message: 'Password changed successfully',
     });
-    return
+    return;
   } catch (e: any) {
     console.error('Error deleting user:', e);
     if (e instanceof Error) {
       res.status(500).json({ message: e.message });
     }
-     res.status(500).json({ message: 'An unknown error occurred' });
+    res.status(500).json({ message: 'An unknown error occurred' });
   }
 };
 
@@ -477,7 +477,7 @@ const profileController = {
   viewRiderProfile,
   switchRole, // Add this line
   deleteUser,
-  changePassword
+  changePassword,
 };
 
 export default profileController;
