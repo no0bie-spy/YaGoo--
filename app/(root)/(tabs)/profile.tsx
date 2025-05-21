@@ -11,6 +11,7 @@ import EditProfileForm from '@/components/Profile/EditProfileForm';
 import ProfileInfoSection from '@/components/Profile/ProfileInfoSection';
 import ProfileHeader from '@/components/Profile/ProfileHeader';
 import SwitchRoleForm from '@/components/Profile/SwitchRoleForm';
+import DeleteProfile from '@/components/Profile/DeleteProfile';
 
 export default function ProfileScreen() {
   const [role, setRole] = useState<string | null>(null);
@@ -22,6 +23,7 @@ export default function ProfileScreen() {
   const [showChangePassword, setShowChangePassword] = useState(false); // State to toggle Change Password view
   const [showEditProfile, setShowEditProfile] = useState(false); // State to toggle Edit Profile view
   const [currentpassword, setcurrentPassword] = useState('');
+  const [showdeleteprofile, setShowDeleteProfile] = useState(false)
   const [newpassword, setnewPassword] = useState('');
   const [showswitchRole, setSwitchRole] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
@@ -85,77 +87,77 @@ export default function ProfileScreen() {
     }
   };
 
-const handleRoleSwitch = async () => {
-  try {
-    const token = await getSession('accessToken');
+  const handleRoleSwitch = async () => {
+    try {
+      const token = await getSession('accessToken');
 
-    const response = await axios.post(
-      `http://${IP_Address}:8002/profile/switch-role`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await axios.post(
+        `http://${IP_Address}:8002/profile/switch-role`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const details = response.data.details?.[0];
+
+      if (details?.requiresRegistration) {
+        Alert.alert(
+          'Registration Required',
+          'You must register as a rider first. Proceed to register?',
+          [
+            {
+              text: 'Yes',
+              onPress: () => router.push({
+                pathname: '/(auth)/rider-register',
+                params: { email },
+              }),
+            },
+            { text: 'Cancel', style: 'cancel' },
+          ]
+        );
+        return;
       }
-    );
 
-    const details = response.data.details?.[0];
+      Alert.alert('Success', details?.message || 'Role switched');
+      setRole(details?.currentRole);
+      fetchUserDetails();
+      setSwitchRole(false)
+    } catch (error: any) {
+      const status = error?.response?.status;
+      const details = error?.response?.data?.details?.[0];
 
-    if (details?.requiresRegistration) {
-      Alert.alert(
-        'Registration Required',
-        'You must register as a rider first. Proceed to register?',
-        [
-          {
-            text: 'Yes',
-            onPress: () => router.push({
-              pathname: '/(auth)/rider-register',
-              params: { email },
-            }),
-          },
-          { text: 'Cancel', style: 'cancel' },
-        ]
-      );
-      return;
+      const message = details?.message;
+      const requiresRegistration = details?.requiresRegistration;
+
+      if (requiresRegistration) {
+        Alert.alert(
+          'Registration Required',
+          'You must register as a rider first. Proceed to register?',
+          [
+            {
+              text: 'Yes',
+              onPress: () => router.push({
+                pathname: '/(auth)/rider-register',
+                params: { email },
+              }),
+            },
+            { text: 'Cancel', style: 'cancel' },
+          ]
+        );
+        return;
+      }
+
+      if (status === 401) {
+        Alert.alert('Unauthorized', 'Please log in again.');
+        router.replace('/(auth)/login');
+      } else {
+        Alert.alert('Error', message || 'Failed to switch role.');
+      }
     }
-
-    Alert.alert('Success', details?.message || 'Role switched');
-    setRole(details?.currentRole);
-    fetchUserDetails();
-    setSwitchRole(false)
-  } catch (error: any) {
-    const status = error?.response?.status;
-    const details = error?.response?.data?.details?.[0];
-
-    const message = details?.message;
-    const requiresRegistration = details?.requiresRegistration;
-
-    if (requiresRegistration) {
-      Alert.alert(
-        'Registration Required',
-        'You must register as a rider first. Proceed to register?',
-        [
-          {
-            text: 'Yes',
-            onPress: () => router.push({
-              pathname: '/(auth)/rider-register',
-              params: { email },
-            }),
-          },
-          { text: 'Cancel', style: 'cancel' },
-        ]
-      );
-      return;
-    }
-
-    if (status === 401) {
-      Alert.alert('Unauthorized', 'Please log in again.');
-      router.replace('/(auth)/login');
-    } else {
-      Alert.alert('Error', message || 'Failed to switch role.');
-    }
-  }
-};
+  };
 
 
   const handleSaveProfile = async () => {
@@ -187,8 +189,8 @@ const handleRoleSwitch = async () => {
       const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
 
       const response = await axios.put(
-        `http://${IP_Address}:8002/auth/set-new-password`,
-        { currentpassword, newpassword },
+        `http://${IP_Address}:8002/profile/changePassword`,
+        { oldPassword: currentpassword, newPassword: newpassword },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -205,6 +207,55 @@ const handleRoleSwitch = async () => {
     }
   };
 
+  const handleDeleteProfile = async () => {
+    Alert.alert(
+      'Confirm Deletion',
+      'Are you sure you want to delete your profile? This action cannot be undone.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const token = await getSession('accessToken');
+
+              const response = await axios.delete(`http://${IP_Address}:8002/profile/deleteProfile`, {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              });
+
+              const data = response.data;
+
+              if (data?.message) {
+                Alert.alert('Success', data.message);
+                router.push('/(auth)/login');
+              } else {
+                setErrors(['Unexpected response from server.']);
+              }
+
+            } catch (error: any) {
+              console.log('Full error:', error);
+
+              if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
+                const errorMessages = error.response.data.details.map((err: any) => err.message);
+                setErrors(errorMessages);
+              } else if (error.response?.data?.message) {
+                setErrors([error.response.data.message]);
+              } else {
+                setErrors(['Something went wrong. Please try again later.']);
+              }
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
   useEffect(() => {
     fetchUserDetails();
   }, []);
@@ -225,6 +276,12 @@ const handleRoleSwitch = async () => {
           currentRole={role || 'customer'}
           onSwitch={handleRoleSwitch}
           onCancel={() => setSwitchRole(false)}
+        />
+      ) : showdeleteprofile ? (
+        <DeleteProfile
+          title='Delete Profile'
+          onDelete={handleDeleteProfile}
+          onCancel={() => setShowDeleteProfile(false)}
         />
       )
         : showEditProfile ? (
@@ -267,7 +324,11 @@ const handleRoleSwitch = async () => {
               style={{ backgroundColor: '#007AFF' }}
               textStyle={{ color: '#FFF' }}
             />
-
+            <AppButton
+              title='Delete Profile'
+              onPress={() => setShowDeleteProfile(true)}
+              style={{ backgroundColor: '#FF3B30' }}
+            />
             <AppButton
               title="Logout"
               onPress={handleLogout}
