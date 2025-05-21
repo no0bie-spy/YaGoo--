@@ -88,6 +88,12 @@ export default function Login() {
         style={{ backgroundColor: 'transparent' }}
         textStyle={{ color: '#2196F3' }}
       />
+      <AppButton
+        title="Forget Password?"
+        onPress={() => router.push('/forgot-password')}
+        style={{ backgroundColor: 'transparent' }}
+        textStyle={{ color: '#2196F3' }}
+      />
     </View>
   );
 }

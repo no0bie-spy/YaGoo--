@@ -455,7 +455,7 @@ const changePassword = async (
   res: Response,
 ) => {
   try {
-    const { email, OTP, newPassword, retypePassword } = req.body;
+    const { email, OTP, newPassword } = req.body;
 
     const existingUser = await User.findOne({ email });
 
@@ -464,12 +464,6 @@ const changePassword = async (
       return res.status(400).json({ details: [{ message: 'User not exist' }] });
     }
 
-    // compare two passwords
-    if (newPassword != retypePassword) {
-      return res
-        .status(400)
-        .json({ details: [{ message: 'Password doesnot match' }] });
-    }
 
     //check otp exists or not
     const otpDoc = await Otp.findOne({ email });
