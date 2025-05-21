@@ -132,7 +132,7 @@ const editProfileDetails = async (
 const viewHistory = async (
   req: IRequest,
   res: Response,
-  next: NextFunction
+ 
 ) => {
   try {
     // Check if the user is authenticated
@@ -156,9 +156,11 @@ const viewHistory = async (
     }
 
     // If no rides found, return empty array
-    if (rides.length === 0) {
-      return res.status(404).json({ message: 'No ride history found.' });
-    }
+    // if (rides.length === 0) {
+    //   rides: [];
+    //    res.status(200).json({ message: 'No ride history found.' });
+    //    return
+    // }
 
     // Format each ride with related bid and time info
     const history = await Promise.all(
@@ -192,10 +194,19 @@ const viewHistory = async (
 
     console.log('Ride history fetched successfully:', history);
 
-    return res.status(200).json({ rides: history });
+    // return res.status(200).json({ rides: history });
+    return res.status(200).json({
+      rides: history || [],
+      message: history.length === 0 ? "No ride history found." : "Ride history fetched successfully.",
+    });
   } catch (error) {
+    if(error instanceof Error){
+      res.status(511).json({
+        message:error.message
+      })
+    }
     console.error('Error fetching ride history:', error);
-    return res.status(500).json({ message: 'Something went wrong.' });
+     res.status(500).json({ message: 'Something went wrong.' });
   }
 };
 

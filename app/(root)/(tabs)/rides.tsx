@@ -35,6 +35,13 @@ export default function RidesScreen() {
       });
 
       const data = await response.data;
+      const rides = response.data.rides;
+
+      if (rides.length === 0) {
+        console.log("No rides found.");
+        // Show "No rides yet" UI
+        setRides([])
+      }
       console.log("Response data:", data); // Debugging log
       console.log("Fetched rides:", data);
       // Validate the response structure
@@ -136,12 +143,20 @@ export default function RidesScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>My Rides</Text>
-      <FlatList
-        data={rides}
-        renderItem={renderRide}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
-      />
+      {rides && rides.length == 0 ? (
+        <View style={styles.norides}>
+          <Text style={styles.title} >No rides yet.</Text>
+        </View>
+      ) : (
+
+        <FlatList
+          data={rides}
+          renderItem={renderRide}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContainer}
+        />
+      )
+      }
     </View>
   );
 }
@@ -150,6 +165,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  norides: {
+    display: 'flex',
+    alignItems: 'center',
+    height: '100%',
   },
   title: {
     fontSize: 24,
