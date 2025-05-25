@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -9,10 +9,9 @@ import {
 import * as Location from 'expo-location';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
-import { io } from 'socket.io-client';
+import { useFocusEffect } from '@react-navigation/native';
 
 import MapComponent from '@/components/Home/MapComponent';
-
 import BidForm from '@/components/Home/BidForm';
 import RiderDashboard from '@/components/Rider/RiderDahsboard';
 import AvailableRidersList from '@/components/Rides/AvailableRidersList';
@@ -21,12 +20,8 @@ import { getSession, getUserRole } from '@/usableFunction/Session';
 import MapPickerScreen from '@/components/Home/MapPickerScreen';
 import FindRideForm from '@/components/Home/FindRideForm';
 
-// Import MapPickerScreen as a component
-
 const screenHeight = Dimensions.get('window').height;
-const IP_Address = process.env.EXPO_PUBLIC_ADDRESS || 'YOUR_IP_ADDRESS'; // Replace with your IP
-
-const socket = io(`http://${IP_Address}:8002`); // Replace with your server's IP and port
+const IP_Address = process.env.EXPO_PUBLIC_ADDRESS || 'YOUR_IP_ADDRESS';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -48,73 +43,81 @@ export default function HomeScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [hasPlacedBid, setHasPlacedBid] = useState(false);
 
-  // Get location & user role
-  useEffect(() => {
-    (async () => {
-      try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          Alert.alert(
-            'Permission Denied',
-            'Location permission is required to use this feature. Using a fallback location.'
-          );
-          setLocation({
-            coords: {
-              latitude: 28.2334, // Fallback latitude
-              longitude: 83.9500, // Fallback longitude
-            },
-          } as Location.LocationObject);
-          return;
-        }
+  // Function to fetch user role
+  const fetchUserRole = async () => {
+    try {
+      const userRole = await getUserRole();
+      console.log('Current user role:', userRole);
+      setRole(userRole);
+    } catch (err) {
+      console.error('Error fetching user role:', err);
+    }
+  };
 
-        const currentLocation = await Location.getCurrentPositionAsync({});
-        setLocation(currentLocation);
-
-        const userRole = await getUserRole();
-        setRole(userRole);
-      } catch (err) {
-        console.error('Location Error:', err);
-        Alert.alert('Error', 'Failed to get current location. Using a fallback location.');
+  // Function to get current location
+  const fetchLocation = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permission Denied',
+          'Location permission is required to use this feature. Using a fallback location.'
+        );
         setLocation({
           coords: {
             latitude: 28.2334, // Fallback latitude
             longitude: 83.9500, // Fallback longitude
           },
         } as Location.LocationObject);
-      } finally {
-        setIsLoading(false);
+        return;
       }
-    })();
-  }, []);
 
+      const currentLocation = await Location.getCurrentPositionAsync({});
+      setLocation(currentLocation);
+    } catch (err) {
+      console.error('Location Error:', err);
+      Alert.alert('Error', 'Failed to get current location. Using a fallback location.');
+      setLocation({
+        coords: {
+          latitude: 28.2334, // Fallback latitude
+          longitude: 83.9500, // Fallback longitude
+        },
+      } as Location.LocationObject);
+    }
+  };
+
+  // Initialize data on first load
   useEffect(() => {
-    // Connect to the socket server
-    socket.on('connect', () => {
-      console.log('Connected to socket server:', socket.id);
-
-      // Listen for ride-related events
-      socket.on('rideRequest', (data) => {
-        console.log('New ride request:', data);
-        Alert.alert('New Ride Request', `Ride ID: ${data.rideId}`);
-      });
-
-      socket.on('rideAccepted', (data) => {
-        console.log('Ride accepted:', data);
-        Alert.alert('Ride Accepted', `Ride ID: ${data.rideId}`);
-      });
-
-      socket.on('rideCompleted', (data) => {
-        console.log('Ride completed:', data);
-        Alert.alert('Ride Completed', `Ride ID: ${data.rideId}`);
-      });
-    });
-
-    // Cleanup on component unmount
-    return () => {
-      socket.disconnect();
-      console.log('Disconnected from socket server');
+    const initializeData = async () => {
+      setIsLoading(true);
+      await fetchLocation();
+      await fetchUserRole();
+      setIsLoading(false);
     };
+    
+    initializeData();
   }, []);
+
+  // Use useFocusEffect to refresh role and data when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      console.log('Screen focused - refreshing user role and data');
+      fetchUserRole();
+      
+      // Reset ride-related state if coming back to this screen
+      if (!rideId) {
+        setPickup({ address: '', coordinates: null });
+        setDestination({ address: '', coordinates: null });
+        setHasPlacedBid(false);
+        setPrice('');
+        setAvailableRiders([]);
+      }
+      
+      return () => {
+        // Cleanup if needed when screen is unfocused
+      };
+    }, [rideId])
+  );
 
   const handlePickupLocationSelect = (location: { address: string; coordinates: any }) => {
     setPickup(location);

@@ -12,7 +12,8 @@ import Rider from '../models/rider';
 import { sendRideOtp } from '../services/mailer';
 import bcrypt from 'bcrypt';
 import RiderList from '../models/riderList';
-import { io } from '../socket'; // Import the io instance
+
+import { console } from 'inspector';
 
 const BASE_RATE = 15; // Rs. 15 per km
 
@@ -231,14 +232,7 @@ const requestRideAsRider = async (req: IRequest, res: Response) => {
       status: 'not-accepted',
     });
 
-    // Emit event to notify the customer about the new ride request
-    io.to(rideId).emit('rideRequest', {
-      riderId,
-      rideId,
-      status: 'not-accepted',
-    });
-
-    return res.status(201).json({
+      return res.status(201).json({
       success: true,
       rideRequest,
       message: 'Ride request created successfully',
@@ -278,8 +272,7 @@ const getAllRequestedRides = async (req: Request, res: Response) => {
       })
     );
 
-    // Emit an event to notify riders about new ride requests
-    io.emit('newRideRequests', rideDetails);
+  
 
     return res.status(200).json({
       success: true,
@@ -359,6 +352,15 @@ const verifyRideOtp = async (req: IRequest, res: Response) => {
   try {
     const { email, rideId, riderOtp } = req.body;
 
+    if (!email || !rideId || !riderOtp) {
+      return res.status(400).json({
+        status: false,
+        message: 'Email, Ride ID, and OTP are required',
+      });
+    }
+    console.log('email', email);
+    console.log('rideId', rideId);
+    console.log('riderOtp', riderOtp);
     const otpRecord = await Otp.findOne({ email });
 
     if (!otpRecord) {
@@ -376,8 +378,7 @@ const verifyRideOtp = async (req: IRequest, res: Response) => {
       });
     }
 
-    const ride = await Ride.findOne({ _id: rideId });
-
+    const ride = await Ride.findById(rideId);
     if (!ride) {
       return res.status(404).json({
         status: false,
@@ -387,7 +388,6 @@ const verifyRideOtp = async (req: IRequest, res: Response) => {
 
     ride.status = 'in-progress';
     ride.startTimer = new Date();
-    console.log('timer ');
     await ride.save();
 
     // Delete the OTP after successful verification
@@ -474,15 +474,15 @@ const acceptRideRequestByCustomer = async (req: IRequest, res: Response) => {
     }
 
     const email = riderDetails.email;
-    console.log('email is', email);
-    const { token, info } = await sendRideOtp(email!);
-    console.log('token', token, info);
 
+    const token = await sendRideOtp(email!);
+    console.log('token', token);
     // Hash the OTP to save into the database
     const hashedToken = await bcrypt.hash(token, 10);
 
     const expiryOTP = new Date(Date.now() + 10 * 60 * 1000); // valid for 10 minutes
-
+    console.log('expiryOTP', expiryOTP);
+    console.log('hashedToken', hashedToken);
     await Otp.updateOne(
       { email }, // find by email
       {
@@ -494,12 +494,7 @@ const acceptRideRequestByCustomer = async (req: IRequest, res: Response) => {
       { upsert: true } // insert new if not exists
     );
 
-    // Emit event to notify the rider about the acceptance
-    io.to(rideRequest.riderId.toString()).emit('rideAccepted', {
-      rideId: (ride._id as unknown as string).toString(),
-      customerId: customerId.toString(),
-      message: 'Your ride request has been accepted!',
-    });
+    
 
     return res.status(200).json({
       success: true,
@@ -597,12 +592,20 @@ const viewRiderOtp = async function (req: IRequest, res: Response) {
     const user: any = await User.findById(userId);
 
     const otpRecord = await Otp.findOne({ email: user.email });
-
+    const Remail=user.email
+    console.log("email",Remail)
+    if (!otpRecord) {
+      return res.status(404).json({
+        details: [{ message: 'OTP not found',
+          email:Remail,otpRecord
+        }],
+      });
+    }
     const validOtp = otpRecord?.OTP;
 
     const validEmail = otpRecord?.email;
 
-    return res.json({
+    return res.status(200).json({
       message: `Otp has been received in your mail${validEmail}`,
       otp: validOtp,
       email: validEmail,
@@ -817,22 +820,21 @@ const topRidersByRides = async (req: IRequest, res: Response) => {
 };
 
 const rideController = {
-  createRideRequest,          // Customer creates a new ride request
-  submitBid,                  // Customer places a bid for a ride
-  cancelRide,                 // Customer cancels a ride before it’s accepted by a rider
-  getAllRequestedRides,       // Rider retrieves all ride requests from customers
-  requestRideAsRider,         // Rider sends a request to take a specific ride
-  getAvailableRiders,         // Customer retrieves all rider requests for their ride
+  createRideRequest, // Customer creates a new ride request
+  submitBid, // Customer places a bid for a ride
+  cancelRide, // Customer cancels a ride before it’s accepted by a rider
+  getAllRequestedRides, // Rider retrieves all ride requests from customers
+  requestRideAsRider, // Rider sends a request to take a specific ride
+  getAvailableRiders, // Customer retrieves all rider requests for their ride
   acceptRideRequestByCustomer, // Customer accepts one rider and sends them an OTP
-  rejectRider,                // Customer rejects a rider’s request
-  customerNotArrived,         // Rider reports that the customer hasn’t arrived at the pickup point
-  viewRiderOtp,               // Rider views the OTP sent by the customer
-  verifyRideOtp,              // Customer verifies the rider using the provided OTP
-  completedRide,              // Marks the ride as completed
-  submitRideReview,           // Customer submits a review after the ride is completed
-  payment,                    // Rider confirms that payment has been received
-  topRidersByRides,           // Retrieve top riders based on the number of completed rides
-  
+  rejectRider, // Customer rejects a rider’s request
+  customerNotArrived, // Rider reports that the customer hasn’t arrived at the pickup point
+  viewRiderOtp, // Rider views the OTP sent by the customer
+  verifyRideOtp, // Customer verifies the rider using the provided OTP
+  completedRide, // Marks the ride as completed
+  submitRideReview, // Customer submits a review after the ride is completed
+  payment, // Rider confirms that payment has been received
+  topRidersByRides, // Retrieve top riders based on the number of completed rides
 };
 
 export default rideController;

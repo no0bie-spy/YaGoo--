@@ -34,7 +34,14 @@ export default function RidesScreen() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const data =await response.data;
+      const data = await response.data;
+      const rides = response.data.rides;
+
+      if (rides.length === 0) {
+        console.log("No rides found.");
+        // Show "No rides yet" UI
+        setRides([])
+      }
       console.log("Response data:", data); // Debugging log
       console.log("Fetched rides:", data);
       // Validate the response structure
@@ -44,19 +51,33 @@ export default function RidesScreen() {
         return;
       }
 
-      // Map the response to match the Ride interface
       const formattedRides = data.rides.map((ride: any) => ({
-        id: ride._id || Math.random().toString(), // Use `_id` or fallback to a random ID
-        source: ride.start_location?.address || 'Unknown Source',
-        destination: ride.destination?.address || 'Unknown Destination',
-        status: ride.status || 'Pending', // Default to 'Pending' if status is missing
-        bidAmount: ride.amount || 0, // Default to 0 if amount is missing
-        distance: ride.distance || 0, // Default to 0 if distance is missing
-        time: ride.time || 0, // Default to 0 if time is missing
-        date: ride.date.split("T")[0]
+        id: ride._id || Math.random().toString(),
+        source: ride.start_location || 'Unknown Source',
+        destination: ride.destination || 'Unknown Destination',
+        status: ride.status || 'Pending',
+        bidAmount: ride.amount || 0,
+        distance: ride.distance || 0,
+        time: ride.totalTime || 0,
+        date: ride.date.split("T")[0],
       }));
 
+      // Sort by date in descending order (latest first)
+      interface FormattedRide {
+        id: string;
+        source: string;
+        destination: string;
+        status: string;
+        bidAmount: number;
+        distance: number;
+        time: number;
+        date: string;
+      }
+
+      formattedRides.sort((a: FormattedRide, b: FormattedRide) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
       setRides(formattedRides);
+
     } catch (error) {
       console.error('Error fetching rides:', error);
       Alert.alert('Error', 'Failed to fetch rides. Please try again later.');
@@ -67,7 +88,14 @@ export default function RidesScreen() {
   };
 
   useEffect(() => {
+    // Call fetchRides initially
     fetchRides();
+
+    // Set interval to refresh every 10 seconds
+    const intervalId = setInterval(fetchRides, 10000);
+
+    // Clear interval when component is unmounted
+    return () => clearInterval(intervalId);
   }, []);
 
   const renderRide = ({ item }: { item: Ride }) => (
@@ -98,7 +126,7 @@ export default function RidesScreen() {
       <View style={styles.footer}>
         <Clock size={16} color="#666" />
         <Text style={styles.locationText}>Distance: {item.distance} km</Text>
-        <Text style={styles.locationText}>Time: {item.time} min</Text>
+        <Text style={styles.locationText}>Time: {item.time}</Text>
         <Text style={styles.bidAmount}>Rs.{item.bidAmount}</Text>
       </View>
     </View>
@@ -115,12 +143,20 @@ export default function RidesScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>My Rides</Text>
-      <FlatList
-        data={rides}
-        renderItem={renderRide}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
-      />
+      {rides && rides.length == 0 ? (
+        <View style={styles.norides}>
+          <Text style={styles.title} >No rides yet.</Text>
+        </View>
+      ) : (
+
+        <FlatList
+          data={rides}
+          renderItem={renderRide}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContainer}
+        />
+      )
+      }
     </View>
   );
 }
@@ -129,6 +165,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  norides: {
+    display: 'flex',
+    alignItems: 'center',
+    height: '100%',
   },
   title: {
     fontSize: 24,

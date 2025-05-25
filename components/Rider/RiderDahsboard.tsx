@@ -1,20 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Alert, Button } from 'react-native';
 import axios from 'axios';
 import { getSession } from '@/usableFunction/Session';
 import { router } from 'expo-router';
-
-const screenHeight = Dimensions.get('window').height;
 
 const RiderDashboard = () => {
   const [rideRequests, setRideRequests] = useState<any[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
+  const [rideId, setRideId] = useState<string>('');
 
   const fetchRideRequests = async () => {
     try {
-      setIsLoading(true); // Start loading
+      setIsLoading(true);
       const token = await getSession('accessToken');
       if (!token) {
         setErrors(['You are not logged in. Please log in to continue.']);
@@ -22,7 +20,7 @@ const RiderDashboard = () => {
         return;
       }
 
-      const response = await axios.get(`http://${IP_Address}:8002/rides/requests`, {
+      const response = await axios.get(`http://${process.env.EXPO_PUBLIC_ADDRESS}:8002/rides/requests`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -40,7 +38,7 @@ const RiderDashboard = () => {
         setErrors(['Something went wrong.']);
       }
     } finally {
-      setIsLoading(false); // End loading
+      setIsLoading(false);
     }
   };
 
@@ -52,75 +50,77 @@ const RiderDashboard = () => {
         return;
       }
 
-      console.log('Attempting to accept ride:', rideId);
+      setIsLoading(true);
 
-      // Send request to accept the ride
       const response = await axios.post(
-        `http://${IP_Address}:8002/rides/rider-request`,
+        `http://${process.env.EXPO_PUBLIC_ADDRESS}:8002/rides/rider-request`,
         { rideId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (response.status === 201) {
-        console.log('Ride accepted successfully:', rideId);
-
-        // Remove the accepted ride from the list
-        setRideRequests((prevRequests) =>
-          prevRequests.filter((ride) => ride.rideId !== rideId)
-        );
-
+        setRideRequests((prev) => prev.filter((ride) => ride.rideId !== rideId));
         Alert.alert('Success', `You have accepted ride: ${rideId}`);
-      } else {
-        console.error('Unexpected response status:', response.status);
+        setRideId(rideId);
+      }
+    } catch (error: any) {
+      console.log('Accept ride error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchViewOtp = async () => {
+    try {
+      const token = await getSession('accessToken');
+      if (!token) {
+        setErrors(['You are not logged in. Please log in to continue.']);
+        return;
       }
 
-      // Fetch OTP for the accepted ride
       const otpResponse = await axios.get(
-        `http://${IP_Address}:8002/rides/view-otp`,
+        `http://${process.env.EXPO_PUBLIC_ADDRESS}:8002/rides/view-otp`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (otpResponse.status === 200) {
-        console.log('OTP received successfully:', otpResponse.data.otp);
-
-        Alert.alert('OTP Received', 'Please check your email for the OTP.');
         router.push({
           pathname: '/(root)/(rides)/ViewOtpScreen',
           params: { otp: otpResponse.data.otp, rideId },
         });
-      } else {
-        console.error('Unexpected OTP response status:', otpResponse.status);
       }
     } catch (error: any) {
-      console.error('Error accepting ride:', error);
-
-      // Handle errors
+      console.log('OTP fetch error:', error);
       if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
         setErrors(error.response.data.details.map((err: any) => err.message));
       } else if (error.response?.data?.message) {
         setErrors([error.response.data.message]);
       } else {
-        setErrors(['Something went wrong. Please try again.']);
+        setErrors(['Something went wrong.']);
       }
     }
   };
 
   const handleReject = (rideId: string) => {
-    setRideRequests(prevRequests => prevRequests.filter(ride => ride.rideId !== rideId));
+    setRideRequests((prev) => prev.filter((ride) => ride.rideId !== rideId));
     alert(`Rejected ride: ${rideId}`);
   };
 
   useEffect(() => {
-    fetchRideRequests(); // Fetch data initially
-    const interval = setInterval(() => {
-      fetchRideRequests(); // Fetch data every 5 seconds
-    }, 5000);
-    return () => clearInterval(interval); // Cleanup interval on unmount
+    fetchViewOtp();
+    fetchRideRequests();
   }, []);
 
+  const handleRefresh = async () => {
+    await fetchRideRequests();
+    await fetchViewOtp();
+  };
+
   return (
-    <View style={styles.container}>
+    <View style={{ flex: 1, maxHeight: Dimensions.get('window').height * 0.8 }}>
       <Text style={styles.header}>Available Ride Requests</Text>
+
+      <Button title="🔄 Refresh" onPress={handleRefresh} color="#007BFF" />
 
       {isLoading ? (
         <Text style={styles.loading}>Loading...</Text>
@@ -130,7 +130,7 @@ const RiderDashboard = () => {
             <Text key={idx} style={styles.error}>{err}</Text>
           ))}
 
-          <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContainer}>
+          <ScrollView style={{ flexGrow: 1 }} contentContainerStyle={styles.scrollContainer}>
             {rideRequests.length > 0 ? (
               rideRequests.map((item, idx) => (
                 <View key={item.rideId || idx} style={styles.card}>
@@ -169,10 +169,6 @@ const RiderDashboard = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    maxHeight: screenHeight * 0.7,
-    flex: 1,
-  },
   header: {
     fontSize: 22,
     fontWeight: 'bold',
@@ -185,9 +181,6 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     fontSize: 14,
     textAlign: 'center',
-  },
-  scrollArea: {
-    flexGrow: 1,
   },
   scrollContainer: {
     paddingBottom: 20,

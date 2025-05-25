@@ -5,14 +5,13 @@ import cors from 'cors';
 import mainRoutes from './routes/mainRoutes';
 import cookieParser from 'cookie-parser';
 import { swaggerSpec, swaggerUi } from './swagger';
-import Socket from './socket'; // Import the Socket module
+
 
 // Load environment variables
 config();
 
 // Initialize app and server from the Socket module
-const app = Socket.app;
-const server = Socket.server;
+const app=express()
 
 // Define the port
 const port = process.env.PORT || 8000;
@@ -35,7 +34,7 @@ connectToDB()
     app.use(mainRoutes);
 
     // Start the server
-    server.listen(port, () => {
+    app.listen(port, () => {
       console.log(`Server started on port: ${port}`);
     });
   })

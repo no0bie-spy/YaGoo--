@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
-import { sendNormalRegistrationEmail, sendRideOtp } from '../services/mailer';
+import { sendRecoveryEmail, sendRideOtp } from '../services/mailer';
 import { Otp } from '../models/otp';
 import User from '../models/User';
 import IRequest from '../middleware/IRequest';
@@ -33,8 +33,8 @@ const sendOtpToRideRider = async (req: IRequest, res: Response) => {
     }
 
     // Generate and send OTP to rider email
-    const { token, info } = await sendRideOtp(email);
-    console.log('OTP sent to rider:', token, info);
+    const token = await sendRideOtp(email);
+    console.log('OTP sent to rider:', token);
 
     // Hash the OTP and store it in the database
     const hashedToken = await bcrypt.hash(token, 10);
@@ -77,8 +77,8 @@ const sendRegisterOtp = async (req: Request, res: Response, next: NextFunction) 
     }
 
     // Call the function to send the recovery email
-    const { token, info } = await sendNormalRegistrationEmail(email);
-    console.log(token, info);
+    const token= await sendRecoveryEmail(email);
+    console.log(token);
 
     // Hash the OTP to save into the database
     const hashedToken = await bcrypt.hash(token, 10);
