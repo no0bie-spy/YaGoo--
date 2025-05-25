@@ -7,6 +7,7 @@ import otpController from '../controllers/otp';
 
 const authRouter = express.Router();
 
+// Multer configuration for rider registration file uploads
 export const riderUpload = upload.fields([
   { name: 'licensePhoto', maxCount: 1 },
   { name: 'citizenshipPhoto', maxCount: 1 },
@@ -15,41 +16,9 @@ export const riderUpload = upload.fields([
   { name: 'vehicleBlueBookPhoto', maxCount: 1 },
 ]);
 
-// Authentication routes
 /**
- * @swagger
- * /auth/register:
- *   post:
- *     summary: Register a new user
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - fullname
- *               - password
- *               - phone
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *               fullname:
- *                 type: string
- *                 minLength: 3
- *               password:
- *                 type: string
- *                 minLength: 6
- *               phone:
- *                 type: string
- *                 pattern: "^[0-9]{10}$"
- *     responses:
- *       '201':
- *         description: User registered successfully
- *       '400':
- *         description: Invalid input
+ * User Registration Route
+ * Registers a new user (customer by default).
  */
 authRouter.post(
   '/register',
@@ -57,42 +26,68 @@ authRouter.post(
   authController.register
 );
 
-authRouter.post(
-  '/register',
-  validate(userValidation.register),
-  authController.register
-);
+/**
+ * User Login Route
+ * Authenticates user and returns access token.
+ */
 authRouter.post('/login', validate(userValidation.login), authController.login);
+
+/**
+ * Verify Email via OTP
+ * Verifies user's email after registration.
+ */
 authRouter.post(
   '/verifyOTP',
   validate(userValidation.otp),
   authController.verifyEmail
 );
-authRouter.post('/set-new-password', authController.setNewPassword); // Only once
 
-// OTP-related routes
+/**
+ * Set New Password (One-time use)
+ * Used during OTP-based registration/password reset flow.
+ */
+authRouter.post('/set-new-password', authController.setNewPassword);
+
+/**
+ * Send OTP for Registration or Password Reset
+ * Sends OTP to user's email or phone.
+ */
 authRouter.post(
   '/sendOTP',
   validate(userValidation.forgotPassword),
   otpController.sendRegisterOtp
 );
+
+/**
+ * Forgot Password
+ * Sends reset link or triggers password reset process.
+ */
 authRouter.post(
   '/forgotPassword',
   validate(userValidation.forgotPassword),
   authController.forgotPassword
 );
 
-// Rider-specific routes
+/**
+ * Rider Registration Route
+ * Registers a rider with uploaded documents (license, vehicle info, etc.).
+ */
 authRouter.post('/register-rider', riderUpload, authController.registerRider);
 
-// Password-related routes
+/**
+ * Change Password
+ * Allows user to change password from their profile/settings.
+ */
 authRouter.post(
   '/changePassword',
   validate(userValidation.changePassword),
   authController.changePassword
 );
 
-// Logout route
+/**
+ * Logout User
+ * Invalidates the session or access token.
+ */
 authRouter.post('/logout', authController.logout);
 
 export default authRouter;

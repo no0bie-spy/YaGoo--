@@ -1,21 +1,30 @@
 import { Router } from "express";
-import authRouter from "./auth"; 
+import authRouter from "./auth";
 import getUserfromAuthToken from "../middleware/jwtfromUser";
-import rideRouter from "./rides"; 
-import profileRouter from "./profile"; 
+import rideRouter from "./rides";
+import profileRouter from "./profile";
 
 const mainRoutes = Router();
 
-// Authentication Routes
-// These routes do not require user authentication
+/**
+ * Public Authentication Routes
+ * Includes login, registration, email verification, etc.
+ * No authentication required for these routes.
+ */
 mainRoutes.use('/auth', authRouter);
 
-// Rides Routes
-// These routes require user authentication, protected by `getUserfromAuthToken` middleware
+/**
+ * Protected Ride Routes
+ * All ride-related operations (create, bid, cancel, etc.)
+ * Require a valid JWT, verified via `getUserfromAuthToken` middleware.
+ */
 mainRoutes.use('/rides', getUserfromAuthToken, rideRouter);
 
-// Profile Routes
-// These routes also require user authentication, protected by `getUserfromAuthToken` middleware
+/**
+ * Protected Profile Routes
+ * Includes viewing/updating profile, switching roles, changing password, etc.
+ * Require a valid JWT, verified via `getUserfromAuthToken` middleware.
+ */
 mainRoutes.use('/profile', getUserfromAuthToken, profileRouter);
 
 export default mainRoutes;
