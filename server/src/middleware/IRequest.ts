@@ -1,7 +1,18 @@
 import { Request } from "express";
 
-// Extending the Request interface to include userId and ride
+/**
+ * Custom Request interface extending Express Request to include
+ * additional properties added during middleware processing.
+ */
 export default interface IRequest extends Request {
-  userId?: string;  // Add userId property
-  ride?: any;       // Add ride property (replace `any` with the actual type of the ride object if needed)
+  /**
+   * ID of the authenticated user (usually added after token verification)
+   */
+  userId?: string;
+
+  /**
+   * Ride object associated with the request (e.g., loaded in middleware)
+   * Replace `any` with a more specific interface/type if available.
+   */
+  ride?: any;
 }

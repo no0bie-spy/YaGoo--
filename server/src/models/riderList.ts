@@ -1,33 +1,49 @@
+import { model, Schema, Types, Document } from 'mongoose';
 
-import {model, Schema, Types } from 'mongoose'
+/**
+ * Interface representing a RiderList document.
+ */
+interface IRiderList extends Document {
+  /** Reference to the rider (user) */
+  riderId: Types.ObjectId;
 
-interface IRiderList extends Document{
-    riderId:Types.ObjectId,
-    rideId:Types.ObjectId,
-    status:
-    | 'accepted'
-    | 'not-accepted',
+  /** Reference to the ride */
+  rideId: Types.ObjectId;
+
+  /** Acceptance status of the rider for the ride */
+  status: 'accepted' | 'not-accepted';
 }
 
-const RiderListSchema= new Schema <IRiderList>({
-    riderId:{
-        type:Schema.Types.ObjectId,
-        required:true
+/**
+ * Schema defining RiderList subdocument structure.
+ */
+const RiderListSchema = new Schema<IRiderList>(
+  {
+    riderId: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      description: 'ObjectId referencing the rider',
     },
-    rideId:{
-        type:Schema.Types.ObjectId,
-        required:true
+    rideId: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      description: 'ObjectId referencing the ride',
     },
-    status:{
-        type:String,
-        enum:['accepted','not-accepted'],
-        default:'not-accepted'
-    }
-},{
-    timestamps:true
-})
+    status: {
+      type: String,
+      enum: ['accepted', 'not-accepted'],
+      default: 'not-accepted',
+      description: 'Rider acceptance status for the ride',
+    },
+  },
+  {
+    timestamps: true, // Automatically add createdAt and updatedAt fields
+  }
+);
 
-const RiderList= model <IRiderList>('RideList',RiderListSchema)
+/**
+ * RiderList model for managing rider-ride status entries.
+ */
+const RiderList = model<IRiderList>('RideList', RiderListSchema);
 
-
-export default RiderList
+export default RiderList;
