@@ -4,13 +4,13 @@ import MapView, { Marker, MapPressEvent } from 'react-native-maps';
 import * as Location from 'expo-location';
 
 interface MapPickerScreenProps {
-    onLocationSelect: (location: { address: string; coordinates: { latitude: number; longitude: number } }) => void;
-    onClose?: () => void;
-    initialCoordinate?: { latitude: number; longitude: number };
-  }
-  
-  const MapPickerScreen: React.FC<MapPickerScreenProps> = ({ onLocationSelect, onClose, initialCoordinate }) => {
-    const [selected, setSelected] = useState<{ latitude: number; longitude: number } | null>(initialCoordinate || null);
+  onLocationSelect: (location: { address: string; coordinates: { latitude: number; longitude: number } }) => void;
+  onClose?: () => void;
+  initialCoordinate?: { latitude: number; longitude: number };
+}
+
+const MapPickerScreen: React.FC<MapPickerScreenProps> = ({ onLocationSelect, onClose, initialCoordinate }) => {
+  const [selected, setSelected] = useState<{ latitude: number; longitude: number } | null>(initialCoordinate || null);
 
   const handleSelect = async () => {
     if (!selected) {
@@ -44,10 +44,10 @@ interface MapPickerScreenProps {
       <MapView
         style={{ flex: 1 }}
         initialRegion={{
-          latitude: initialCoordinate?.latitude || 27.7172,
-          longitude: initialCoordinate?.longitude || 85.3240,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
+          "latitude": 28.2096,
+          "longitude": 83.9856,
+          "latitudeDelta": 0.0922,
+          "longitudeDelta": 0.0421
         }}
         onPress={handleMapPress}
       >

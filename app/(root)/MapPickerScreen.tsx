@@ -24,10 +24,10 @@ const MapPickerScreen = () => {
             'Location permission is required to use this feature. Using a fallback location.'
           );
           setInitialRegion({
-            latitude: 28.2334, // Fallback latitude
-            longitude: 83.9500, // Fallback longitude
-            latitudeDelta: 0.0922,
-            longitudeDelta: 0.0421,
+            "latitude": 28.2096,
+            "longitude": 83.9856,
+            "latitudeDelta": 0.0922,
+            "longitudeDelta": 0.0421
           });
           return;
         }
@@ -43,10 +43,10 @@ const MapPickerScreen = () => {
         console.error('Error getting current location:', error);
         Alert.alert('Error', 'Failed to get current location. Using a fallback location.');
         setInitialRegion({
-          latitude: 28.2334, // Fallback latitude
-          longitude: 83.9500, // Fallback longitude
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
+          "latitude": 28.2096,
+          "longitude": 83.9856,
+          "latitudeDelta": 0.0922,
+          "longitudeDelta": 0.0421
         });
       } finally {
         setLoading(false);
@@ -81,8 +81,10 @@ const MapPickerScreen = () => {
 
   const handleMapPress = (e: MapPressEvent) => {
     const { latitude, longitude } = e.nativeEvent.coordinate;
+    console.log('Map pressed:', latitude, longitude); // ← confirm this runs
     setSelected({ latitude, longitude });
   };
+
 
   if (loading || !initialRegion) {
     return (
@@ -93,15 +95,18 @@ const MapPickerScreen = () => {
   }
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1 }} pointerEvents="box-none">
       <MapView
-        style={{ flex: 1 }}
-        initialRegion={initialRegion}
+        style={StyleSheet.absoluteFillObject}
+        initialRegion={initialRegion}  // ← use region instead of initialRegion
         onPress={handleMapPress}
       >
         {selected && <Marker coordinate={selected} />}
       </MapView>
-      <View style={styles.footer}>
+
+
+
+      <View pointerEvents="box-none" style={styles.footer}>
         <Button title="Confirm Location" onPress={handleSelect} disabled={!selected} />
       </View>
     </View>
@@ -118,7 +123,10 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     elevation: 4,
+    zIndex: 10,              // add this
+    pointerEvents: 'box-none' // add this
   },
 });
+
 
 export default MapPickerScreen;
