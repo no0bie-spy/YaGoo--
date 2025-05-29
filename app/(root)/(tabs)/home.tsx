@@ -1,10 +1,11 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View,
   StyleSheet,
   Dimensions,
   Alert,
   ActivityIndicator,
+  BackHandler,
 } from 'react-native';
 import * as Location from 'expo-location';
 import axios from 'axios';
@@ -19,13 +20,29 @@ import { useLocationSetter } from '@/components/LocationSetterContext';
 import { getSession, getUserRole } from '@/usableFunction/Session';
 import MapPickerScreen from '@/components/Home/MapPickerScreen';
 import FindRideForm from '@/components/Home/FindRideForm';
+import socketService from '@/services/socketService';
+import type { 
+  NewBidEvent, 
+  RideAcceptedEvent, 
+  RideCancelledEvent,
+  RiderLocationUpdateEvent,
+  RideStatusUpdateEvent
+} from '@/types/socket';
 
 const screenHeight = Dimensions.get('window').height;
 const IP_Address = process.env.EXPO_PUBLIC_ADDRESS || 'YOUR_IP_ADDRESS';
 
+const FALLBACK_LOCATION = {
+  coords: {
+    latitude: 28.2334,
+    longitude: 83.9500,
+  },
+} as Location.LocationObject;
+
 export default function HomeScreen() {
   const router = useRouter();
   const { setSetter } = useLocationSetter();
+  const locationSubscription = useRef<Location.LocationSubscription | null>(null);
 
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [pickup, setPickup] = useState({ address: '', coordinates: null });
@@ -41,7 +58,27 @@ export default function HomeScreen() {
   const [isCanceling, setIsCanceling] = useState(false);
   const [role, setRole] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasPlacedBid, setHasPlacedBid] = useState(false);
+  const [riderLocation, setRiderLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [rideStatus, setRideStatus] = useState<'pending' | 'accepted' | 'started' | 'completed' | 'cancelled'>('pending');
+
+  // Handle back button press
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (isPickupMapVisible) {
+        setIsPickupMapVisible(false);
+        return true;
+      }
+      if (isDestinationMapVisible) {
+        setIsDestinationMapVisible(false);
+        return true;
+      }
+      return false;
+    });
+
+    return () => backHandler.remove();
+  }, [isPickupMapVisible, isDestinationMapVisible]);
 
   // Function to fetch user role
   const fetchUserRole = async () => {
@@ -51,6 +88,7 @@ export default function HomeScreen() {
       setRole(userRole);
     } catch (err) {
       console.error('Error fetching user role:', err);
+      handleError(err);
     }
   };
 
@@ -63,26 +101,34 @@ export default function HomeScreen() {
           'Permission Denied',
           'Location permission is required to use this feature. Using a fallback location.'
         );
-        setLocation({
-          coords: {
-            latitude: 28.2334, // Fallback latitude
-            longitude: 83.9500, // Fallback longitude
-          },
-        } as Location.LocationObject);
+        setLocation(FALLBACK_LOCATION);
         return;
       }
 
-      const currentLocation = await Location.getCurrentPositionAsync({});
+      const currentLocation = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
       setLocation(currentLocation);
+
+      // Start watching position
+      if (locationSubscription.current) {
+        locationSubscription.current.remove();
+      }
+      
+      locationSubscription.current = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.Balanced,
+          timeInterval: 10000,
+          distanceInterval: 10,
+        },
+        (newLocation) => {
+          setLocation(newLocation);
+        }
+      );
     } catch (err) {
       console.error('Location Error:', err);
       Alert.alert('Error', 'Failed to get current location. Using a fallback location.');
-      setLocation({
-        coords: {
-          latitude: 28.2334, // Fallback latitude
-          longitude: 83.9500, // Fallback longitude
-        },
-      } as Location.LocationObject);
+      setLocation(FALLBACK_LOCATION);
     }
   };
 
@@ -90,12 +136,23 @@ export default function HomeScreen() {
   useEffect(() => {
     const initializeData = async () => {
       setIsLoading(true);
-      await fetchLocation();
-      await fetchUserRole();
-      setIsLoading(false);
+      try {
+        await Promise.all([fetchLocation(), fetchUserRole()]);
+      } catch (error) {
+        console.error('Initialization error:', error);
+        handleError(error);
+      } finally {
+        setIsLoading(false);
+      }
     };
     
     initializeData();
+
+    return () => {
+      if (locationSubscription.current) {
+        locationSubscription.current.remove();
+      }
+    };
   }, []);
 
   // Use useFocusEffect to refresh role and data when screen comes into focus
@@ -111,6 +168,7 @@ export default function HomeScreen() {
         setHasPlacedBid(false);
         setPrice('');
         setAvailableRiders([]);
+        setErrors([]);
       }
       
       return () => {
@@ -148,15 +206,16 @@ export default function HomeScreen() {
   // Create ride
   const handleRideCreation = async () => {
     if (!pickup.address || !destination.address) {
-      return Alert.alert('Please enter both pickup and destination');
+      return Alert.alert('Missing Information', 'Please enter both pickup and destination locations');
     }
 
+    setIsSubmitting(true);
     try {
       const token = await getSession('accessToken');
       if (!token) {
-        return Alert.alert('You are not logged in. Please log in to continue.');
+        return Alert.alert('Authentication Error', 'You are not logged in. Please log in to continue.');
       }
-      console.log('Pickup:', pickup);
+
       const response = await axios.post(
         `http://${IP_Address}:8002/rides/create`,
         {
@@ -176,20 +235,29 @@ export default function HomeScreen() {
       const { ride, minimumPrice } = response.data;
 
       console.log('Ride created:', ride);
-      setRideId(ride._id); // Ensure rideId is set
+      setRideId(ride._id);
       setMinimumPrice(minimumPrice);
+      setErrors([]);
     } catch (error: any) {
       console.error('Create Ride Error:', error);
       handleError(error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   // Place bid
   const handleBid = async () => {
-    if (!price || !rideId) return Alert.alert('Enter a valid bid amount');
+    if (!price || !rideId) {
+      return Alert.alert('Invalid Input', 'Please enter a valid bid amount');
+    }
 
+    setIsSubmitting(true);
     try {
       const token = await getSession('accessToken');
+      if (!token) {
+        return Alert.alert('Authentication Error', 'Please log in to continue');
+      }
 
       await axios.post(
         `http://${IP_Address}:8002/rides/bid`,
@@ -202,20 +270,28 @@ export default function HomeScreen() {
         }
       );
 
-      Alert.alert('Bid placed successfully!');
+      Alert.alert('Success', 'Bid placed successfully!');
       setHasPlacedBid(true);
-      fetchAvailableRiders(); // Immediate fetch after bidding
+      setErrors([]);
+      fetchAvailableRiders();
     } catch (error: any) {
       console.error('Bid Error:', error);
       handleError(error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   // Cancel ride
   const handleCancelRide = async () => {
+    if (!rideId) return;
+
+    setIsCanceling(true);
     try {
       const token = await getSession('accessToken');
-      if (!token || !rideId) return;
+      if (!token) {
+        return Alert.alert('Authentication Error', 'Please log in to continue');
+      }
 
       const response = await axios.delete(
         `http://${IP_Address}:8002/rides/cancel`,
@@ -225,13 +301,16 @@ export default function HomeScreen() {
         }
       );
 
-      Alert.alert(response.data.message || 'Ride canceled successfully');
+      Alert.alert('Success', response.data.message || 'Ride canceled successfully');
       setRideId(null);
       setPrice('');
       setAvailableRiders([]);
+      setErrors([]);
     } catch (error: any) {
       console.error('Cancel Ride Error:', error);
       handleError(error);
+    } finally {
+      setIsCanceling(false);
     }
   };
 
@@ -323,15 +402,106 @@ export default function HomeScreen() {
 
   // Error handler utility
   const handleError = (error: any) => {
+    let errorMessages: string[] = [];
     if (error.response?.data?.details && Array.isArray(error.response.data.details)) {
-      const messages = error.response.data.details.map((err: any) => err.message);
-      setErrors(messages);
+      errorMessages = error.response.data.details.map((err: any) => err.message);
     } else if (error.response?.data?.message) {
-      setErrors([error.response.data.message]);
+      errorMessages = [error.response.data.message];
+    } else if (error.message) {
+      errorMessages = [error.message];
     } else {
-      setErrors(['Something went wrong.']);
+      errorMessages = ['An unexpected error occurred. Please try again.'];
     }
+    setErrors(errorMessages);
+    Alert.alert('Error', errorMessages[0]);
   };
+
+  // Initialize socket connection
+  useEffect(() => {
+    const initializeSocket = async () => {
+      await socketService.connect();
+    };
+
+    initializeSocket();
+
+    return () => {
+      socketService.disconnect();
+    };
+  }, []);
+
+  // Socket event handlers
+  useEffect(() => {
+    if (!rideId) return;
+
+    // Join ride room when ride is created
+    socketService.joinRideRoom(rideId);
+
+    // Listen for new bids (for passenger)
+    socketService.onNewBid((event: NewBidEvent) => {
+      if (event.rideId === rideId) {
+        console.log('New bid received:', event);
+        fetchAvailableRiders();
+      }
+    });
+
+    // Listen for ride acceptance (for passenger)
+    socketService.onRideAccepted((event: RideAcceptedEvent) => {
+      if (event.rideId === rideId) {
+        console.log('Ride accepted:', event);
+        Alert.alert('Ride Accepted', 'A rider has accepted your ride request!');
+        router.push({
+          pathname: '/(root)/(rides)/ChatScreen',
+          params: { 
+            rideId: event.rideId,
+            riderId: event.riderId,
+            isRider: 'false'
+          },
+        });
+      }
+    });
+
+    // Listen for ride cancellation
+    socketService.onRideCancelled((event: RideCancelledEvent) => {
+      if (event.rideId === rideId) {
+        console.log('Ride cancelled:', event);
+        Alert.alert('Ride Cancelled', event.reason || 'The ride has been cancelled.');
+        setRideId(null);
+        setPrice('');
+        setAvailableRiders([]);
+      }
+    });
+
+    // Listen for rider location updates
+    socketService.onRiderLocationUpdate((event: RiderLocationUpdateEvent) => {
+      if (event.rideId === rideId) {
+        console.log('Rider location update:', event);
+        setRiderLocation(event.location);
+      }
+    });
+
+    // Listen for ride status updates
+    socketService.onRideStatusUpdate((event: RideStatusUpdateEvent) => {
+      if (event.rideId === rideId) {
+        console.log('Ride status update:', event);
+        setRideStatus(event.status.status);
+      }
+    });
+
+    return () => {
+      socketService.leaveRideRoom(rideId);
+      socketService.removeAllListeners();
+    };
+  }, [rideId]);
+
+  // Update location through socket when it changes
+  useEffect(() => {
+    if (location && role === 'rider') {
+      socketService.updateLocation({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+    }
+  }, [location, role]);
 
   // Rider view
   if (isLoading) {
@@ -345,7 +515,19 @@ export default function HomeScreen() {
   if (role === 'rider') {
     return (
       <View style={styles.container}>
-        <MapComponent location={location} />
+        <MapComponent 
+          location={location} 
+          markers={riderLocation ? [
+            {
+              id: 'rider',
+              lat: riderLocation.latitude,
+              lng: riderLocation.longitude,
+              title: 'Rider Location',
+              description: 'Current rider location',
+              icon: '🛵'
+            }
+          ] : []}
+        />
         <View style={styles.overlay}>
           <RiderDashboard />
         </View>
@@ -356,7 +538,19 @@ export default function HomeScreen() {
   // Passenger view
   return (
     <View style={styles.container}>
-      <MapComponent location={location} />
+      <MapComponent 
+        location={location} 
+        markers={riderLocation ? [
+          {
+            id: 'rider',
+            lat: riderLocation.latitude,
+            lng: riderLocation.longitude,
+            title: 'Rider Location',
+            description: 'Current rider location',
+            icon: '🛵'
+          }
+        ] : []}
+      />
       <View style={styles.overlay}>
         {!rideId ? (
           <FindRideForm
@@ -367,6 +561,8 @@ export default function HomeScreen() {
             onOpenPickupMap={openPickupMapPicker}
             onOpenDestinationMap={openDestinationMapPicker}
             onSubmit={handleRideCreation}
+            isSubmitting={isSubmitting}
+            errors={errors}
           />
         ) : hasPlacedBid ? (
           <AvailableRidersList
@@ -384,6 +580,9 @@ export default function HomeScreen() {
             startLocation={pickup.address}
             destination={destination.address}
             minimumPrice={minimumPrice}
+            isSubmitting={isSubmitting}
+            isCanceling={isCanceling}
+            errors={errors}
           />
         )}
       </View>
@@ -412,7 +611,10 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { 
+    flex: 1,
+    position: 'relative'
+  },
   overlay: {
     position: 'absolute',
     top: 40,
@@ -423,11 +625,17 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 20,
     elevation: 6,
+    zIndex: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   loader: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#fff',
   },
   modalOverlay: {
     position: 'absolute',
@@ -436,6 +644,6 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: 'white',
-    zIndex: 10, // Ensure it's on top
+    zIndex: 10,
   },
 });

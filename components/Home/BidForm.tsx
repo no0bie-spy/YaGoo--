@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import Input from '@/components/Input';
 import AppButton from '@/components/Button';
 import { IndianRupee } from 'lucide-react-native';
+
 type Props = {
   price: string;
   setPrice: (val: string) => void;
@@ -10,10 +11,11 @@ type Props = {
   onCancel: () => void;
   startLocation: string;
   destination: string;
-  minimumPrice: number | null; // Add minimumPrice prop
- 
+  minimumPrice: number | null;
+  isSubmitting?: boolean;
+  isCanceling?: boolean;
+  errors?: string[];
 };
-
 
 const BidForm = ({
   price,
@@ -23,8 +25,16 @@ const BidForm = ({
   startLocation,
   destination,
   minimumPrice,
-  
+  isSubmitting = false,
+  isCanceling = false,
+  errors = [],
 }: Props) => {
+  const priceError = errors.find(err => 
+    err.toLowerCase().includes('price') || 
+    err.toLowerCase().includes('amount') || 
+    err.toLowerCase().includes('bid')
+  );
+
   return (
     <View style={styles.card}>
       <Text style={styles.rideSummary}>
@@ -39,20 +49,40 @@ const BidForm = ({
       )}
 
       <Input
-        icon={<IndianRupee size={20} />}
+        icon={<IndianRupee size={20} color={priceError ? '#e74c3c' : '#333'} />}
         placeholder="Your Bid Price"
         value={price}
         setValue={setPrice}
         keyboardType="numeric"
+        error={priceError}
+        editable={!isSubmitting && !isCanceling}
       />
-      <AppButton title="Submit Bid" onPress={onSubmit} />
+
+      {errors.length > 0 && !priceError && (
+        <Text style={styles.error}>{errors[0]}</Text>
+      )}
+
+      <AppButton 
+        title={isSubmitting ? "Submitting Bid..." : "Submit Bid"}
+        onPress={onSubmit}
+        disabled={isSubmitting || isCanceling}
+        style={[
+          styles.submitBtn,
+          (isSubmitting || isCanceling) && styles.disabledButton
+        ]}
+        icon={isSubmitting ? () => <ActivityIndicator color="white" size="small" /> : undefined}
+      />
+
       <AppButton
-        title={'Cancel Ride'}
+        title={isCanceling ? "Canceling..." : "Cancel Ride"}
         onPress={onCancel}
-       
-        style={styles.cancelBtn}
+        disabled={isSubmitting || isCanceling}
+        style={[
+          styles.cancelBtn,
+          (isSubmitting || isCanceling) && styles.disabledButton
+        ]}
+        icon={isCanceling ? () => <ActivityIndicator color="white" size="small" /> : undefined}
       />
-    
     </View>
   );
 };
@@ -78,14 +108,22 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
   },
+  submitBtn: {
+    backgroundColor: '#27ae60',
+    marginTop: 15,
+  },
   cancelBtn: {
     marginTop: 10,
+    backgroundColor: '#e74c3c',
   },
-
+  disabledButton: {
+    backgroundColor: '#95a5a6',
+  },
   error: {
-    color: 'red',
-    fontSize: 12,
-    marginBottom: 5,
+    color: '#e74c3c',
+    fontSize: 14,
+    marginTop: 5,
+    marginBottom: 10,
     textAlign: 'center',
   },
 });
