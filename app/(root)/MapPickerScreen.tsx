@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Button, ActivityIndicator, Alert, Platform } from 'react-native';
-import MapView, { Marker, MapPressEvent, Region } from 'react-native-maps';
+import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import { useLocationSetter } from '@/components/LocationSetterContext';
+import { generateLeafletHTML } from '@/utils/leafletMap';
 
 const MapPickerScreen = () => {
   const { setter } = useLocationSetter();
   const router = useRouter();
   const [selected, setSelected] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [initialRegion, setInitialRegion] = useState<Region | null>(null);
+  const [initialLocation, setInitialLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,30 +24,24 @@ const MapPickerScreen = () => {
             'Permission Denied',
             'Location permission is required to use this feature. Using a fallback location.'
           );
-          setInitialRegion({
-            "latitude": 28.2096,
-            "longitude": 83.9856,
-            "latitudeDelta": 0.0922,
-            "longitudeDelta": 0.0421
+          setInitialLocation({
+            latitude: 28.2096,
+            longitude: 83.9856
           });
           return;
         }
 
         const currentLocation = await Location.getCurrentPositionAsync({});
-        setInitialRegion({
+        setInitialLocation({
           latitude: currentLocation.coords.latitude,
           longitude: currentLocation.coords.longitude,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
         });
       } catch (error) {
         console.error('Error getting current location:', error);
         Alert.alert('Error', 'Failed to get current location. Using a fallback location.');
-        setInitialRegion({
-          "latitude": 28.2096,
-          "longitude": 83.9856,
-          "latitudeDelta": 0.0922,
-          "longitudeDelta": 0.0421
+        setInitialLocation({
+          latitude: 28.2096,
+          longitude: 83.9856
         });
       } finally {
         setLoading(false);
@@ -79,14 +74,19 @@ const MapPickerScreen = () => {
     }
   };
 
-  const handleMapPress = (e: MapPressEvent) => {
-    const { latitude, longitude } = e.nativeEvent.coordinate;
-    console.log('Map pressed:', latitude, longitude); // ← confirm this runs
-    setSelected({ latitude, longitude });
+  const handleMessage = (event: any) => {
+    try {
+      const data = JSON.parse(event.nativeEvent.data);
+      if (data.type === 'mapPress') {
+        console.log('Map pressed:', data.lat, data.lng);
+        setSelected({ latitude: data.lat, longitude: data.lng });
+      }
+    } catch (error) {
+      console.error('Error parsing WebView message:', error);
+    }
   };
 
-
-  if (loading || !initialRegion) {
+  if (loading || !initialLocation) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#007AFF" />
@@ -94,19 +94,35 @@ const MapPickerScreen = () => {
     );
   }
 
+  const markers = selected ? [{
+    id: 'selected',
+    lat: selected.latitude,
+    lng: selected.longitude,
+    title: 'Selected Location'
+  }] : [];
+
   return (
-    <View style={{ flex: 1 }} pointerEvents="box-none">
-      <MapView
+    <View style={{ flex: 1 }}>
+      <WebView
         style={StyleSheet.absoluteFillObject}
-        initialRegion={initialRegion}  // ← use region instead of initialRegion
-        onPress={handleMapPress}
-      >
-        {selected && <Marker coordinate={selected} />}
-      </MapView>
-
-
-
-      <View pointerEvents="box-none" style={styles.footer}>
+        source={{ 
+          html: generateLeafletHTML({
+            center: { 
+              lat: initialLocation.latitude, 
+              lng: initialLocation.longitude 
+            },
+            markers,
+            enableClick: true,
+            fitBounds: false
+          })
+        }}
+        onMessage={handleMessage}
+        javaScriptEnabled={true}
+        domStorageEnabled={true}
+        startInLoadingState={true}
+        scalesPageToFit={false}
+      />
+      <View style={styles.footer}>
         <Button title="Confirm Location" onPress={handleSelect} disabled={!selected} />
       </View>
     </View>
@@ -123,10 +139,9 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     elevation: 4,
-    zIndex: 10,              // add this
-    pointerEvents: 'box-none' // add this
+    zIndex: 10,
+    pointerEvents: 'box-none'
   },
 });
-
 
 export default MapPickerScreen;
