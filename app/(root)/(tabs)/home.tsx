@@ -44,7 +44,7 @@ export default function HomeScreen() {
   const [hasPlacedBid, setHasPlacedBid] = useState(false);
 
   // Function to fetch user role
-  const fetchUserRole = async () => {
+ const fetchUserRole = async () => {
     try {
       const userRole = await getUserRole();
       console.log('Current user role:', userRole);
