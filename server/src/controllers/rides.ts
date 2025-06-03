@@ -427,14 +427,18 @@ const acceptRideRequestByCustomer = async (req: IRequest, res: Response) => {
     }
 
     // Find the ride request
-    const rideRequest = await RiderList.findOne({ _id: rideListId });
+    const rideRequest = await RiderList.findOneAndUpdate(
+  { _id: rideListId, status: 'not-accepted' },
+  { $set: { status: 'accepted' } },
+  { new: true }
+);
 
-    if (!rideRequest || rideRequest.status !== 'not-accepted') {
-      return res.status(404).json({
-        success: false,
-        message: 'Ride request not found or already accepted',
-      });
-    }
+if (!rideRequest) {
+  return res.status(404).json({
+    success: false,
+    message: 'Ride request not found or already accepted',
+  });
+}
 
     // Accept the ride request
     rideRequest.status = 'accepted';
@@ -447,9 +451,11 @@ const acceptRideRequestByCustomer = async (req: IRequest, res: Response) => {
 
     // Remove all except the accepted one
     for (const request of allRideRequests) {
-      if (request._id.toString() !== rideListId) {
-        await RiderList.findByIdAndDelete(request._id);
-      }
+      const requestId = request._id?.toString();
+
+if (requestId !== rideListId) {
+  await RiderList.findByIdAndDelete(request._id);
+}
     }
 
     // Find and update the ride

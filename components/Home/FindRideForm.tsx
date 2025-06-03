@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Text } from 'react-native';
+import { View, StyleSheet, Text, ActivityIndicator } from 'react-native';
 import AppButton from '../Button';
 import Input from '../Input';
 
@@ -11,6 +11,8 @@ interface FindRideFormProps {
   onOpenPickupMap: () => void;
   onOpenDestinationMap: () => void;
   onSubmit: () => void;
+  isSubmitting?: boolean;
+  errors?: string[];
 }
 
 const FindRideForm: React.FC<FindRideFormProps> = ({
@@ -21,6 +23,8 @@ const FindRideForm: React.FC<FindRideFormProps> = ({
   onOpenPickupMap,
   onOpenDestinationMap,
   onSubmit,
+  isSubmitting = false,
+  errors = [],
 }) => {
   return (
     <View style={styles.container}>
@@ -29,8 +33,14 @@ const FindRideForm: React.FC<FindRideFormProps> = ({
         placeholder="Enter pickup address"
         value={pickup.address}
         setValue={(text) => setPickup({ ...pickup, address: text })}
+        error={errors.find(err => err.toLowerCase().includes('pickup'))}
+        editable={!isSubmitting}
       />
-      <AppButton title="Select on Map" onPress={onOpenPickupMap}  />
+      <AppButton 
+        title="Select on Map" 
+        onPress={onOpenPickupMap}
+        disabled={isSubmitting}
+      />
 
       <View style={styles.separator} />
 
@@ -39,10 +49,29 @@ const FindRideForm: React.FC<FindRideFormProps> = ({
         placeholder="Enter destination address"
         value={destination.address}
         setValue={(text) => setDestination({ ...destination, address: text })}
+        error={errors.find(err => err.toLowerCase().includes('destination'))}
+        editable={!isSubmitting}
       />
-      <AppButton title="Select on Map" onPress={onOpenDestinationMap}  />
+      <AppButton 
+        title="Select on Map" 
+        onPress={onOpenDestinationMap}
+        disabled={isSubmitting}
+      />
 
-      <AppButton title="Find Riders" onPress={onSubmit} style={styles.findButton} />
+      {errors.length > 0 && !errors.some(err => 
+        err.toLowerCase().includes('pickup') || 
+        err.toLowerCase().includes('destination')
+      ) && (
+        <Text style={styles.errorText}>{errors[0]}</Text>
+      )}
+
+      <AppButton 
+        title={isSubmitting ? "Finding Riders..." : "Find Riders"} 
+        onPress={onSubmit}
+        style={[styles.findButton, isSubmitting && styles.findButtonDisabled]}
+        disabled={isSubmitting}
+        icon={isSubmitting ? () => <ActivityIndicator color="white" size="small" /> : undefined}
+      />
     </View>
   );
 };
@@ -60,10 +89,18 @@ const styles = StyleSheet.create({
   separator: {
     height: 15,
   },
- 
   findButton: {
     marginTop: 25,
-    backgroundColor: '#27ae60', // A nice green color for primary action
+    backgroundColor: '#27ae60',
+  },
+  findButtonDisabled: {
+    backgroundColor: '#95a5a6',
+  },
+  errorText: {
+    color: '#e74c3c',
+    marginTop: 10,
+    fontSize: 14,
+    textAlign: 'center',
   },
 });
 
