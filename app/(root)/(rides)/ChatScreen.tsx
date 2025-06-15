@@ -153,9 +153,15 @@ export default function ChatScreen() {
                     onPress={() => {
                         socket?.emit('leave_room', { roomId });
                         if (role === 'customer') {
-                            router.push('/(root)/(rides)/VerifyOtpScreen');
+                            router.push({
+                                pathname: '/(root)/(rides)/VerifyOtpScreen',
+                                // params: { email: riderEmail, rideId },
+                            });
                         } else if (role === 'rider') {
-                            router.push('/(root)/(rides)/ViewOtpScreen');
+                            router.push({
+                                pathname: '/(root)/(rides)/ViewOtpScreen',
+                                // params: { otp: otpResponse.data.otp, rideId },
+                            });
                         }
                     }}
                 />
