@@ -1,134 +1,270 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import axios from 'axios';
+import React, { useState, useRef, useEffect } from 'react';
+import {
+    View,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    ScrollView,
+    StyleSheet,
+    Dimensions,
+} from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import AppButton from '@/components/Button';
+import useSocket from '@/hooks/useSocket';
+import { getUserRole } from '@/usableFunction/Session';
 
-import ChatComponent from '@/components/Chat/ChatComponent';
-import ReviewComponent from '@/components/Review/ReviewComponent';
-import { getSession } from '@/usableFunction/Session';
-import chatService from '@/services/chatService';
-
-const IP_Address = process.env.EXPO_PUBLIC_ADDRESS || 'YOUR_IP_ADDRESS';
+const { width } = Dimensions.get('window');
+type ChatMessage = {
+    roomId: string;
+    message: string;
+    userId?: string;
+    timestamp: string;
+};
 
 export default function ChatScreen() {
-  const { rideId, riderId, isRider } = useLocalSearchParams<{
-    rideId: string;
-    riderId: string;
-    isRider: string;
-  }>();
-  const router = useRouter();
-
-  const [userId, setUserId] = useState<string>('');
-  const [showReview, setShowReview] = useState(false);
-  const [hasPaymentCompleted, setHasPaymentCompleted] = useState(false);
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const token = await getSession('accessToken');
-        const response = await axios.get(`http://${IP_Address}:8002/users/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setUserId(response.data.id);
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-        Alert.alert('Error', 'Failed to load user data');
-      }
-    };
-
-    fetchUserData();
-  }, []);
-
-  useEffect(() => {
-    // Listen for ride completion
-    chatService.onRideCompleted(({ duration, fare }) => {
-      if (isRider === 'true') {
-        Alert.alert(
-          'Ride Completed',
-          `Trip duration: ${Math.floor(duration / 60)} minutes\nFare: Rs. ${fare}`,
-          [
-            {
-              text: 'OK',
-              onPress: () => router.replace('/(root)/(tabs)/home'),
-            },
-          ]
-        );
-      } else {
-        Alert.alert(
-          'Ride Completed',
-          `Trip duration: ${Math.floor(duration / 60)} minutes\nFare: Rs. ${fare}`,
-          [
-            {
-              text: 'Pay Now',
-              onPress: () => handlePayment(fare),
-            },
-          ]
-        );
-      }
-    });
-
-    return () => {
-      chatService.removeAllListeners();
-    };
-  }, [isRider]);
-
-  const handlePayment = async (fare: number) => {
-    try {
-      const token = await getSession('accessToken');
-      await axios.post(
-        `http://${IP_Address}:8002/payments/process`,
-        {
-          rideId,
-          amount: fare,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
+    const { roomId } = useLocalSearchParams(); // get roomId param
+    const [currentMessage, setCurrentMessage] = useState('');
+    const [chats, setChats] = useState<ChatMessage[]>([]);
+    const { socket, loading } = useSocket();
+    const messagesEndRef = useRef<ScrollView>(null);
+    const [role, setRole] = useState<string | null>(null);
+    const fetchUserRole = async () => {
+        try {
+            const userRole = await getUserRole();
+            console.log('Current user role:', userRole);
+            setRole(userRole);
+        } catch (err) {
+            console.error('Error fetching user role:', err);
         }
-      );
+    };
+    useEffect(() => {
+        fetchUserRole();
+    }, []);
 
-      setHasPaymentCompleted(true);
-      setShowReview(true);
-    } catch (error) {
-      console.error('Payment error:', error);
-      Alert.alert('Error', 'Payment failed. Please try again.');
-    }
-  };
+    useEffect(() => {
 
-  const handleReviewSubmitted = () => {
-    router.replace('/(root)/(tabs)/home');
-  };
+        if (socket && !loading && roomId) {
+            // Join room on socket connect
+            socket.emit('join_room', { roomId });
 
-  if (!userId || !rideId || !riderId) {
-    return null;
-  }
+            // Listen for incoming messages
+            const receiveMessageHandler = (message: ChatMessage) => {
+                setChats((prev) => [...prev, message]);
+                scrollToBottom();
+            };
 
-  return (
-    <View style={styles.container}>
-      {showReview ? (
-        <ReviewComponent
-          rideId={rideId}
-          riderId={riderId}
-          onReviewSubmitted={handleReviewSubmitted}
-        />
-      ) : (
-        <ChatComponent
-          rideId={rideId}
-          userId={userId}
-          isRider={isRider === 'true'}
-          onEndChat={() => {
-            if (isRider === 'true') {
-              chatService.markRiderArrived(rideId, 'destination');
-            }
-          }}
-        />
-      )}
-    </View>
-  );
+
+            socket.on('receive_message', receiveMessageHandler);
+
+            socket.on('connect', () => {
+                console.log('Connected with socket ID:', socket.id);
+            });
+
+            socket.on('disconnect', () => {
+                console.log('Socket disconnected');
+            });
+
+            // Cleanup listeners on unmount or socket change
+            return () => {
+                socket.off('receive_message', receiveMessageHandler);
+                socket.off('connect');
+                socket.off('disconnect');
+            };
+        }
+    }, [socket, loading, roomId]);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollToEnd({ animated: true });
+    };
+
+    const roomIdStr = Array.isArray(roomId) ? roomId[0] : roomId;
+    const sendMessage = () => {
+        if (!currentMessage.trim() || !socket) return;
+
+        const messageData: ChatMessage = {
+            roomId: roomIdStr,
+            message: currentMessage,
+            userId: socket.id,
+            timestamp: new Date().toISOString(),
+        };
+
+        socket.emit('send_message', messageData);
+        setChats((prev) => [...prev, messageData]);
+        setCurrentMessage('');
+        scrollToBottom();
+    };
+
+    return (
+        <View style={styles.container}>
+            <ScrollView
+                style={styles.messagesContainer}
+                contentContainerStyle={styles.messagesContent}
+                ref={messagesEndRef}
+                onContentSizeChange={scrollToBottom}
+            >
+                {chats.map((chat, index) => {
+                    const isMe = chat.userId === socket?.id;
+                    return (
+                        <View
+                            key={index}
+                            style={[
+                                styles.messageRow,
+                                isMe ? styles.messageRowEnd : styles.messageRowStart,
+                            ]}
+                        >
+                            <View
+                                style={[
+                                    styles.messageBubble,
+                                    isMe ? styles.myMessage : styles.otherMessage,
+                                ]}
+                            >
+                                <Text style={styles.messageHeader}>
+                                    {isMe ? 'You' : `User ${chat.userId?.substring(0, 5)}`}
+                                </Text>
+                                <Text
+                                    style={[
+                                        styles.messageText,
+                                        isMe ? styles.myMessageText : styles.otherMessageText,
+                                    ]}
+                                >
+                                    {chat.message}
+                                </Text>
+                            </View>
+                        </View>
+                    );
+                })}
+            </ScrollView>
+
+            <View style={styles.inputContainer}>
+                <TextInput
+                    style={styles.textInput}
+                    value={currentMessage}
+                    onChangeText={setCurrentMessage}
+                    placeholder="Type a message..."
+                    placeholderTextColor="#9CA3AF"
+                    onSubmitEditing={sendMessage}
+                    returnKeyType="send"
+                />
+                <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
+                    <Text style={styles.sendButtonText}>Send</Text>
+                </TouchableOpacity>
+                <AppButton
+                    title="End Chat"
+                    onPress={() => {
+                        socket?.emit('leave_room', { roomId });
+                        if (role === 'customer') {
+                            router.push({
+                                pathname: '/(root)/(rides)/VerifyOtpScreen',
+                                // params: { email: riderEmail, rideId },
+                            });
+                        } else if (role === 'rider') {
+                            router.push({
+                                pathname: '/(root)/(rides)/ViewOtpScreen',
+                                // params: { otp: otpResponse.data.otp, rideId },
+                            });
+                        }
+                    }}
+                />
+            </View>
+        </View>
+    );
 }
 
+
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-}); 
+    container: {
+        flex: 1,
+        maxWidth: Math.min(width, 448),
+        alignSelf: 'center',
+        backgroundColor: '#FFFFFF',
+        borderRadius: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 4,
+        overflow: 'hidden',
+    },
+    messagesContainer: {
+        flex: 1,
+        backgroundColor: '#F3F4F6',
+    },
+    messagesContent: {
+        padding: 16,
+        gap: 8,
+    },
+    messageRow: {
+        flexDirection: 'row',
+        marginBottom: 8,
+    },
+    messageRowEnd: {
+        justifyContent: 'flex-end',
+    },
+    messageRowStart: {
+        justifyContent: 'flex-start',
+    },
+    messageBubble: {
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        maxWidth: '75%',
+        borderRadius: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        elevation: 1,
+    },
+    myMessage: {
+        backgroundColor: '#3B82F6',
+        borderBottomRightRadius: 4,
+    },
+    otherMessage: {
+        backgroundColor: '#D1D5DB',
+        borderBottomLeftRadius: 4,
+    },
+    messageHeader: {
+        fontSize: 12,
+        fontWeight: '600',
+        marginBottom: 4,
+    },
+    messageText: {
+        fontSize: 16,
+    },
+    myMessageText: {
+        color: '#FFFFFF',
+    },
+    otherMessageText: {
+        color: '#000000',
+    },
+    inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 16,
+        borderTopWidth: 1,
+        borderTopColor: '#E5E7EB',
+        backgroundColor: '#FFFFFF',
+        gap: 8,
+    },
+    textInput: {
+        flex: 1,
+        borderWidth: 1,
+        borderColor: '#D1D5DB',
+        borderRadius: 25,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        fontSize: 16,
+        backgroundColor: '#FFFFFF',
+    },
+    sendButton: {
+        backgroundColor: '#3B82F6',
+        borderRadius: 25,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+    },
+    sendButtonText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: '500',
+    },
+});
