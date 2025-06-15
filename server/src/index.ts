@@ -22,7 +22,7 @@ const httpServer = createServer(app);
 // Setup Socket.IO
 const io = new Server(httpServer, {
   cors: {
-    origin: '*', // Set to your frontend origin for security
+    origin: '*', 
     methods: ['GET', 'POST'],
   },
 });
