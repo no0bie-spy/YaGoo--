@@ -85,7 +85,7 @@ const RiderDashboard = () => {
 
       if (otpResponse.status === 200) {
         router.push({
-          pathname: '/(root)/(rides)/ViewOtpScreen',
+          pathname: '/(root)/(rides)/ChatScreen',
           params: { otp: otpResponse.data.otp, rideId },
         });
       }

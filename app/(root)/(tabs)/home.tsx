@@ -44,7 +44,7 @@ export default function HomeScreen() {
   const [hasPlacedBid, setHasPlacedBid] = useState(false);
 
   // Function to fetch user role
- const fetchUserRole = async () => {
+  const fetchUserRole = async () => {
     try {
       const userRole = await getUserRole();
       console.log('Current user role:', userRole);
@@ -94,7 +94,7 @@ export default function HomeScreen() {
       await fetchUserRole();
       setIsLoading(false);
     };
-    
+
     initializeData();
   }, []);
 
@@ -103,7 +103,7 @@ export default function HomeScreen() {
     useCallback(() => {
       console.log('Screen focused - refreshing user role and data');
       fetchUserRole();
-      
+
       // Reset ride-related state if coming back to this screen
       if (!rideId) {
         setPickup({ address: '', coordinates: null });
@@ -112,7 +112,7 @@ export default function HomeScreen() {
         setPrice('');
         setAvailableRiders([]);
       }
-      
+
       return () => {
         // Cleanup if needed when screen is unfocused
       };
@@ -254,7 +254,7 @@ export default function HomeScreen() {
         rideId,
       });
       router.push({
-        pathname: '/(root)/(rides)/VerifyOtpScreen',
+        pathname: '/(root)/(rides)/ChatScreen',
         params: { email: riderEmail, rideId },
       });
     } catch (error: any) {

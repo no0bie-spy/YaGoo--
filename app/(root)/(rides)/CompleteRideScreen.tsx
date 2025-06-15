@@ -5,15 +5,14 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { getSession } from '@/usableFunction/Session';
 import AppButton from '@/components/Button';
 
-const IP_Address = process.env.EXPO_PUBLIC_ADDRESS ;
+const IP_Address = process.env.EXPO_PUBLIC_ADDRESS;
 
 const CompleteRideScreen = () => {
   const { rideId } = useLocalSearchParams();
   const router = useRouter();
-  const [isCompleting, setIsCompleting] = useState(false);
+
 
   const handleCompleteRide = async () => {
-    setIsCompleting(true);
 
     try {
       const token = await getSession('accessToken');
@@ -24,21 +23,20 @@ const CompleteRideScreen = () => {
       );
 
       Alert.alert(response.data.message || 'Ride completed successfully');
-      const data =await  response.data;
+      const data = await response.data;
       const riderId = data.riderId;
-      const totalTime= data.totalTime;
+      console.log(data)
+      const totalTime = data.totalTime;
       router.push({
         pathname: '/(root)/(rides)/ReviewScreen',
-        params: {  rideId,riderId,totalTime },
-        });
-     // Redirect back to HomeScreen
+        params: { rideId, riderId, totalTime },
+      });
+      // Redirect back to HomeScreen
     } catch (error: any) {
       console.error('Complete Ride Error:', error);
       Alert.alert(
         error.response?.data?.message || 'Failed to complete the ride. Please try again.'
       );
-    } finally {
-      setIsCompleting(false);
     }
   };
 
@@ -49,9 +47,8 @@ const CompleteRideScreen = () => {
         Are you sure you want to complete this ride?
       </Text>
       <AppButton
-        title={isCompleting ? 'Completing...' : 'Complete Ride'}
+        title={'Complete Ride'}
         onPress={handleCompleteRide}
-        disabled={isCompleting}
       />
     </View>
   );
