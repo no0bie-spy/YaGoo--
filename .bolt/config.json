@@ -1,3 +1,6 @@
 {
-  "template": "bolt-expo"
+  "template": "YaGoo--",
+  "name": "YaGoo--",
+  "description": "A full-stack authentication app with Expo, React Native, and Node.js",
+  "version": "1.0.0"
 }

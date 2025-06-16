@@ -1,14 +1,14 @@
 import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/user';
-import RiderDocuments from '../models/riderDocument';
+import RiderDocuments from '../models/riderDocuments';
 import Vehicle from '../models/vehicle';
 import env from '../../../Ienv';
 import { sendRecoveryEmail } from '../../../services/mailer';
 import bcrypt from 'bcrypt';
-import { Otp } from '../models/otp';
+import { Otp } from '../../../models/otp';
 import multer from 'multer';
-import Rider from '../../models/rider';
+import Rider from '../../../models/rider';
 
 //normal registration
 const register = async (req: Request, res: Response, next: NextFunction) => {

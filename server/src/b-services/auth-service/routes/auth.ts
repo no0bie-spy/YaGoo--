@@ -1,9 +1,9 @@
 import express from 'express';
 import authController from '../controllers/auth';
 import validate from '../../../middleware/validation';
-import userValidation from '../../validations/auth';
+import userValidation from './../validations/auth';
 import upload from '../../../middleware/multerConfig';
-import otpController from '../controllers/otp';
+import otpController from '../../../controllers/otp';
 
 const authRouter = express.Router();
 
