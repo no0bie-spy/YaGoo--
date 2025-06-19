@@ -1,15 +1,15 @@
 import { NextFunction, Request, Response } from 'express';
 import Ride from '../models/rides';
-import IRequest from '../middleware/IRequest';
-import Bid from '../models/bid';
-import { calculateRoadDistance } from '../services/distance';
-import User from '../models/User';
-import { Otp } from '../models/otp';
-import Review from '../models/review';
-import Vehicle from '../models/vehicle';
+import IRequest from '../../../middleware/IRequest';
+import Bid from '../../../models/bid';
+import { calculateRoadDistance } from '../../../services/distance';
+import User from '../../auth-service/models/user';
+import { Otp } from '../../../models/otp';
+import Review from './../models/review';
+import Vehicle from '../../auth-service/models/vehicle';
 import { defaultMaxListeners } from 'events';
 import Rider from '../models/rider';
-import { sendRideOtp } from '../services/mailer';
+import { sendRideOtp } from '../../../services/mailer';
 import bcrypt from 'bcrypt';
 import RiderList from '../models/riderList';
 

@@ -8,7 +8,7 @@ import { sendRecoveryEmail } from '../../../services/mailer';
 import bcrypt from 'bcrypt';
 import { Otp } from '../../../models/otp';
 import multer from 'multer';
-import Rider from '../../../models/rider';
+import Rider from '../../rides-service/models/rider';
 
 //normal registration
 const register = async (req: Request, res: Response, next: NextFunction) => {
