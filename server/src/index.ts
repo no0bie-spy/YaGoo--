@@ -5,6 +5,9 @@ import cors from 'cors';
 import mainRoutes from './routes/mainRoutes';
 import cookieParser from 'cookie-parser';
 import { swaggerSpec, swaggerUi } from './swagger';
+import rideRouter from './b-services/rides-service/routes/rides';
+import authRouter from './b-services/auth-service/routes/auth';
+import bidRouter from './b-services/bid-service/routes/bids';
 
 
 // Load environment variables
@@ -32,6 +35,11 @@ connectToDB()
 
     // Register routes
     app.use(mainRoutes);
+
+    //Mircroservice specific routes
+    app.use('/api/rides', rideRouter);
+    app.use('/api/bids', bidRouter);
+    app.use('/api/auth', authRouter);
 
     // Start the server
     app.listen(port, () => {
